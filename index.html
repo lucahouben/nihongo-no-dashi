@@ -23,12 +23,12 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 100%);color:var(--ink);font-family:Inter,"Noto Sans JP",system-ui,-apple-system,Segoe UI,sans-serif}
-  .wrap{max-width:1120px;margin:24px auto;padding:0 16px 140px;position:relative}
+  .wrap{max-width:1120px;margin:24px auto;padding:0 16px 160px;position:relative;z-index:2}
   h1{font-weight:800;letter-spacing:.2px;margin:8px 0 4px;text-transform:lowercase}
   .sub{color:var(--muted);margin:0 0 18px}
-  .grid{display:grid;grid-template-columns:1fr;gap:16px;position:relative;z-index:2}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;position:relative;z-index:3}
   @media(min-width:980px){.grid{grid-template-columns:1fr 1fr}}
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px;border:1px solid var(--line);position:relative}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px;border:1px solid var(--line);position:relative;z-index:3}
   .title{display:flex;align-items:center;gap:10px;margin:0 0 8px}
   .chip{font-size:12px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#083127;padding:4px 10px;border-radius:999px;font-weight:700}
   .row{display:flex;align-items:center;gap:8px;margin:8px 0}
@@ -36,32 +36,43 @@
   table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden}
   th,td{padding:10px 12px;border-bottom:1px dashed var(--line);font-size:14px}
   th{background:#ecfbf4;text-align:left;color:#0f3b29}
-  .hint{font-size:13px;color:var(--muted)}
+  .hint{font-size:13px;color:#5c8477}
   a{color:#0e7e67}
 
-  /* character images BETWEEN cards (like WaniKani) */
-  .scene{position:absolute;inset:0;pointer-events:none;z-index:1}
-  .char{position:absolute;opacity:.28;filter:drop-shadow(0 8px 18px rgba(20,53,43,.16))}
-  /* desktop placement */
-  #c-midori{left:-6px;top:-8px;width:160px;opacity:.22} /* tiny cameo near title */
-  #c-knight{left:-40px;top:180px;width:240px}
-  #c-rogue{left:18%;top:560px;width:240px}
-  #c-monk{right:12%;top:930px;width:240px}
-  #c-alch{right:-40px;top:120px;width:260px}
+  /* character images BETWEEN cards (WaniKani-style) */
+  .scene{position:absolute;inset:0;pointer-events:none;z-index:2}
+  .char{
+    position:absolute;
+    opacity:.35;                    /* softly visible */
+    filter:drop-shadow(0 10px 20px rgba(20,53,43,.14));
+    mix-blend-mode:multiply;        /* pastel merge */
+    transform:translate3d(0,0,0);
+    will-change:transform;
+  }
+  /* desktop placement tuned to peek between cards */
+  #c-midori{left:4px;top:-6px;width:160px;opacity:.24} /* cameo near title */
+  #c-knight{left:-36px;top:180px;width:260px}
+  #c-rogue{left:18%;top:570px;width:250px}
+  #c-monk{right:12%;top:940px;width:250px}
+  #c-alch{right:-36px;top:140px;width:270px}
   @media(max-width:980px){
     #c-midori{display:none}
-    #c-knight{left:-60px;top:160px;width:190px}
-    #c-rogue{left:-40px;top:660px;width:190px}
-    #c-monk{right:-30px;top:1040px;width:190px}
-    #c-alch{right:-60px;top:260px;width:190px}
+    #c-knight{left:-60px;top:200px;width:200px}
+    #c-rogue{left:-40px;top:700px;width:200px}
+    #c-monk{right:-30px;top:1120px;width:200px}
+    #c-alch{right:-60px;top:340px;width:200px}
   }
 
   /* floating chat avatar bubble (Sensei Midori) */
-  .bubble{position:fixed;right:18px;bottom:18px;width:76px;height:76px;border-radius:50%;
+  @keyframes cloudBob { 0%{transform:translateY(0)} 50%{transform:translateY(-4px)} 100%{transform:translateY(0)} }
+  .bubble{
+    position:fixed;right:18px;bottom:18px;width:76px;height:76px;border-radius:50%;
     background:radial-gradient(100% 100% at 70% 30%, #fff 0%, #fff0 38%), linear-gradient(180deg,#cffff0,#b8ffea);
-    box-shadow:0 18px 36px rgba(0,0,0,.18);cursor:pointer;z-index:60;display:flex;align-items:center;justify-content:center;border:1px solid #d8f8ee}
+    box-shadow:0 18px 36px rgba(0,0,0,.18);cursor:pointer;z-index:60;display:flex;align-items:center;justify-content:center;border:1px solid #d8f8ee;
+    animation:cloudBob 4.5s ease-in-out infinite;
+  }
   .bubble img{width:66px;height:66px;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.16))}
-  .bubble:hover{transform:translateY(-3px);transition:.2s ease}
+  .bubble:hover{transform:translateY(-2px);transition:.2s ease}
 
   /* chat panel */
   .chat{position:fixed;right:16px;bottom:104px;width:380px;max-width:92vw;background:var(--card);border-radius:18px;box-shadow:0 20px 44px rgba(10,82,56,.28);overflow:hidden;transform:translateY(16px);opacity:0;pointer-events:none;transition:.25s ease;z-index:61;border:1px solid var(--line)}
@@ -90,12 +101,12 @@
 <body>
 
   <!-- Characters placed between cards -->
-  <div class="scene" aria-hidden="true">
-    <img id="c-midori" class="char" src="assets/characters/midori_sensei.png" alt="sensei midori cameo">
-    <img id="c-knight" class="char" src="assets/characters/kanji_knight.png" alt="kanji knight">
-    <img id="c-rogue" class="char" src="assets/characters/grammar_rogue.png" alt="grammar rogue">
-    <img id="c-monk" class="char" src="assets/characters/listening_monk.png" alt="listening monk">
-    <img id="c-alch" class="char" src="assets/characters/vocab_alchemist.png" alt="vocab alchemist">
+  <div class="scene" id="scene" aria-hidden="true">
+    <img id="c-midori" class="char" src="assets/characters/midori_sensei.png" alt="sensei midori cameo" data-speed="0.08">
+    <img id="c-knight" class="char" src="assets/characters/kanji_knight.png" alt="kanji knight" data-speed="0.12">
+    <img id="c-rogue"  class="char" src="assets/characters/grammar_rogue.png" alt="grammar rogue" data-speed="0.10">
+    <img id="c-monk"   class="char" src="assets/characters/listening_monk.png" alt="listening monk" data-speed="0.09">
+    <img id="c-alch"   class="char" src="assets/characters/vocab_alchemist.png" alt="vocab alchemist" data-speed="0.11">
   </div>
 
   <div class="wrap">
@@ -142,7 +153,7 @@
         <table>
           <tr><th>skill</th><th>current</th><th>goal</th><th>notes</th></tr>
           <tr><td>vocabulary</td><td>n4 ready（wk 20）</td><td>strong recall</td><td>reinforce via reading</td></tr>
-          <tr><td>grammar</td><td>85% done</td><td>100% mastery</td><td>nuance（のに／けど／が）</td></tr>
+       	  <tr><td>grammar</td><td>85% done</td><td>100% mastery</td><td>nuance（のに／けど／が）</td></tr>
           <tr><td>reading</td><td>medium speed</td><td>≤6m nhk</td><td>timed drills 3×/week</td></tr>
           <tr><td>listening</td><td>improving</td><td>80% teppei</td><td>daily shadowing</td></tr>
           <tr><td>speaking</td><td>natural</td><td>maintain</td><td>5‑min convos daily</td></tr>
@@ -192,6 +203,20 @@
     if(v !== null){ cb.checked = v === "1"; }
     cb.addEventListener('change', () => localStorage.setItem(k, cb.checked ? "1":"0"));
   });
+})();
+
+// ---------- Character parallax on scroll ----------
+(function(){
+  const chars = Array.from(document.querySelectorAll('.char'));
+  const update = () => {
+    const y = window.scrollY || window.pageYOffset;
+    chars.forEach(el => {
+      const s = parseFloat(el.dataset.speed || '0.1');
+      el.style.transform = `translate3d(0, ${y * s}px, 0)`;
+    });
+  };
+  update();
+  window.addEventListener('scroll', update, {passive:true});
 })();
 
 // ---------- Chat bubble toggle ----------
