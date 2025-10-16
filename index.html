@@ -1,110 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JLPT N4 Command Center - Luca Houben</title>
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f6f6f9;
-      margin: 0;
-      padding: 20px;
-      color: #222;
-    }
-    h1, h2, h3 { color: #333; }
-    .section {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-      padding: 16px 20px;
-    }
-    .checkbox {
-      display: flex;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    input[type="checkbox"] {
-      margin-right: 10px;
-      width: 18px;
-      height: 18px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border-bottom: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-    th { background-color: #fafafa; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JLPT N4 Command Center — Luca</title>
+<style>
+  :root{
+    --bg:#fbf7ff;
+    --card:#ffffff;
+    --ink:#1f1336;
+    --muted:#6d5b8d;
+    --accent:#7c4dff;
+    --accent-2:#ff7ac6;
+    --accent-3:#30c0ff;
+    --ok:#5ac18e;
+    --shadow:0 10px 22px rgba(52,26,103,.12);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:linear-gradient(180deg,#fff6ff 0%, #fbf7ff 60%, #f2f8ff 100%);color:var(--ink);font-family:system-ui,"Inter","Segoe UI","Noto Sans JP",sans-serif}
+  .wrap{max-width:1020px;margin:24px auto;padding:0 16px 96px}
+  h1{font-weight:800;letter-spacing:.2px;margin:12px 0 4px}
+  .sub{color:var(--muted);margin:0 0 20px}
+  .cards{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:920px){.cards{grid-template-columns:1fr 1fr}}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 18px}
+  .title{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+  .title .chip{font-size:12px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;padding:4px 10px;border-radius:999px}
+  .row{display:flex;align-items:center;gap:8px;margin:8px 0}
+  input[type="checkbox"]{width:20px;height:20px;accent-color:var(--accent)}
+  table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden}
+  th,td{padding:10px 12px;border-bottom:1px dashed #eee;font-size:14px}
+  th{background:#faf7ff;text-align:left;color:#4d3c71}
+  .hint{font-size:13px;color:var(--muted)}
+  .ok{color:var(--ok);font-weight:600}
+  .mascots{position:relative;height:110px;display:flex;gap:12px;align-items:flex-end;justify-content:flex-end}
+  .mascot{width:88px;height:88px;border-radius:22px;background:linear-gradient(180deg,var(--accent-2),#ffa9dc);box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .mascot:before,.mascot:after{content:"";position:absolute;border-radius:50%}
+  .mascot:before{width:70px;height:70px;background:#fff6;left:6px;top:6px;filter:blur(8px)}
+  .mascot .eyes{position:absolute;left:22px;top:34px;display:flex;gap:22px}
+  .eye{width:12px;height:12px;background:#21182f;border-radius:50%}
+  .smile{position:absolute;left:30px;top:56px;width:36px;height:18px;border:3px solid #21182f;border-top:none;border-radius:0 0 40px 40px}
+  .tentacles{position:absolute;bottom:-6px;left:6px;right:6px;display:flex;gap:6px;justify-content:center}
+  .tent{width:12px;height:24px;background:#ffd3ec;border-radius:6px 6px 12px 12px}
+  .bubble{position:fixed;right:18px;bottom:18px;width:64px;height:64px;border-radius:50%;background:radial-gradient(100% 100% at 70% 30%, #fff 0%, #fff0 35%), linear-gradient(180deg,var(--accent-3),var(--accent));box-shadow:0 12px 30px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50}
+  .bubble svg{filter:drop-shadow(0 2px 6px rgba(0,0,0,.2))}
+  .chat{position:fixed;right:16px;bottom:90px;width:360px;max-width:92vw;background:var(--card);border-radius:18px;box-shadow:0 18px 40px rgba(31,19,54,.25);overflow:hidden;transform:translateY(16px);opacity:0;pointer-events:none;transition:.25s ease}
+  .chat.open{transform:translateY(0);opacity:1;pointer-events:auto}
+  .chat .top{padding:10px 12px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;display:flex;align-items:center;gap:10px}
+  .chat .top b{font-weight:700}
+  .chat .sys{padding:8px 12px;background:#fff7ff;border-bottom:1px dashed #f0e6ff}
+  .chat .sys input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #eadfff;font-size:13px}
+  .chat .log{height:280px;overflow:auto;padding:10px 12px;scroll-behavior:smooth}
+  .msg{margin:8px 0;max-width:88%}
+  .me{margin-left:auto;background:#ebf6ff;border:1px solid #d7ebff}
+  .bot{background:#fff1fb;border:1px solid #ffd9f1}
+  .msg{padding:10px 12px;border-radius:12px;font-size:14px;line-height:1.45}
+  .chat .composer{display:flex;gap:8px;padding:10px 12px;border-top:1px dashed #f0e6ff}
+  .chat textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border-radius:12px;border:1px solid #e8e2ff;font-size:14px}
+  .send{background:linear-gradient(90deg,var(--accent-3),var(--accent));color:#fff;border:none;border-radius:12px;padding:10px 14px;cursor:pointer}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#efe9ff;color:#5a3dc8;font-size:12px;margin-left:auto}
+  .flex{display:flex;gap:8px;align-items:center}
+</style>
 </head>
 <body>
-  <h1>🎯 JLPT N4 Command Center</h1>
-  <p><strong>Exam Date:</strong> December 7, 2025<br>
-     <strong>Goal:</strong> Pass JLPT N4 with strong comprehension & balanced skills</p>
+  <div class="wrap">
+    <h1>🎯 JLPT N4 Command Center</h1>
+    <p class="sub"><b>Exam:</b> Dec 7, 2025 · <b>Mission:</b> Pass N4 with confident Listening/Reading/Grammar</p>
 
-  <div class="section">
-    <h2>📅 Daily Study Checklist</h2>
-    <label class="checkbox"><input type="checkbox" id="daily1">Listening – 15–20 min (Nihongo con Teppei)</label>
-    <label class="checkbox"><input type="checkbox" id="daily2">Reading – 10–15 min (NHK Easy, ≤6 min)</label>
-    <label class="checkbox"><input type="checkbox" id="daily3">Grammar Review – 15–20 min (3 sentences using patterns)</label>
-    <label class="checkbox"><input type="checkbox" id="daily4">WaniKani & Bunpro Reviews – during work breaks</label>
+    <div class="cards">
+      <div class="card">
+        <h3 class="title"><span class="chip">Daily</span> Study Checklist</h3>
+        <div class="row"><input type="checkbox" data-key="daily:listening"> Listening — 15–20 min（Teppei）<br><span class="hint">Write 3 words + 1 full sentence</span></div>
+        <div class="row"><input type="checkbox" data-key="daily:reading"> Reading — 10–15 min（NHK Easy ≤6m）<br><span class="hint">Highlight 2 grammar points</span></div>
+        <div class="row"><input type="checkbox" data-key="daily:grammar"> Grammar — 15–20 min（ので/から/のに・そうだ・つもりだ・てしまう）</div>
+        <div class="row"><input type="checkbox" data-key="daily:reviews"> Reviews — WaniKani & Bunpro（at work）</div>
+        <div class="hint">Tip: Busy day? Split into two quick blocks (AM + PM).</div>
+      </div>
+
+      <div class="card">
+        <h3 class="title"><span class="chip">Weekly</span> Focus Tracker</h3>
+        <table>
+          <tr><th>Week</th><th>Focus</th><th>Done</th></tr>
+          <tr><td>Oct 14–20</td><td>Connectors（ので／から／のに／けど）</td><td><input type="checkbox" data-key="week:1"></td></tr>
+          <tr><td>Oct 21–27</td><td>てしまう・そうだ・つもりだ</td><td><input type="checkbox" data-key="week:2"></td></tr>
+          <tr><td>Oct 28–Nov 3</td><td>Reading speed + Listening</td><td><input type="checkbox" data-key="week:3"></td></tr>
+          <tr><td>Nov 4–10</td><td>ように／ために（complex）</td><td><input type="checkbox" data-key="week:4"></td></tr>
+          <tr><td>Nov 11–17</td><td>Mock 1 prep・timed practice</td><td><input type="checkbox" data-key="week:5"></td></tr>
+          <tr><td>Nov 18–24</td><td>Weak-point review（from Mock 1）</td><td><input type="checkbox" data-key="week:6"></td></tr>
+          <tr><td>Nov 25–Dec 1</td><td>Final polish・Mock 2</td><td><input type="checkbox" data-key="week:7"></td></tr>
+          <tr><td>Dec 2–6</td><td>Light review・Confidence</td><td><input type="checkbox" data-key="week:8"></td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 class="title"><span class="chip">Schedule</span> Mock Exams</h3>
+        <table>
+          <tr><th>Test</th><th>Date</th><th>Type</th><th>Done</th></tr>
+          <tr><td>Mock 0</td><td>Oct 26</td><td>Short diagnostic (~1h)</td><td><input type="checkbox" data-key="mock:0"></td></tr>
+          <tr><td>Mock 1</td><td>Nov 16</td><td>Full timed</td><td><input type="checkbox" data-key="mock:1"></td></tr>
+          <tr><td>Mock 2</td><td>Nov 30</td><td>Final rehearsal</td><td><input type="checkbox" data-key="mock:2"></td></tr>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3 class="title"><span class="chip">Status</span> Progress Summary</h3>
+        <table>
+          <tr><th>Skill</th><th>Current</th><th>Goal</th><th>Notes</th></tr>
+          <tr><td>Vocabulary</td><td>N4 ready（WK 20）</td><td>Strong recall</td><td>Reinforce via reading</td></tr>
+          <tr><td>Grammar</td><td>85% done</td><td>100% mastery</td><td>Nuance（のに／けど／が）</td></tr>
+          <tr><td>Reading</td><td>Medium speed</td><td>≤6m NHK</td><td>Timed drills 3×/week</td></tr>
+          <tr><td>Listening</td><td>Improving</td><td>80% Teppei</td><td>Daily shadowing</td></tr>
+          <tr><td>Speaking</td><td>Natural</td><td>Maintain</td><td>5‑min convos daily</td></tr>
+        </table>
+        <div class="mascots" aria-hidden="true">
+          <div class="mascot">
+            <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+            <div class="smile"></div>
+            <div class="tentacles">
+              <div class="tent"></div><div class="tent"></div><div class="tent"></div><div class="tent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="section">
-    <h2>🧠 Weekly Focus Tracker</h2>
-    <table>
-      <tr><th>Week</th><th>Focus</th><th>Done</th></tr>
-      <tr><td>Oct 14–20</td><td>Connectors (ので／から／のに／けど)</td><td><input type="checkbox" id="week1"></td></tr>
-      <tr><td>Oct 21–27</td><td>〜てしまう・〜そうだ・〜つもりだ</td><td><input type="checkbox" id="week2"></td></tr>
-      <tr><td>Oct 28–Nov 3</td><td>Reading speed + Listening</td><td><input type="checkbox" id="week3"></td></tr>
-      <tr><td>Nov 4–10</td><td>Complex sentences・〜ように／ために</td><td><input type="checkbox" id="week4"></td></tr>
-      <tr><td>Nov 11–17</td><td>Mock 1 prep・timed practice</td><td><input type="checkbox" id="week5"></td></tr>
-      <tr><td>Nov 18–24</td><td>Weak point review (from Mock 1)</td><td><input type="checkbox" id="week6"></td></tr>
-      <tr><td>Nov 25–Dec 1</td><td>Final polish・Mock 2</td><td><input type="checkbox" id="week7"></td></tr>
-      <tr><td>Dec 2–6</td><td>Light review・confidence</td><td><input type="checkbox" id="week8"></td></tr>
-    </table>
+  <!-- Floating Chat Bubble -->
+  <div class="bubble" id="chatBubble" title="Chat (GPT)">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 3C7.03 3 3 6.58 3 11c0 2.06.93 3.95 2.49 5.39-.14.84-.5 2.21-1.39 3.11 0 0 2.02-.22 3.42-1 1.17.33 2.43.5 3.78.5 4.97 0 9-3.58 9-8s-4.03-8-9-8z"/>
+    </svg>
   </div>
 
-  <div class="section">
-    <h2>🎓 Mock Exam Schedule</h2>
-    <table>
-      <tr><th>Test</th><th>Date</th><th>Type</th><th>Done</th></tr>
-      <tr><td>Mock 0</td><td>Oct 26</td><td>Short diagnostic (~1 hr)</td><td><input type="checkbox" id="mock0"></td></tr>
-      <tr><td>Mock 1</td><td>Nov 16</td><td>Full timed test</td><td><input type="checkbox" id="mock1"></td></tr>
-      <tr><td>Mock 2</td><td>Nov 30</td><td>Final rehearsal</td><td><input type="checkbox" id="mock2"></td></tr>
-    </table>
+  <div class="chat" id="chatPanel" aria-live="polite">
+    <div class="top"><b>Chat (JLPT Coach)</b><span class="badge">N4</span></div>
+    <div class="sys">
+      <div class="hint">Paste your <b>OpenAI API key</b> (stored locally):</div>
+      <input id="apiKey" type="password" placeholder="sk-... (never share this key)">
+    </div>
+    <div class="log" id="log"></div>
+    <div class="composer">
+      <textarea id="input" rows="2" placeholder="日本語で質問してみよう…（例：のに と けど の違いは？）"></textarea>
+      <button class="send" id="sendBtn">Send</button>
+    </div>
   </div>
 
-  <div class="section">
-    <h2>📈 Progress Summary</h2>
-    <table>
-      <tr><th>Skill</th><th>Current Level</th><th>Goal</th><th>Notes</th></tr>
-      <tr><td>Vocabulary</td><td>N4 ready (WK Lv20)</td><td>Strong recall</td><td>Keep reinforcing reading context</td></tr>
-      <tr><td>Grammar</td><td>85% done</td><td>100% mastery</td><td>Focus on nuance (~のに・~けど・~が)</td></tr>
-      <tr><td>Reading</td><td>Medium speed</td><td>6-min NHK goal</td><td>Timed drills 3x/week</td></tr>
-      <tr><td>Listening</td><td>Improving</td><td>Comprehend 80% Teppei</td><td>Daily shadowing</td></tr>
-      <tr><td>Speaking</td><td>Natural rhythm</td><td>Maintain</td><td>Keep 5-min convos daily</td></tr>
-    </table>
-  </div>
-
-  <script>
-    // Save checkbox states in localStorage
-    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-      const id = checkbox.id;
-      if (localStorage.getItem(id) === 'true') {
-        checkbox.checked = true;
-      }
-      checkbox.addEventListener('change', () => {
-        localStorage.setItem(id, checkbox.checked);
-      });
+<script>
+// ---------- Auto‑save for checkboxes ----------
+(function(){
+  const KEY_PREFIX = "jlpt-dashboard:";
+  const boxes = document.querySelectorAll('input[type="checkbox"][data-key]');
+  // Load
+  boxes.forEach(cb => {
+    const k = KEY_PREFIX + cb.dataset.key;
+    const v = localStorage.getItem(k);
+    if(v !== null){ cb.checked = v === "1"; }
+    cb.addEventListener('change', () => {
+      localStorage.setItem(k, cb.checked ? "1":"0");
     });
-  </script>
+  });
+})();
+
+// ---------- Chat bubble toggle ----------
+const bubble = document.getElementById('chatBubble');
+const panel  = document.getElementById('chatPanel');
+bubble.addEventListener('click', ()=>{
+  panel.classList.toggle('open');
+});
+
+// ---------- Chat (OpenAI API) ----------
+const apiKeyInput = document.getElementById('apiKey');
+const logEl = document.getElementById('log');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+
+// persist API key locally (never send anywhere except OpenAI API call)
+apiKeyInput.value = localStorage.getItem('jlpt-dashboard:apiKey') || "";
+apiKeyInput.addEventListener('change', ()=>{
+  localStorage.setItem('jlpt-dashboard:apiKey', apiKeyInput.value.trim());
+});
+
+function appendMsg(text, who){
+  const div = document.createElement('div');
+  div.className = 'msg ' + (who==='me'?'me':'bot');
+  div.textContent = text;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+  // save log
+  const msgs = Array.from(logEl.querySelectorAll('.msg')).map(m=>({who: m.classList.contains('me')?'me':'bot', text: m.textContent}));
+  localStorage.setItem('jlpt-dashboard:chatLog', JSON.stringify(msgs));
+}
+
+// restore chat history
+(function restoreChat(){
+  try{
+    const raw = localStorage.getItem('jlpt-dashboard:chatLog');
+    if(raw){
+      JSON.parse(raw).forEach(m=>appendMsg(m.text, m.who));
+    }else{
+      appendMsg('こんにちは！ここで勉強の質問ができます。例：「〜のに」と「〜けど」の違いは？', 'bot');
+    }
+  }catch(e){/* ignore */}
+})();
+
+async function sendMessage(){
+  const apiKey = apiKeyInput.value.trim();
+  const content = inputEl.value.trim();
+  if(!apiKey){ alert('Please paste your OpenAI API key first.'); return; }
+  if(!content){ return; }
+  appendMsg(content, 'me');
+  inputEl.value = '';
+
+  try{
+    appendMsg('…考え中…', 'bot');
+
+    // Call OpenAI Chat Completions API
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {role:'system', content:'You are a friendly JLPT N4 Japanese coach. Keep grammar simple, correct gently, and give short examples. Reply in Japanese by default unless the user asks for English.'},
+          {role:'user', content: content}
+        ],
+        temperature: 0.4
+      })
+    });
+
+    const data = await res.json();
+    // Replace the waiting message with the real one
+    const lastBot = Array.from(logEl.querySelectorAll('.msg.bot')).pop();
+    if(data && data.choices && data.choices[0] && data.choices[0].message){
+      lastBot.textContent = data.choices[0].message.content.trim();
+    }else{
+      lastBot.textContent = 'エラー：応答を取得できませんでした。APIキーやネットワークを確認してください。';
+    }
+    // Save log after updating
+    const msgs = Array.from(logEl.querySelectorAll('.msg')).map(m=>({who: m.classList.contains('me')?'me':'bot', text: m.textContent}));
+    localStorage.setItem('jlpt-dashboard:chatLog', JSON.stringify(msgs));
+  }catch(e){
+    const lastBot = Array.from(logEl.querySelectorAll('.msg.bot')).pop();
+    if(lastBot) lastBot.textContent = 'エラーが発生しました：' + (e.message || e.toString());
+  }
+}
+
+sendBtn.addEventListener('click', sendMessage);
+inputEl.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && (e.metaKey || e.ctrlKey)){ sendMessage(); }
+});
+</script>
 </body>
 </html>
