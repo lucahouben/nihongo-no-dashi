@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Kosugi+Maru&display=swap" rel="stylesheet">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>nihongo no dashi</title>
@@ -8,6 +10,65 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
 <style>
+  /* === Loading Screen === */
+#loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #b7e4c7, #cfe8dc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 9999;
+  transition: opacity 1s ease-out, visibility 1s ease-out;
+}
+
+.loading-content {
+  text-align: center;
+  color: #2f5d50;
+}
+
+.loading-logo {
+  width: 90px;
+  height: 90px;
+  margin-bottom: 20px;
+  animation: spin 3s linear infinite, pulse 2.4s ease-in-out infinite;
+}
+
+/* rotation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/* gentle bounce */
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.loading-title {
+  font-family: 'Yomogi', 'Kosugi Maru', 'Noto Sans JP', sans-serif;
+  font-size: 2.3rem;
+  color: #245953;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.loading-subtitle {
+  font-family: 'Kosugi Maru', 'Noto Sans JP', sans-serif;
+  font-size: 1.1rem;
+  color: #47796e;
+  margin-top: 10px;
+}
+
+/* === Hide loading screen after load === */
+body.loaded #loading-screen {
+  opacity: 0;
+  visibility: hidden;
+}
 :root{
   --bg1:#f4fff8; --bg2:#f7fbff;
   --ink:#14352b; --muted:#5a7d71;
@@ -78,6 +139,14 @@ th{background:#ecfbf4;color:#0f3b29;text-align:left}
 </style>
 </head>
 <body>
+  <!-- Loading Screen -->
+<div id="loading-screen">
+  <div class="loading-content">
+    <img src="logo_loading_screen.png" alt="Ramen Bowl Spinner" class="loading-logo" />
+    <h1 class="loading-title">日本語のダシ</h1>
+    <p class="loading-subtitle">Your Japanese dashboard.</p>
+  </div>
+</div>
 <div class="wrap">
   <h1>nihongo no dashi</h1>
   <p class="sub"><b>exam:</b> dec 7, 2025 · <b>mission:</b> pass jlpt n4 with confident listening / reading / grammar</p>
@@ -242,6 +311,11 @@ async function sendMessage(){
 }
 sendBtn.addEventListener('click',sendMessage);
 inputEl.addEventListener('keydown',e=>{ if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)) sendMessage(); });
+</script>
+  <script>
+  window.addEventListener('load', () => {
+    document.body.classList.add('loaded');
+  });
 </script>
 </body>
 </html>
