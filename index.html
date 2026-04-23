@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Japanese SRS - Flip Trainer</title>
+    <title>Japanese SRS - Cloud Sync</title>
     <style>
         :root {
             --wani-pink: #f100a1;
@@ -22,6 +22,7 @@
             align-items: center;
             height: 100vh;
             overflow: hidden;
+            user-select: none;
         }
         #app {
             width: 100%;
@@ -39,10 +40,9 @@
             letter-spacing: 2px;
         }
 
-        /* 3D Flashcard Flip */
         .flashcard {
             width: 100%;
-            height: 280px;
+            height: 300px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,49 +60,36 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             padding: 20px;
             box-sizing: border-box;
         }
        
-        .card-front {
-            background-color: var(--wani-blue);
-            font-size: 5rem;
-        }
+        .card-front { background-color: var(--wani-blue); font-size: 5.5rem; }
+        .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 8px solid var(--wani-pink); }
        
-        .card-back {
-            background-color: var(--card-bg);
-            transform: rotateY(180deg);
-            border-bottom: 8px solid var(--wani-pink);
-        }
-       
-        .reading { font-size: 2.2rem; color: var(--wani-pink); font-weight: bold; margin-bottom: 10px; }
-        .meaning { font-size: 1.6rem; color: #fff; }
+        .reading { font-size: 2.4rem; color: var(--wani-pink); font-weight: bold; margin-bottom: 10px; }
+        .meaning { font-size: 1.8rem; color: #fff; }
        
         #controls { height: 130px; display: flex; flex-direction: column; justify-content: center; }
-       
         button {
-            width: 100%; padding: 16px; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px;
-            cursor: pointer; transition: transform 0.1s, background 0.2s;
+            width: 100%; padding: 18px; font-size: 1.1rem; font-weight: bold; border: none; border-radius: 12px;
+            cursor: pointer; transition: transform 0.1s, opacity 0.2s;
         }
-        button:active { transform: scale(0.95); }
-       
-        .btn-flip { background: #333; color: white; border: 1px solid #444; }
-        .btn-correct { background: #28a745; color: white; margin-bottom: 10px; }
+        button:active { transform: scale(0.96); }
+        .btn-correct { background: #28a745; color: white; margin-bottom: 12px; }
         .btn-wrong { background: #dc3545; color: white; }
        
-        .stats { margin-top: 25px; font-size: 0.8rem; color: #444; font-weight: bold; }
+        .stats { margin-top: 30px; font-size: 0.8rem; color: #444; font-weight: bold; }
         #queue-num { color: var(--wani-blue); }
-
-        /* Keyboard hint */
-        .hint { font-size: 0.7rem; color: #444; margin-top: 5px; }
+        .hint { font-size: 0.7rem; color: #333; margin-top: 10px; opacity: 0.5; }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <div class="info-bar" id="status">Syncing Database...</div>
+    <div class="info-bar" id="status">Syncing with Cloud...</div>
    
     <div class="flashcard" id="card" onclick="flipCard()">
         <div class="card-face card-front" id="display-front">...</div>
@@ -113,15 +100,11 @@
     </div>
    
     <div id="controls">
-        <div id="flip-area">
-            <button id="flip-btn" class="btn-flip" onclick="flipCard()">SHOW ANSWER</button>
-            <div class="hint">Press SPACE</div>
+        <div id="action-btns" style="visibility: hidden;">
+            <button class="btn-correct" onclick="submitResult(true)">CORRECT</button>
+            <button class="btn-wrong" onclick="submitResult(false)">INCORRECT</button>
         </div>
-       
-        <div id="action-btns" style="display:none;">
-            <button class="btn-correct" onclick="submitResult(true)">CORRECT (1)</button>
-            <button class="btn-wrong" onclick="submitResult(false)">INCORRECT (2)</button>
-        </div>
+        <div class="hint" id="keyboard-hint">Tap card or SPACE to flip</div>
     </div>
 
     <div class="stats">
@@ -131,16 +114,17 @@
 
 <script>
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ7pDV2s1fCr9E_RI-47f8XTwMUWUQ9bvNiuPVv3D1uM690uoUWxXfMGbtRLbKNTeZVN8Xf-2jjrPb/pub?output=csv';
+    const SAVE_URL = 'https://script.google.com/macros/s/AKfycbwwoZw3ezALhgWyXKGA1Uubz9d8vvGA4DeZr8yU_VhKfYFNlIIMz9F5wKa0lmxw399oPQ/exec';
 
     let masterList = [];
-    let srsData = JSON.parse(localStorage.getItem('jap_srs_v1')) || {};
     let currentItem = null;
     let reviewQueue = [];
     let isFlipped = false;
 
     async function init() {
         try {
-            const res = await fetch(CSV_URL);
+            // Adding timestamp to URL to bypass browser caching of the CSV
+            const res = await fetch(CSV_URL + '&t=' + Date.now());
             if (!res.ok) throw new Error('Failed to fetch CSV');
             const csvText = await res.text();
            
@@ -152,28 +136,26 @@
                 if (!line) continue;
                
                 const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                if (parts.length >= 3) {
+                if (parts.length >= 5) {
                     masterList.push({
                         kanji: parts[0].replace(/"/g, '').trim(),
                         reading: parts[1].replace(/"/g, '').trim(),
-                        meaning: parts[2].replace(/"/g, '').trim()
+                        meaning: parts[2].replace(/"/g, '').trim(),
+                        level: parseInt(parts[3]) || 0,
+                        nextReview: parseInt(parts[4]) || 0
                     });
                 }
             }
             refreshQueue();
         } catch (err) {
-            document.getElementById('status').innerText = "OFFLINE OR ERROR";
+            document.getElementById('status').innerText = "SYNC ERROR";
             console.error(err);
         }
     }
 
     function refreshQueue() {
         const now = Date.now();
-        reviewQueue = masterList.filter(item => {
-            const progress = srsData[item.kanji] || { nextReview: 0 };
-            return progress.nextReview <= now;
-        });
-
+        reviewQueue = masterList.filter(item => item.nextReview <= now);
         document.getElementById('queue-num').innerText = reviewQueue.length;
 
         if (reviewQueue.length > 0) {
@@ -186,8 +168,6 @@
     function nextItem() {
         isFlipped = false;
         document.getElementById('card').classList.remove('is-flipped');
-       
-        // Shuffle queue a bit
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
        
         document.getElementById('display-front').innerText = currentItem.kanji;
@@ -195,50 +175,53 @@
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('status').innerText = "Reviewing Kanji";
        
-        document.getElementById('flip-area').style.display = 'block';
-        document.getElementById('action-btns').style.display = 'none';
+        document.getElementById('action-btns').style.visibility = 'hidden';
+        document.getElementById('keyboard-hint').innerText = "Tap card or SPACE to flip";
     }
 
     function flipCard() {
         if (isFlipped || !currentItem) return;
         isFlipped = true;
         document.getElementById('card').classList.add('is-flipped');
-        document.getElementById('flip-area').style.display = 'none';
-        document.getElementById('action-btns').style.display = 'block';
-        document.getElementById('status').innerText = "Check your answer";
+        document.getElementById('action-btns').style.visibility = 'visible';
+        document.getElementById('keyboard-hint').innerText = "Use 1 for Correct, 2 for Incorrect";
     }
 
-    function submitResult(isCorrect) {
-        if (!srsData[currentItem.kanji]) {
-            srsData[currentItem.kanji] = { level: 0, nextReview: 0 };
-        }
-
-        let data = srsData[currentItem.kanji];
+    async function submitResult(isCorrect) {
+        document.getElementById('status').innerText = "Updating Cloud...";
        
-        if (isCorrect) {
-            data.level++;
-        } else {
-            data.level = Math.max(0, data.level - 1);
-        }
-
-        // Intervals: 0, 4h, 8h, 1d, 2d, 1w, 2w, 1mo
+        let newLevel = isCorrect ? currentItem.level + 1 : Math.max(0, currentItem.level - 1);
         const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000];
-        data.nextReview = Date.now() + (intervals[Math.min(data.level, intervals.length - 1)]);
+        let newTime = Date.now() + (intervals[Math.min(newLevel, intervals.length - 1)]);
 
-        localStorage.setItem('jap_srs_v1', JSON.stringify(srsData));
+        // Send to Google Sheets (Fire and forget, don't wait for response to keep UI snappy)
+        fetch(SAVE_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                kanji: currentItem.kanji,
+                level: newLevel,
+                nextReview: newTime
+            })
+        });
+
+        // Update local list so the item disappears immediately
+        currentItem.level = newLevel;
+        currentItem.nextReview = newTime;
+       
         refreshQueue();
     }
 
     function showFinished() {
         document.getElementById('display-front').innerText = "🎉";
         document.getElementById('status').innerText = "SESSION COMPLETE";
-        document.getElementById('flip-area').style.display = 'none';
-        document.getElementById('action-btns').style.display = 'none';
+        document.getElementById('action-btns').style.visibility = 'hidden';
         document.getElementById('reading-text').innerText = "Great Job!";
-        document.getElementById('meaning-text').innerText = "No more reviews for now.";
+        document.getElementById('meaning-text').innerText = "Synced across all devices.";
+        document.getElementById('keyboard-hint').innerText = "";
     }
 
-    // Keyboard support
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Space') {
             e.preventDefault();
