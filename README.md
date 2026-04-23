@@ -1,2 +1,2 @@
 # nihongo-no-dashi
-A Japanese learning dashboard to track your progress and learn with AI.
+A Japanese learning dashboard with an incorporated SRS flashcard system.
