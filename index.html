@@ -10,6 +10,7 @@
             --wani-blue: #00aaff;
             --dark: #1a1a1a;
             --text: #ffffff;
+            --card-bg: #2a2a2a;
         }
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -22,12 +23,26 @@
             height: 100vh;
             overflow: hidden;
         }
-        #app { width: 100%; max-width: 450px; padding: 20px; text-align: center; perspective: 1000px; }
+        #app {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            text-align: center;
+            perspective: 1000px;
+        }
        
-        /* Flashcard Flip Animation */
+        .info-bar {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* 3D Flashcard Flip */
         .flashcard {
             width: 100%;
-            height: 250px;
+            height: 280px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
@@ -47,33 +62,47 @@
             justify-content: center;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 20px;
+            box-sizing: border-box;
         }
        
-        .card-front { background-color: var(--wani-blue); font-size: 5rem; }
-        .card-back { background-color: #2a2a2a; transform: rotateY(180deg); border-bottom: 8px solid var(--wani-pink); }
+        .card-front {
+            background-color: var(--wani-blue);
+            font-size: 5rem;
+        }
        
-        .info-bar { font-size: 0.8rem; color: #666; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; }
-        .reading { font-size: 2.2rem; color: var(--wani-pink); font-weight: bold; }
-        .meaning { font-size: 1.6rem; color: #fff; margin-top: 10px; }
+        .card-back {
+            background-color: var(--card-bg);
+            transform: rotateY(180deg);
+            border-bottom: 8px solid var(--wani-pink);
+        }
        
-        #controls { height: 120px; display: flex; flex-direction: column; justify-content: center; }
+        .reading { font-size: 2.2rem; color: var(--wani-pink); font-weight: bold; margin-bottom: 10px; }
+        .meaning { font-size: 1.6rem; color: #fff; }
+       
+        #controls { height: 130px; display: flex; flex-direction: column; justify-content: center; }
+       
         button {
             width: 100%; padding: 16px; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px;
-            cursor: pointer; transition: transform 0.1s, opacity 0.2s;
+            cursor: pointer; transition: transform 0.1s, background 0.2s;
         }
         button:active { transform: scale(0.95); }
+       
         .btn-flip { background: #333; color: white; border: 1px solid #444; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 10px; }
         .btn-wrong { background: #dc3545; color: white; }
        
-        .stats { margin-top: 20px; font-size: 0.8rem; color: #444; }
-        #queue-num { color: var(--wani-blue); font-weight: bold; }
+        .stats { margin-top: 25px; font-size: 0.8rem; color: #444; font-weight: bold; }
+        #queue-num { color: var(--wani-blue); }
+
+        /* Keyboard hint */
+        .hint { font-size: 0.7rem; color: #444; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <div class="info-bar" id="status">Loading...</div>
+    <div class="info-bar" id="status">Syncing Database...</div>
    
     <div class="flashcard" id="card" onclick="flipCard()">
         <div class="card-face card-front" id="display-front">...</div>
@@ -84,16 +113,19 @@
     </div>
    
     <div id="controls">
-        <button id="flip-btn" class="btn-flip" onclick="flipCard()">SHOW ANSWER (Space)</button>
+        <div id="flip-area">
+            <button id="flip-btn" class="btn-flip" onclick="flipCard()">SHOW ANSWER</button>
+            <div class="hint">Press SPACE</div>
+        </div>
        
         <div id="action-btns" style="display:none;">
-            <button class="btn-correct" onclick="submitResult(true)">CORRECT</button>
-            <button class="btn-wrong" onclick="submitResult(false)">INCORRECT</button>
+            <button class="btn-correct" onclick="submitResult(true)">CORRECT (1)</button>
+            <button class="btn-wrong" onclick="submitResult(false)">INCORRECT (2)</button>
         </div>
     </div>
 
     <div class="stats">
-        REVIEWS QUEUE: <span id="queue-num">0</span>
+        ITEMS IN QUEUE: <span id="queue-num">0</span>
     </div>
 </div>
 
@@ -109,15 +141,29 @@
     async function init() {
         try {
             const res = await fetch(CSV_URL);
+            if (!res.ok) throw new Error('Failed to fetch CSV');
             const csvText = await res.text();
-            const lines = csvText.split('\n').map(l => l.trim()).filter(l => l);
-            masterList = lines.slice(1).map(line => {
-                const parts = line.split(',');
-                return { kanji: parts[0], reading: parts[1], meaning: parts[2] };
-            });
+           
+            const lines = csvText.split(/\r?\n/);
+            masterList = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+               
+                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                if (parts.length >= 3) {
+                    masterList.push({
+                        kanji: parts[0].replace(/"/g, '').trim(),
+                        reading: parts[1].replace(/"/g, '').trim(),
+                        meaning: parts[2].replace(/"/g, '').trim()
+                    });
+                }
+            }
             refreshQueue();
         } catch (err) {
-            document.getElementById('status').innerText = "DATABASE ERROR";
+            document.getElementById('status').innerText = "OFFLINE OR ERROR";
+            console.error(err);
         }
     }
 
@@ -127,53 +173,69 @@
             const progress = srsData[item.kanji] || { nextReview: 0 };
             return progress.nextReview <= now;
         });
+
         document.getElementById('queue-num').innerText = reviewQueue.length;
-        if (reviewQueue.length > 0) nextItem();
-        else showFinished();
+
+        if (reviewQueue.length > 0) {
+            nextItem();
+        } else {
+            showFinished();
+        }
     }
 
     function nextItem() {
         isFlipped = false;
         document.getElementById('card').classList.remove('is-flipped');
+       
+        // Shuffle queue a bit
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
+       
         document.getElementById('display-front').innerText = currentItem.kanji;
         document.getElementById('reading-text').innerText = currentItem.reading;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
-        document.getElementById('status').innerText = "What's the meaning?";
-        resetUI();
+        document.getElementById('status').innerText = "Reviewing Kanji";
+       
+        document.getElementById('flip-area').style.display = 'block';
+        document.getElementById('action-btns').style.display = 'none';
     }
 
     function flipCard() {
         if (isFlipped || !currentItem) return;
         isFlipped = true;
         document.getElementById('card').classList.add('is-flipped');
-        document.getElementById('flip-btn').style.display = 'none';
+        document.getElementById('flip-area').style.display = 'none';
         document.getElementById('action-btns').style.display = 'block';
         document.getElementById('status').innerText = "Check your answer";
     }
 
     function submitResult(isCorrect) {
-        if (!srsData[currentItem.kanji]) srsData[currentItem.kanji] = { level: 0, nextReview: 0 };
-        let data = srsData[currentItem.kanji];
-        if (isCorrect) data.level++;
-        else data.level = Math.max(0, data.level - 1);
+        if (!srsData[currentItem.kanji]) {
+            srsData[currentItem.kanji] = { level: 0, nextReview: 0 };
+        }
 
+        let data = srsData[currentItem.kanji];
+       
+        if (isCorrect) {
+            data.level++;
+        } else {
+            data.level = Math.max(0, data.level - 1);
+        }
+
+        // Intervals: 0, 4h, 8h, 1d, 2d, 1w, 2w, 1mo
         const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000];
         data.nextReview = Date.now() + (intervals[Math.min(data.level, intervals.length - 1)]);
-       
+
         localStorage.setItem('jap_srs_v1', JSON.stringify(srsData));
         refreshQueue();
     }
 
-    function resetUI() {
-        document.getElementById('flip-btn').style.display = 'block';
-        document.getElementById('action-btns').style.display = 'none';
-    }
-
     function showFinished() {
         document.getElementById('display-front').innerText = "🎉";
-        document.getElementById('status').innerText = "ALL DONE FOR NOW!";
-        document.getElementById('flip-btn').style.display = 'none';
+        document.getElementById('status').innerText = "SESSION COMPLETE";
+        document.getElementById('flip-area').style.display = 'none';
+        document.getElementById('action-btns').style.display = 'none';
+        document.getElementById('reading-text').innerText = "Great Job!";
+        document.getElementById('meaning-text').innerText = "No more reviews for now.";
     }
 
     // Keyboard support
@@ -181,6 +243,10 @@
         if (e.code === 'Space') {
             e.preventDefault();
             flipCard();
+        }
+        if (isFlipped) {
+            if (e.key === '1') submitResult(true);
+            if (e.key === '2') submitResult(false);
         }
     });
 
