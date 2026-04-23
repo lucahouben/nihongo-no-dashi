@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Japans SRS Trainer</title>
+    <title>Japanese SRS - Flip Trainer</title>
     <style>
         :root {
             --wani-pink: #f100a1;
@@ -22,88 +22,78 @@
             height: 100vh;
             overflow: hidden;
         }
-        #app {
+        #app { width: 100%; max-width: 450px; padding: 20px; text-align: center; perspective: 1000px; }
+       
+        /* Flashcard Flip Animation */
+        .flashcard {
             width: 100%;
-            max-width: 500px;
-            padding: 20px;
-            text-align: center;
+            height: 250px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            margin-bottom: 30px;
         }
-        .card {
-            background-color: var(--wani-blue);
-            font-size: 4.5rem;
-            padding: 50px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            min-height: 150px;
+        .flashcard.is-flipped { transform: rotateY(180deg); }
+       
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            cursor: default;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .info-bar {
-            font-size: 0.9rem;
-            color: #888;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .answer-box {
-            display: none;
-            background: #2a2a2a;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 10px;
-            border-bottom: 5px solid var(--wani-pink);
-        }
-        .reading { font-size: 1.8rem; color: var(--wani-pink); margin-bottom: 5px; }
-        .meaning { font-size: 1.4rem; color: #fff; }
        
+        .card-front { background-color: var(--wani-blue); font-size: 5rem; }
+        .card-back { background-color: #2a2a2a; transform: rotateY(180deg); border-bottom: 8px solid var(--wani-pink); }
+       
+        .info-bar { font-size: 0.8rem; color: #666; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; }
+        .reading { font-size: 2.2rem; color: var(--wani-pink); font-weight: bold; }
+        .meaning { font-size: 1.6rem; color: #fff; margin-top: 10px; }
+       
+        #controls { height: 120px; display: flex; flex-direction: column; justify-content: center; }
         button {
-            width: 100%;
-            padding: 18px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: transform 0.1s;
+            width: 100%; padding: 16px; font-size: 1rem; font-weight: bold; border: none; border-radius: 8px;
+            cursor: pointer; transition: transform 0.1s, opacity 0.2s;
         }
-        button:active { transform: scale(0.98); }
-        .btn-show { background-color: #333; color: white; border: 1px solid #444; }
-        .btn-correct { background-color: #28a745; color: white; margin-bottom: 10px; }
-        .btn-wrong { background-color: #dc3545; color: white; }
+        button:active { transform: scale(0.95); }
+        .btn-flip { background: #333; color: white; border: 1px solid #444; }
+        .btn-correct { background: #28a745; color: white; margin-bottom: 10px; }
+        .btn-wrong { background: #dc3545; color: white; }
        
-        .stats {
-            margin-top: 30px;
-            font-size: 0.8rem;
-            color: #555;
-        }
+        .stats { margin-top: 20px; font-size: 0.8rem; color: #444; }
         #queue-num { color: var(--wani-blue); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="app">
-    <div class="info-bar" id="status">Laden...</div>
-    <div class="card" id="display">...</div>
+    <div class="info-bar" id="status">Loading...</div>
    
-    <div id="controls">
-        <button id="show-btn" class="btn-show" onclick="showAnswer()">TOON ANTWOORD</button>
-       
-        <div id="answer-area" class="answer-box">
+    <div class="flashcard" id="card" onclick="flipCard()">
+        <div class="card-face card-front" id="display-front">...</div>
+        <div class="card-face card-back">
             <div id="reading-text" class="reading"></div>
             <div id="meaning-text" class="meaning"></div>
-            <div style="margin-top: 25px;">
-                <button class="btn-correct" onclick="submitResult(true)">JUIST</button>
-                <button class="btn-wrong" onclick="submitResult(false)">ONJUIST</button>
-            </div>
+        </div>
+    </div>
+   
+    <div id="controls">
+        <button id="flip-btn" class="btn-flip" onclick="flipCard()">SHOW ANSWER (Space)</button>
+       
+        <div id="action-btns" style="display:none;">
+            <button class="btn-correct" onclick="submitResult(true)">CORRECT</button>
+            <button class="btn-wrong" onclick="submitResult(false)">INCORRECT</button>
         </div>
     </div>
 
     <div class="stats">
-        REVIEWS BESCHIKBAAR: <span id="queue-num">0</span>
+        REVIEWS QUEUE: <span id="queue-num">0</span>
     </div>
 </div>
 
@@ -114,22 +104,20 @@
     let srsData = JSON.parse(localStorage.getItem('jap_srs_v1')) || {};
     let currentItem = null;
     let reviewQueue = [];
+    let isFlipped = false;
 
     async function init() {
         try {
             const res = await fetch(CSV_URL);
             const csvText = await res.text();
             const lines = csvText.split('\n').map(l => l.trim()).filter(l => l);
-           
-            // Verwerk CSV (Slaat header over)
             masterList = lines.slice(1).map(line => {
                 const parts = line.split(',');
                 return { kanji: parts[0], reading: parts[1], meaning: parts[2] };
             });
-
             refreshQueue();
         } catch (err) {
-            document.getElementById('status').innerText = "FOUT BIJ LADEN DATABASE";
+            document.getElementById('status').innerText = "DATABASE ERROR";
         }
     }
 
@@ -139,61 +127,62 @@
             const progress = srsData[item.kanji] || { nextReview: 0 };
             return progress.nextReview <= now;
         });
-
         document.getElementById('queue-num').innerText = reviewQueue.length;
-
-        if (reviewQueue.length > 0) {
-            nextItem();
-        } else {
-            showFinished();
-        }
+        if (reviewQueue.length > 0) nextItem();
+        else showFinished();
     }
 
     function nextItem() {
+        isFlipped = false;
+        document.getElementById('card').classList.remove('is-flipped');
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
-        document.getElementById('display').innerText = currentItem.kanji;
-        document.getElementById('status').innerText = "Betekenis & Lezing?";
+        document.getElementById('display-front').innerText = currentItem.kanji;
+        document.getElementById('reading-text').innerText = currentItem.reading;
+        document.getElementById('meaning-text').innerText = currentItem.meaning;
+        document.getElementById('status').innerText = "What's the meaning?";
         resetUI();
     }
 
-    function showAnswer() {
-        document.getElementById('reading-text').innerText = currentItem.reading;
-        document.getElementById('meaning-text').innerText = currentItem.meaning;
-        document.getElementById('answer-area').style.display = 'block';
-        document.getElementById('show-btn').style.display = 'none';
+    function flipCard() {
+        if (isFlipped || !currentItem) return;
+        isFlipped = true;
+        document.getElementById('card').classList.add('is-flipped');
+        document.getElementById('flip-btn').style.display = 'none';
+        document.getElementById('action-btns').style.display = 'block';
+        document.getElementById('status').innerText = "Check your answer";
     }
 
     function submitResult(isCorrect) {
-        if (!srsData[currentItem.kanji]) {
-            srsData[currentItem.kanji] = { level: 0, nextReview: 0 };
-        }
-
+        if (!srsData[currentItem.kanji]) srsData[currentItem.kanji] = { level: 0, nextReview: 0 };
         let data = srsData[currentItem.kanji];
-       
-        if (isCorrect) {
-            data.level++;
-        } else {
-            data.level = Math.max(0, data.level - 1);
-        }
+        if (isCorrect) data.level++;
+        else data.level = Math.max(0, data.level - 1);
 
-        // SRS Intervals: 4u, 8u, 1d, 2d, 1wk, 2wk, 1mnd
         const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000];
         data.nextReview = Date.now() + (intervals[Math.min(data.level, intervals.length - 1)]);
-
+       
         localStorage.setItem('jap_srs_v1', JSON.stringify(srsData));
         refreshQueue();
     }
 
     function resetUI() {
-        document.getElementById('answer-area').style.display = 'none';
-        document.getElementById('show-btn').style.display = 'block';
+        document.getElementById('flip-btn').style.display = 'block';
+        document.getElementById('action-btns').style.display = 'none';
     }
 
     function showFinished() {
-        document.getElementById('display').innerText = "🎉";
-        document.getElementById('status').innerText = "Alles geleerd voor nu!";
-        document.getElementById('show-btn').style.display = 'none';
+        document.getElementById('display-front').innerText = "🎉";
+        document.getElementById('status').innerText = "ALL DONE FOR NOW!";
+        document.getElementById('flip-btn').style.display = 'none';
     }
+
+    // Keyboard support
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            flipCard();
+        }
+    });
 
     init();
 </script>
