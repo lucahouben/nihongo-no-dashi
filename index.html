@@ -1,321 +1,201 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
-  <!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Kosugi+Maru&display=swap" rel="stylesheet">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>nihongo no dashi</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  /* === Loading Screen === */
-#loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #b7e4c7, #cfe8dc);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  z-index: 9999;
-  transition: opacity 1s ease-out, visibility 1s ease-out;
-}
-
-.loading-content {
-  text-align: center;
-  color: #2f5d50;
-}
-
-.loading-logo {
-  width: 90px;
-  height: 90px;
-  margin-bottom: 20px;
-  animation: spin 3s linear infinite, pulse 2.4s ease-in-out infinite;
-}
-
-/* rotation */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-/* gentle bounce */
-@keyframes pulse {
-  0%,100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-
-.loading-title {
-  font-family: 'Yomogi', 'Kosugi Maru', 'Noto Sans JP', sans-serif;
-  font-size: 2.3rem;
-  color: #245953;
-  margin: 0;
-  letter-spacing: 1px;
-}
-
-.loading-subtitle {
-  font-family: 'Kosugi Maru', 'Noto Sans JP', sans-serif;
-  font-size: 1.1rem;
-  color: #47796e;
-  margin-top: 10px;
-}
-
-/* === Hide loading screen after load === */
-body.loaded #loading-screen {
-  opacity: 0;
-  visibility: hidden;
-}
-:root{
-  --bg1:#f4fff8; --bg2:#f7fbff;
-  --ink:#14352b; --muted:#5a7d71;
-  --card:#fff; --line:#d9efe7; --shadow:0 10px 24px rgba(20,53,43,.10);
-  --accent:#3cc6a1; --accent-2:#ff92a8; --radius:16px;
-}
-*{box-sizing:border-box}
-html,body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--ink);
-  font-family:Inter,"Noto Sans JP",system-ui,-apple-system,Segoe UI,sans-serif}
-.wrap{max-width:1120px;margin:24px auto;padding:0 16px 160px;position:relative}
-h1{margin:8px 0 2px;font-weight:800;text-transform:lowercase}
-.sub{margin:0 0 18px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:1fr;gap:16px}
-@media(min-width:980px){.grid{grid-template-columns:1fr 1fr}}
-.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
-.title{display:flex;align-items:center;gap:10px;margin:0 0 8px}
-.chip{font-size:12px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#083127;padding:4px 10px;border-radius:999px;font-weight:800}
-.row{display:flex;gap:8px;align-items:center;margin:8px 0}
-input[type="checkbox"]{width:20px;height:20px;accent-color:var(--accent)}
-table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden}
-th,td{padding:10px 12px;border-bottom:1px dashed var(--line);font-size:14px}
-th{background:#ecfbf4;color:#0f3b29;text-align:left}
-.hint{font-size:13px;color:var(--muted)}
-
-/* ---------- Mascots integrated INTO cards (WaniKani-style) ---------- */
-.sticker{
-  position:absolute; pointer-events:none; z-index:4; opacity:.36;
-  filter:drop-shadow(0 12px 20px rgba(20,53,43,.14));
-  mix-blend-mode:multiply;                 /* hides most white backdrops */
-  transform:translate3d(0,0,0);
-}
-/* individual placements */
-#s-midori{top:-46px; left:-20px; width:190px; opacity:.26}
-#s-knight{right:-30px; top:-18px; width:220px; transform:rotate(-2deg)}
-#s-rogue{left:-24px; bottom:-12px; width:210px}
-#s-monk{right:-20px; bottom:-18px; width:220px}
-#s-alch{left:-18px; top:-12px; width:210px}
-
-/* ---------- Floating chat avatar (Sensei Midori) ---------- */
-@keyframes cloudBob { 0%{transform:translateY(0)} 50%{transform:translateY(-4px)} 100%{transform:translateY(0)} }
-.bubble{position:fixed;right:18px;bottom:18px;width:76px;height:76px;border-radius:50%;
-  background:radial-gradient(100% 100% at 70% 30%, #fff 0%, #fff0 38%), linear-gradient(180deg,#cffff0,#b8ffea);
-  box-shadow:0 18px 36px rgba(0,0,0,.18);cursor:pointer;z-index:60;display:flex;align-items:center;justify-content:center;border:1px solid #d8f8ee;
-  animation:cloudBob 4.5s ease-in-out infinite;}
-.bubble img{width:66px;height:66px;object-fit:contain;image-rendering:auto;
-  mix-blend-mode:multiply; /* reduces white halo if background exists */}
-.bubble:hover{transform:translateY(-2px);transition:.2s}
-
-/* Chat panel */
-.chat{position:fixed;right:16px;bottom:104px;width:380px;max-width:92vw;background:var(--card);border-radius:18px;box-shadow:0 20px 44px rgba(10,82,56,.28);overflow:hidden;transform:translateY(16px);opacity:0;pointer-events:none;transition:.25s ease;z-index:61;border:1px solid var(--line)}
-.chat.open{transform:translateY(0);opacity:1;pointer-events:auto}
-.chat .top{padding:10px 12px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#073528;display:flex;align-items:center;gap:10px}
-.chat .top b{font-weight:800}
-.chat .top img{width:24px;height:24px;border-radius:50%;background:#fff;padding:2px;border:1px solid #d8f8ee;mix-blend-mode:multiply}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#e0fff2;color:#0a5238;font-size:12px;margin-left:auto;border:1px solid #b7ffdd}
-.chat .sys{padding:10px 12px;background:#f1fff8;border-bottom:1px dashed #cfeede}
-.chat .sys input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #c8eddc;font-size:13px}
-.enter{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#062414;border:none;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer}
-.lockNote{display:none;align-items:center;gap:8px;color:#0a5238;font-size:13px}
-.chat .log{height:300px;overflow:auto;padding:10px 12px;background:#fcfffd}
-.msg{margin:8px 0;max-width:88%;padding:10px 12px;border-radius:12px;font-size:14px;line-height:1.45;white-space:pre-wrap}
-.me{margin-left:auto;background:#ebf6ff;border:1px solid #d7ebff}
-.bot{background:#eafff5;border:1px solid #c8eddc}
-.chat .composer{display:flex;gap:8px;padding:10px 12px;border-top:1px dashed #cfeede;background:#f6fffb}
-.chat textarea{flex:1;resize:none;min-height:44px;max-height:120px;padding:10px 12px;border-radius:12px;border:1px solid #cfeede;font-size:14px}
-.send{background:linear-gradient(90deg,var(--accent-2),var(--accent));color:#fff;border:none;border-radius:12px;padding:10px 14px;cursor:pointer}
-.footer-note{color:var(--muted);font-size:12px;margin-top:12px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japans SRS Trainer</title>
+    <style>
+        :root {
+            --wani-pink: #f100a1;
+            --wani-blue: #00aaff;
+            --dark: #1a1a1a;
+            --text: #ffffff;
+        }
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--dark);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #app {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            text-align: center;
+        }
+        .card {
+            background-color: var(--wani-blue);
+            font-size: 4.5rem;
+            padding: 50px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+        }
+        .info-bar {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .answer-box {
+            display: none;
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 10px;
+            border-bottom: 5px solid var(--wani-pink);
+        }
+        .reading { font-size: 1.8rem; color: var(--wani-pink); margin-bottom: 5px; }
+        .meaning { font-size: 1.4rem; color: #fff; }
+       
+        button {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.98); }
+        .btn-show { background-color: #333; color: white; border: 1px solid #444; }
+        .btn-correct { background-color: #28a745; color: white; margin-bottom: 10px; }
+        .btn-wrong { background-color: #dc3545; color: white; }
+       
+        .stats {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+        #queue-num { color: var(--wani-blue); font-weight: bold; }
+    </style>
 </head>
 <body>
-  <!-- Loading Screen -->
-<div id="loading-screen">
-  <div class="loading-content">
-    <img src="logo_loading_screen.png" alt="Ramen Bowl Spinner" class="loading-logo" />
-    <h1 class="loading-title">日本語のダシ</h1>
-    <p class="loading-subtitle">Your Japanese dashboard.</p>
-  </div>
-</div>
-<div class="wrap">
-  <h1>nihongo no dashi</h1>
-  <p class="sub"><b>exam:</b> dec 7, 2025 · <b>mission:</b> pass jlpt n4 with confident listening / reading / grammar</p>
 
-  <div class="grid">
-    <div class="card" id="card1">
-      <img id="s-midori" class="sticker" src="assets/characters/midori_sensei.png" alt="sensei midori">
-      <h3 class="title"><span class="chip">daily</span> study checklist</h3>
-      <div class="row"><input type="checkbox" data-key="daily:listening"> listening — 15–20 min（teppē）<br><span class="hint">write 3 words + 1 full sentence</span></div>
-      <div class="row"><input type="checkbox" data-key="daily:reading"> reading — 10–15 min（nhk easy ≤6m）<br><span class="hint">highlight 2 grammar points</span></div>
-      <div class="row"><input type="checkbox" data-key="daily:grammar"> grammar — 15–20 min（ので/から/のに・そうだ・つもりだ・てしまう）</div>
-      <div class="row"><input type="checkbox" data-key="daily:reviews"> reviews — wanikani & bunpro（at work）</div>
-      <div class="hint">tip: busy day? split into two quick blocks (am + pm).</div>
+<div id="app">
+    <div class="info-bar" id="status">Laden...</div>
+    <div class="card" id="display">...</div>
+   
+    <div id="controls">
+        <button id="show-btn" class="btn-show" onclick="showAnswer()">TOON ANTWOORD</button>
+       
+        <div id="answer-area" class="answer-box">
+            <div id="reading-text" class="reading"></div>
+            <div id="meaning-text" class="meaning"></div>
+            <div style="margin-top: 25px;">
+                <button class="btn-correct" onclick="submitResult(true)">JUIST</button>
+                <button class="btn-wrong" onclick="submitResult(false)">ONJUIST</button>
+            </div>
+        </div>
     </div>
 
-    <div class="card" id="card2">
-      <img id="s-knight" class="sticker" src="assets/characters/kanji_knight.png" alt="kanji knight">
-      <h3 class="title"><span class="chip">weekly</span> focus tracker</h3>
-      <table>
-        <tr><th>week</th><th>focus</th><th>done</th></tr>
-        <tr><td>oct 14–20</td><td>connectors（ので／から／のに／けど）</td><td><input type="checkbox" data-key="week:1"></td></tr>
-        <tr><td>oct 21–27</td><td>てしまう・そうだ・つもりだ</td><td><input type="checkbox" data-key="week:2"></td></tr>
-        <tr><td>oct 28–nov 3</td><td>reading speed + listening</td><td><input type="checkbox" data-key="week:3"></td></tr>
-        <tr><td>nov 4–10</td><td>ように／ために（complex）</td><td><input type="checkbox" data-key="week:4"></td></tr>
-        <tr><td>nov 11–17</td><td>mock 1 prep・timed practice</td><td><input type="checkbox" data-key="week:5"></td></tr>
-        <tr><td>nov 18–24</td><td>weak‑point review（from mock 1）</td><td><input type="checkbox" data-key="week:6"></td></tr>
-        <tr><td>nov 25–dec 1</td><td>final polish・mock 2</td><td><input type="checkbox" data-key="week:7"></td></tr>
-        <tr><td>dec 2–6</td><td>light review・confidence</td><td><input type="checkbox" data-key="week:8"></td></tr>
-      </table>
+    <div class="stats">
+        REVIEWS BESCHIKBAAR: <span id="queue-num">0</span>
     </div>
-
-    <div class="card" id="card3">
-      <img id="s-alch" class="sticker" src="assets/characters/vocab_alchemist.png" alt="vocab alchemist">
-      <h3 class="title"><span class="chip">schedule</span> mock exams</h3>
-      <table>
-        <tr><th>test</th><th>date</th><th>type</th><th>done</th></tr>
-        <tr><td>mock 0</td><td>oct 26</td><td>short diagnostic (~1h)</td><td><input type="checkbox" data-key="mock:0"></td></tr>
-        <tr><td>mock 1</td><td>nov 16</td><td>full timed</td><td><input type="checkbox" data-key="mock:1"></td></tr>
-        <tr><td>mock 2</td><td>nov 30</td><td>final rehearsal</td><td><input type="checkbox" data-key="mock:2"></td></tr>
-      </table>
-    </div>
-
-    <div class="card" id="card4">
-      <img id="s-rogue" class="sticker" src="assets/characters/grammar_rogue.png" alt="grammar rogue">
-      <h3 class="title"><span class="chip">status</span> progress summary</h3>
-      <table>
-        <tr><th>skill</th><th>current</th><th>goal</th><th>notes</th></tr>
-        <tr><td>vocabulary</td><td>n4 ready（wk 20）</td><td>strong recall</td><td>reinforce via reading</td></tr>
-        <tr><td>grammar</td><td>85% done</td><td>100% mastery</td><td>nuance（のに／けど／が）</td></tr>
-        <tr><td>reading</td><td>medium speed</td><td>≤6m nhk</td><td>timed drills 3×/week</td></tr>
-        <tr><td>listening</td><td>improving</td><td>80% teppei</td><td>daily shadowing</td></tr>
-        <tr><td>speaking</td><td>natural</td><td>maintain</td><td>5‑min convos daily</td></tr>
-      </table>
-      <img id="s-monk" class="sticker" src="assets/characters/listening_monk.png" alt="listening monk">
-      <p class="footer-note">made with mint & courage.</p>
-    </div>
-  </div>
-</div>
-
-<!-- Chat bubble (midori avatar) -->
-<div class="bubble" id="chatBubble" title="chat with みどり先生">
-  <img src="assets/characters/midori_avatar.png" alt="midori avatar">
-</div>
-
-<div class="chat" id="chatPanel" aria-live="polite">
-  <div class="top"><img src="assets/characters/midori_avatar.png" alt="midori" width="24" height="24"><b>みどり先生</b><span class="badge">jlpt n4 coach</span></div>
-  <div class="sys" id="keyRow">
-    <div class="row" style="justify-content:space-between; gap:8px;">
-      <input id="apiKey" type="password" placeholder="paste your openai api key: sk-..." aria-label="OpenAI API key">
-      <button class="enter" id="enterKey">enter</button>
-    </div>
-    <div id="lockRow" class="lockNote">
-      <span><b>connected.</b> key saved locally. <a href="#" id="changeKey" style="color:#0a5238;text-decoration:underline">change</a></span>
-    </div>
-  </div>
-  <div class="log" id="log"></div>
-  <div class="composer">
-    <textarea id="input" rows="2" placeholder="日本語で質問してみよう…（例：『〜のに』と『〜けど』の違いは？）"></textarea>
-    <button class="send" id="sendBtn">send</button>
-  </div>
 </div>
 
 <script>
-// save checkboxes
-(function(){
-  const KEY = "jlpt-dashboard:";
-  document.querySelectorAll('input[type="checkbox"][data-key]').forEach(cb=>{
-    const k = KEY + cb.dataset.key;
-    const v = localStorage.getItem(k);
-    if(v !== null) cb.checked = v==="1";
-    cb.addEventListener('change', ()=>localStorage.setItem(k, cb.checked?"1":"0"));
-  });
-})();
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ7pDV2s1fCr9E_RI-47f8XTwMUWUQ9bvNiuPVv3D1uM690uoUWxXfMGbtRLbKNTeZVN8Xf-2jjrPb/pub?output=csv';
 
-// chat bubble toggle
-const bubble = document.getElementById('chatBubble');
-const panel  = document.getElementById('chatPanel');
-bubble.addEventListener('click', ()=> panel.classList.toggle('open'));
+    let masterList = [];
+    let srsData = JSON.parse(localStorage.getItem('jap_srs_v1')) || {};
+    let currentItem = null;
+    let reviewQueue = [];
 
-// chat basic client using OpenAI API
-const apiKeyInput = document.getElementById('apiKey');
-const enterBtn = document.getElementById('enterKey');
-const keyRow = document.getElementById('keyRow');
-const lockRow = document.getElementById('lockRow');
-const logEl = document.getElementById('log');
-const inputEl = document.getElementById('input');
-const sendBtn = document.getElementById('sendBtn');
+    async function init() {
+        try {
+            const res = await fetch(CSV_URL);
+            const csvText = await res.text();
+            const lines = csvText.split('\n').map(l => l.trim()).filter(l => l);
+           
+            // Verwerk CSV (Slaat header over)
+            masterList = lines.slice(1).map(line => {
+                const parts = line.split(',');
+                return { kanji: parts[0], reading: parts[1], meaning: parts[2] };
+            });
 
-(function init(){
-  const saved = localStorage.getItem('jlpt-dashboard:apiKey');
-  if(saved){ apiKeyInput.value = saved; showLocked(); }
-})();
-enterBtn.addEventListener('click',()=>{
-  const k = apiKeyInput.value.trim();
-  if(!k){ alert('please paste your openai api key.'); return; }
-  localStorage.setItem('jlpt-dashboard:apiKey', k);
-  showLocked();
-  append('ようこそ。今日の修行、何から始める？','bot');
-});
-function showLocked(){
-  keyRow.querySelector('.row').style.display='none';
-  lockRow.style.display='inline-flex';
-}
-document.getElementById('changeKey').addEventListener('click',(e)=>{
-  e.preventDefault();
-  keyRow.querySelector('.row').style.display='flex';
-  lockRow.style.display='none';
-  apiKeyInput.focus();
-});
+            refreshQueue();
+        } catch (err) {
+            document.getElementById('status').innerText = "FOUT BIJ LADEN DATABASE";
+        }
+    }
 
-function append(t,who){
-  const d=document.createElement('div');
-  d.className='msg '+(who==='me'?'me':'bot');
-  d.textContent=t;
-  logEl.appendChild(d);
-  logEl.scrollTop=logEl.scrollHeight;
-}
-async function sendMessage(){
-  const apiKey = localStorage.getItem('jlpt-dashboard:apiKey')||'';
-  const content = inputEl.value.trim();
-  if(!content) return;
-  append(content,'me'); inputEl.value='';
-  append('…考え中…','bot');
-  const placeholder = logEl.querySelectorAll('.msg.bot'); const ph = placeholder[placeholder.length-1];
-  if(!apiKey){ ph.textContent='apiキーがありません。上でキーを入力してください。'; return; }
-  try{
-    const res = await fetch('https://api.openai.com/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-      body: JSON.stringify({
-        model:'gpt-4o-mini',
-        messages:[
-          {role:'system',content:'You are みどり先生 (Sensei Midori), a warm, concise JLPT N4 coach for Luca Houben. Speak mostly in easy Japanese (N4). Correct briefly. Offer tiny quests.'},
-          {role:'user',content:content}
-        ],
-        temperature:0.4
-      })
-    });
-    const data = await res.json();
-    ph.textContent = (data && data.choices && data.choices[0]) ? data.choices[0].message.content.trim() : 'エラー：応答なし。';
-  }catch(e){ ph.textContent='エラー：'+e.toString(); }
-}
-sendBtn.addEventListener('click',sendMessage);
-inputEl.addEventListener('keydown',e=>{ if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)) sendMessage(); });
-</script>
-  <script>
-  window.addEventListener('load', () => {
-    document.body.classList.add('loaded');
-  });
+    function refreshQueue() {
+        const now = Date.now();
+        reviewQueue = masterList.filter(item => {
+            const progress = srsData[item.kanji] || { nextReview: 0 };
+            return progress.nextReview <= now;
+        });
+
+        document.getElementById('queue-num').innerText = reviewQueue.length;
+
+        if (reviewQueue.length > 0) {
+            nextItem();
+        } else {
+            showFinished();
+        }
+    }
+
+    function nextItem() {
+        currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
+        document.getElementById('display').innerText = currentItem.kanji;
+        document.getElementById('status').innerText = "Betekenis & Lezing?";
+        resetUI();
+    }
+
+    function showAnswer() {
+        document.getElementById('reading-text').innerText = currentItem.reading;
+        document.getElementById('meaning-text').innerText = currentItem.meaning;
+        document.getElementById('answer-area').style.display = 'block';
+        document.getElementById('show-btn').style.display = 'none';
+    }
+
+    function submitResult(isCorrect) {
+        if (!srsData[currentItem.kanji]) {
+            srsData[currentItem.kanji] = { level: 0, nextReview: 0 };
+        }
+
+        let data = srsData[currentItem.kanji];
+       
+        if (isCorrect) {
+            data.level++;
+        } else {
+            data.level = Math.max(0, data.level - 1);
+        }
+
+        // SRS Intervals: 4u, 8u, 1d, 2d, 1wk, 2wk, 1mnd
+        const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000];
+        data.nextReview = Date.now() + (intervals[Math.min(data.level, intervals.length - 1)]);
+
+        localStorage.setItem('jap_srs_v1', JSON.stringify(srsData));
+        refreshQueue();
+    }
+
+    function resetUI() {
+        document.getElementById('answer-area').style.display = 'none';
+        document.getElementById('show-btn').style.display = 'block';
+    }
+
+    function showFinished() {
+        document.getElementById('display').innerText = "🎉";
+        document.getElementById('status').innerText = "Alles geleerd voor nu!";
+        document.getElementById('show-btn').style.display = 'none';
+    }
+
+    init();
 </script>
 </body>
 </html>
