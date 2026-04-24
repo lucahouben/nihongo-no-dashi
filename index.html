@@ -32,7 +32,6 @@
 
         #app { width: 100%; max-width: 450px; padding: 20px; text-align: center; perspective: 1000px; }
 
-        /* Level Up/Down Feedback */
         #level-feedback {
             position: fixed;
             top: 15%;
@@ -70,7 +69,6 @@
             border-bottom: 10px solid var(--apprentice); justify-content: flex-start;
         }
 
-        /* Type Pill */
         .type-tag {
             font-size: 0.7rem; color: var(--wani-blue); border: 1px solid var(--wani-blue);
             padding: 3px 12px; border-radius: 100px; text-transform: uppercase;
@@ -80,7 +78,6 @@
         .reading { font-size: 2.2rem; color: var(--apprentice); font-weight: bold; margin-bottom: 5px; }
         .meaning { font-size: 1.7rem; color: #fff; margin-bottom: 15px; }
 
-        /* Advanced Info Tray */
         #info-tray {
             width: 100%; text-align: left; border-top: 1px solid #444;
             padding-top: 15px; display: none; overflow-y: auto;
@@ -104,8 +101,26 @@
             padding: 8px 15px; font-size: 0.7rem; width: auto; margin: 0 auto;
         }
 
-        .stats { margin-top: 20px; font-size: 0.8rem; color: #444; font-weight: bold; }
+        .stats-area { margin-top: 20px; }
+        .stats { font-size: 0.8rem; color: #444; font-weight: bold; margin-bottom: 10px; }
         #queue-num { color: var(--wani-blue); }
+
+        /* Shortcut Legend Styles */
+        .shortcut-legend {
+            font-size: 0.65rem;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            letter-spacing: 0.5px;
+        }
+        .key {
+            border: 1px solid #333;
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-right: 4px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
@@ -117,7 +132,6 @@
     
     <div class="flashcard" id="card" onclick="flipCard()">
         <div class="card-face card-front" id="display-front">...</div>
-        
         <div class="card-face card-back" id="card-back-ui">
             <div id="type-text" class="type-tag"></div>
             <div id="reading-text" class="reading"></div>
@@ -143,7 +157,15 @@
         </div>
     </div>
 
-    <div class="stats">ITEMS REMAINING: <span id="queue-num">0</span></div>
+    <div class="stats-area">
+        <div class="stats">ITEMS REMAINING: <span id="queue-num">0</span></div>
+        <div class="shortcut-legend">
+            <span><span class="key">SPACE</span> Flip</span>
+            <span><span class="key">F</span> Info</span>
+            <span><span class="key">1</span> Correct</span>
+            <span><span class="key">2</span> Wrong</span>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -152,13 +174,12 @@
 
     let masterList = [], currentItem = null, reviewQueue = [], isFlipped = false;
 
-    // WK Level Colors & Names
     const WK_STAGES = [
-        { name: "APPRENTICE", color: "#dd0093" }, // 0-4
-        { name: "GURU", color: "#882d9e" },       // 5-6
-        { name: "MASTER", color: "#294ddb" },     // 7
-        { name: "ENLIGHTENED", color: "#0093dd" },// 8
-        { name: "BURNED", color: "#434343" }      // 9+
+        { name: "APPRENTICE", color: "#dd0093" },
+        { name: "GURU", color: "#882d9e" },
+        { name: "MASTER", color: "#294ddb" },
+        { name: "ENLIGHTENED", color: "#0093dd" },
+        { name: "BURNED", color: "#434343" }
     ];
 
     function getWKInfo(level) {
@@ -205,19 +226,15 @@
 
     function nextItem() {
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
-        
-        // Front & Basic Back
         document.getElementById('display-front').innerText = currentItem.kanji;
         document.getElementById('reading-text').innerText = currentItem.reading;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
 
-        // Dynamic Back Colors based on current level
         const info = getWKInfo(currentItem.level);
         document.getElementById('card-back-ui').style.borderBottomColor = info.color;
         document.getElementById('reading-text').style.color = info.color;
 
-        // Tray logic
         if (!currentItem.conj || currentItem.conj === "" || currentItem.conj === "N/A") {
             document.getElementById('conj-section').style.display = "none";
         } else {
@@ -225,10 +242,8 @@
             document.getElementById('conj-text').innerText = currentItem.conj;
         }
         
-        // Sentence bolding
         document.getElementById('sent-text').innerHTML = currentItem.sent.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
         
-        // Reset Tray visibility
         document.getElementById('info-tray').style.display = "none";
         document.getElementById('details-btn').innerText = "SHOW DETAILS";
         document.getElementById('status').innerText = "Reviewing Kanji";
@@ -242,7 +257,8 @@
     }
 
     function toggleDetails(e) {
-        e.stopPropagation();
+        if(e) e.stopPropagation();
+        if(!isFlipped) return; // Don't show details if card isn't flipped
         const tray = document.getElementById('info-tray');
         const btn = document.getElementById('details-btn');
         const isOpen = tray.style.display === "block";
@@ -262,25 +278,19 @@
     async function submitResult(isCorrect) {
         const oldLevel = currentItem.level;
         const newLevel = isCorrect ? oldLevel + 1 : Math.max(0, oldLevel - 1);
-        
-        // Standard SRS Intervals
         const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
         const newTime = Date.now() + intervals[Math.min(newLevel, 8)];
 
-        // Update UI
         flashFeedback(isCorrect, newLevel);
         
-        // Sync to Cloud
         fetch(SAVE_URL, {
             method: 'POST', mode: 'no-cors',
             body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime })
         });
 
-        // Update local state
         currentItem.level = newLevel;
         currentItem.nextReview = newTime;
 
-        // Animate out
         isFlipped = false;
         document.getElementById('card').classList.remove('is-flipped');
         document.getElementById('action-btns').style.visibility = 'hidden';
@@ -298,9 +308,11 @@
         document.getElementById('queue-num').innerText = "0";
     }
 
-    // Keyboard support
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+        // Press F to toggle info
+        if (e.key.toLowerCase() === 'f') { toggleDetails(); }
+        
         if (isFlipped) {
             if (e.key === '1') submitResult(true);
             if (e.key === '2') submitResult(false);
