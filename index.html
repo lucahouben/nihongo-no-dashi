@@ -307,6 +307,21 @@
     }, 600); 
 }
 
+    ///Adjust font based on string length.
+    function adjustFontSize(element) {
+  const length = element.innerText.length;
+  if (length > 20) {
+    element.style.fontSize = "1.5rem"; // Small for long sentences
+  } else if (length > 10) {
+    element.style.fontSize = "2.5rem"; // Medium
+  } else {
+    element.style.fontSize = "4rem";   // Big for single Kanji/Words
+  }
+}
+
+// Call this every time you display a new word
+// adjustFontSize(document.getElementById('kanji-display'));
+
     function showFinished() {
         currentItem = null;
         const front = document.getElementById('display-front');
