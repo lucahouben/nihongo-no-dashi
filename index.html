@@ -189,7 +189,10 @@
                 }
             }
             refreshQueue();
-        } catch (err) { document.getElementById('status').innerText = "SYNC ERROR"; }
+        } catch (err) { 
+            console.error(err);
+            document.getElementById('status').innerText = "SYNC ERROR"; 
+        }
     }
 
     function refreshQueue() {
@@ -197,8 +200,11 @@
         reviewQueue = masterList.filter(item => item.nextReview <= now);
         if (initialQueueLength === 0 && reviewQueue.length > 0) initialQueueLength = reviewQueue.length;
         document.getElementById('queue-num').innerText = reviewQueue.length;
-        if (reviewQueue.length > 0) { if (!currentItem) nextItem(); } 
-        else { showFinished(); }
+        if (reviewQueue.length > 0) { 
+            if (!currentItem) nextItem(); 
+        } else { 
+            showFinished(); 
+        }
     }
 
     function nextItem() {
@@ -251,7 +257,6 @@
         const cardContainer = document.getElementById('card');
         const backFace = document.getElementById('card-back-ui');
         
-        // --- GREEN VS RED PULSE ---
         backFace.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
 
         const oldLevel = currentItem.level;
@@ -265,7 +270,10 @@
         flashFeedback(isCorrect, newLevel);
         fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) });
         
-        currentItem.level = newLevel; currentItem.nextReview = newTime;
+        const localItem = masterList.find(i => i.kanji === currentItem.kanji);
+        if (localItem) {
+            localItem.level = newLevel; localItem.nextReview = newTime;
+        }
 
         setTimeout(() => {
             isFlipped = false;
@@ -281,24 +289,30 @@
     }
 
     function showFinished() {
-    currentItem = null;
-    const front = document.getElementById('display-front');
-    const status = document.getElementById('status');
-    
-    // Main completion message
-    front.innerHTML = `
-        <div style="font-size: 3rem; margin-bottom: 20px;">🎉</div>
-        <div style="font-size: 1.5rem; font-weight: bold;">お疲れ様でした！</div>
-        <div style="font-size: 0.9rem; margin-top: 15px; opacity: 0.8; font-weight: normal;">
-            (All reviews complete!)
-        </div>
-    `;
-    
-    status.innerText = "SESSION COMPLETE";
-    document.getElementById('queue-num').innerText = "0";
-    document.getElementById('progress-bar').style.width = "100%";
-    
-    // Hide controls so they don't look messy
-    document.getElementById('action-btns').style.visibility = "hidden";
-    document.getElementById('card').onclick = null; // Disable clicking the card
-}
+        currentItem = null;
+        const front = document.getElementById('display-front');
+        front.innerHTML = `
+            <div style="font-size: 3rem; margin-bottom: 20px;">🎉</div>
+            <div style="font-size: 1.5rem; font-weight: bold;">お疲れ様でした！</div>
+            <div style="font-size: 0.9rem; margin-top: 15px; opacity: 0.8; font-weight: normal;">Reviews Complete</div>
+        `;
+        document.getElementById('status').innerText = "SESSION COMPLETE";
+        document.getElementById('queue-num').innerText = "0";
+        document.getElementById('progress-bar').style.width = "100%";
+        document.getElementById('action-btns').style.visibility = 'hidden';
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+        if (e.key.toLowerCase() === 'f') { toggleDetails(); }
+        if (e.key.toLowerCase() === 'v') { speakCurrentItem(); }
+        if (isFlipped) {
+            if (e.key === '1') submitResult(true);
+            if (e.key === '2') submitResult(false);
+        }
+    });
+
+    init();
+</script>
+</body>
+</html>
