@@ -257,40 +257,54 @@
         setTimeout(() => fb.classList.remove('show'), 1500);
     }
 
-    async function submitResult(isCorrect) {
-        if (!currentItem || !currentItem.kanji) return;
+   async function submitResult(isCorrect) {
+    if (!currentItem || !currentItem.kanji) return;
 
-        const cardContainer = document.getElementById('card');
-        const backFace = document.getElementById('card-back-ui');
-        backFace.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
+    const cardContainer = document.getElementById('card');
+    const backFace = document.getElementById('card-back-ui');
+    backFace.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
 
-        const oldLevel = currentItem.level;
-        const newLevel = isCorrect ? oldLevel + 1 : Math.max(0, oldLevel - 1);
-        const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
-        const newTime = Date.now() + intervals[Math.min(newLevel, 8)];
-        
+    const oldLevel = currentItem.level;
+    const newLevel = isCorrect ? oldLevel + 1 : Math.max(0, oldLevel - 1);
+    
+    // In SRS, "Wrong" usually means seeing it again in 0 minutes (today)
+    // "Correct" pushes it into the future.
+    const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
+    const newTime = isCorrect ? (Date.now() + intervals[Math.min(newLevel, 8)]) : Date.now();
+    
+    // --- PROGRESS BAR LOGIC ---
+    // Only move the bar if they actually got it right!
+    if (isCorrect) {
         completedCount++;
-        document.getElementById('progress-bar').style.width = Math.min((completedCount / initialQueueLength) * 100, 100) + "%";
-        
-        flashFeedback(isCorrect, newLevel);
-        
-        // Save using the NEW URL
-        fetch(SAVE_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) 
-        });
-        
-        currentItem.level = newLevel; currentItem.nextReview = newTime;
-
-        setTimeout(() => {
-            isFlipped = false;
-            cardContainer.classList.remove('is-flipped');
-            backFace.classList.remove('apply-pulse-correct', 'apply-pulse-wrong');
-            document.getElementById('action-btns').style.visibility = 'hidden';
-            setTimeout(() => { currentItem = null; refreshQueue(); }, 400); 
-        }, 600); 
+        const progressPercent = Math.min((completedCount / initialQueueLength) * 100, 100);
+        document.getElementById('progress-bar').style.width = progressPercent + "%";
     }
+    
+    flashFeedback(isCorrect, newLevel);
+    
+    // Save to Google
+    fetch(SAVE_URL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) 
+    });
+    
+    // Local Sync
+    currentItem.level = newLevel; 
+    currentItem.nextReview = newTime;
+
+    setTimeout(() => {
+        isFlipped = false;
+        cardContainer.classList.remove('is-flipped');
+        backFace.classList.remove('apply-pulse-correct', 'apply-pulse-wrong');
+        document.getElementById('action-btns').style.visibility = 'hidden';
+        
+        setTimeout(() => { 
+            currentItem = null; 
+            refreshQueue(); 
+        }, 400); 
+    }, 600); 
+}
 
     function showFinished() {
         currentItem = null;
