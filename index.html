@@ -133,9 +133,9 @@
 </div>
 
 <script>
-    // --- SETTINGS ---
+    // --- SETTINGS (Updated with your new script URL) ---
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ7pDV2s1fCr9E_RI-47f8XTwMUWUQ9bvNiuPVv3D1uM690uoUWxXfMGbtRLbKNTeZVN8Xf-2jjrPb/pub?output=csv';
-    const SAVE_URL = 'https://script.google.com/macros/s/AKfycbwwoZw3ezALhgWyXKGA1Uubz9d8vvGA4DeZr8yU_VhKfYFNlIIMz9F5wKa0lmxw399oPQ/exec';
+    const SAVE_URL = 'https://script.google.com/macros/s/AKfycbyglcNt7yckRZ7kOPugcbGla6mBBC8oE7fycZmBqxvUlpYeKUQOSqqd2nUR0GfatghwAA/exec';
 
     let masterList = [], currentItem = null, reviewQueue = [], isFlipped = false;
     let initialQueueLength = 0, completedCount = 0;
@@ -172,7 +172,7 @@
                 const line = lines[i].trim();
                 if (!line) continue;
 
-                // Smart Split: Handles commas correctly even inside quotes
+                // Split by comma only if NOT inside double quotes
                 const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 
                 if (parts.length >= 8) {
@@ -187,7 +187,7 @@
                         nextReview: parseInt(parts[7].replace(/^"|"$/g, '')) || 0
                     };
 
-                    // Safety Check: Only add if Kanji looks like text, not a timestamp
+                    // Safety Check: Avoid adding column-shifted data
                     if (item.kanji && isNaN(item.kanji)) {
                         masterList.push(item);
                     }
@@ -274,14 +274,13 @@
         
         flashFeedback(isCorrect, newLevel);
         
-        // Save to Google (The Payload is now safer)
+        // Save using the NEW URL
         fetch(SAVE_URL, { 
             method: 'POST', 
             mode: 'no-cors', 
             body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) 
         });
         
-        // Local Sync to prevent re-appearance during session
         currentItem.level = newLevel; currentItem.nextReview = newTime;
 
         setTimeout(() => {
