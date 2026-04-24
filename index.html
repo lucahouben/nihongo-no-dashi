@@ -24,20 +24,20 @@
             overflow: hidden;
             user-select: none;
         }
-        #app {
-            width: 100%;
-            max-width: 450px;
-            padding: 20px;
-            text-align: center;
-            perspective: 1000px;
+        #app { 
+            width: 100%; 
+            max-width: 450px; 
+            padding: 20px; 
+            text-align: center; 
+            perspective: 1000px; 
         }
-       
-        .info-bar {
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+        
+        .info-bar { 
+            font-size: 0.8rem; 
+            color: #666; 
+            margin-bottom: 15px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
         }
 
         .flashcard {
@@ -50,7 +50,7 @@
             margin-bottom: 30px;
         }
         .flashcard.is-flipped { transform: rotateY(180deg); }
-       
+        
         .card-face {
             position: absolute;
             width: 100%;
@@ -65,13 +65,13 @@
             padding: 20px;
             box-sizing: border-box;
         }
-       
+        
         .card-front { background-color: var(--wani-blue); font-size: 5.5rem; }
         .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 8px solid var(--wani-pink); }
-       
+        
         .reading { font-size: 2.4rem; color: var(--wani-pink); font-weight: bold; margin-bottom: 10px; }
         .meaning { font-size: 1.8rem; color: #fff; }
-       
+        
         #controls { height: 130px; display: flex; flex-direction: column; justify-content: center; }
         button {
             width: 100%; padding: 18px; font-size: 1.1rem; font-weight: bold; border: none; border-radius: 12px;
@@ -80,7 +80,7 @@
         button:active { transform: scale(0.96); }
         .btn-correct { background: #28a745; color: white; margin-bottom: 12px; }
         .btn-wrong { background: #dc3545; color: white; }
-       
+        
         .stats { margin-top: 30px; font-size: 0.8rem; color: #444; font-weight: bold; }
         #queue-num { color: var(--wani-blue); }
         .hint { font-size: 0.7rem; color: #333; margin-top: 10px; opacity: 0.5; }
@@ -90,7 +90,7 @@
 
 <div id="app">
     <div class="info-bar" id="status">Syncing with Cloud...</div>
-   
+    
     <div class="flashcard" id="card" onclick="flipCard()">
         <div class="card-face card-front" id="display-front">...</div>
         <div class="card-face card-back">
@@ -98,7 +98,7 @@
             <div id="meaning-text" class="meaning"></div>
         </div>
     </div>
-   
+    
     <div id="controls">
         <div id="action-btns" style="visibility: hidden;">
             <button class="btn-correct" onclick="submitResult(true)">CORRECT</button>
@@ -123,18 +123,17 @@
 
     async function init() {
         try {
-            // Adding timestamp to URL to bypass browser caching of the CSV
             const res = await fetch(CSV_URL + '&t=' + Date.now());
             if (!res.ok) throw new Error('Failed to fetch CSV');
             const csvText = await res.text();
-           
+            
             const lines = csvText.split(/\r?\n/);
             masterList = [];
 
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
-               
+                
                 const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 if (parts.length >= 5) {
                     masterList.push({
@@ -159,23 +158,20 @@
         document.getElementById('queue-num').innerText = reviewQueue.length;
 
         if (reviewQueue.length > 0) {
-            nextItem();
+            if (!currentItem) nextItem(); 
         } else {
             showFinished();
         }
     }
 
     function nextItem() {
-        isFlipped = false;
-        document.getElementById('card').classList.remove('is-flipped');
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
-       
+        
         document.getElementById('display-front').innerText = currentItem.kanji;
         document.getElementById('reading-text').innerText = currentItem.reading;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
+        
         document.getElementById('status').innerText = "Reviewing Kanji";
-       
-        document.getElementById('action-btns').style.visibility = 'hidden';
         document.getElementById('keyboard-hint').innerText = "Tap card or SPACE to flip";
     }
 
@@ -189,12 +185,12 @@
 
     async function submitResult(isCorrect) {
         document.getElementById('status').innerText = "Updating Cloud...";
-       
+        
         let newLevel = isCorrect ? currentItem.level + 1 : Math.max(0, currentItem.level - 1);
         const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000];
         let newTime = Date.now() + (intervals[Math.min(newLevel, intervals.length - 1)]);
 
-        // Send to Google Sheets (Fire and forget, don't wait for response to keep UI snappy)
+        // Send to Google Sheets
         fetch(SAVE_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -206,11 +202,16 @@
             })
         });
 
-        // Update local list so the item disappears immediately
         currentItem.level = newLevel;
         currentItem.nextReview = newTime;
-       
-        refreshQueue();
+
+        isFlipped = false;
+        document.getElementById('card').classList.remove('is-flipped');
+        document.getElementById('action-btns').style.visibility = 'hidden';
+
+        setTimeout(() => {
+            refreshQueue();
+        }, 300); 
     }
 
     function showFinished() {
