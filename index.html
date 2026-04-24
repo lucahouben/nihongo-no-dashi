@@ -281,24 +281,24 @@
     }
 
     function showFinished() {
-        currentItem = null;
-        document.getElementById('display-front').innerText = "🎉";
-        document.getElementById('status').innerText = "SESSION COMPLETE";
-        document.getElementById('queue-num').innerText = "0";
-        document.getElementById('progress-bar').style.width = "100%";
-    }
-
-    window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space') { e.preventDefault(); flipCard(); }
-        if (e.key.toLowerCase() === 'f') { toggleDetails(); }
-        if (e.key.toLowerCase() === 'v') { speakCurrentItem(); }
-        if (isFlipped) {
-            if (e.key === '1') submitResult(true);
-            if (e.key === '2') submitResult(false);
-        }
-    });
-
-    init();
-</script>
-</body>
-</html>
+    currentItem = null;
+    const front = document.getElementById('display-front');
+    const status = document.getElementById('status');
+    
+    // Main completion message
+    front.innerHTML = `
+        <div style="font-size: 3rem; margin-bottom: 20px;">🎉</div>
+        <div style="font-size: 1.5rem; font-weight: bold;">お疲れ様でした！</div>
+        <div style="font-size: 0.9rem; margin-top: 15px; opacity: 0.8; font-weight: normal;">
+            (All reviews complete!)
+        </div>
+    `;
+    
+    status.innerText = "SESSION COMPLETE";
+    document.getElementById('queue-num').innerText = "0";
+    document.getElementById('progress-bar').style.width = "100%";
+    
+    // Hide controls so they don't look messy
+    document.getElementById('action-btns').style.visibility = "hidden";
+    document.getElementById('card').onclick = null; // Disable clicking the card
+}
