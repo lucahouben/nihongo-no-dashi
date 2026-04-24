@@ -6,16 +6,9 @@
     <title>nihongo no dashi</title>
     <style>
         :root {
-            --apprentice: #dd0093;
-            --guru: #882d9e;
-            --master: #294ddb;
-            --enlightened: #0093dd;
-            --burned: #434343;
-            --wani-blue: #00aaff;
-            --wani-pink: #f100a1;
-            --dark: #1a1a1a;
-            --text: #ffffff;
-            --card-bg: #2a2a2a;
+            --apprentice: #dd0093; --guru: #882d9e; --master: #294ddb;
+            --enlightened: #0093dd; --burned: #434343; --wani-blue: #00aaff;
+            --wani-pink: #f100a1; --dark: #1a1a1a; --text: #ffffff; --card-bg: #2a2a2a;
         }
 
         body {
@@ -27,7 +20,7 @@
 
         #app { width: 100%; max-width: 450px; padding: 20px; text-align: center; perspective: 1000px; }
 
-        /* --- PULSE ANIMATIONS --- */
+        /* --- FEEDBACK ANIMATIONS --- */
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.8); }
             70% { box-shadow: 0 0 0 30px rgba(40, 167, 69, 0); }
@@ -140,6 +133,7 @@
 </div>
 
 <script>
+    // --- SETTINGS ---
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ7pDV2s1fCr9E_RI-47f8XTwMUWUQ9bvNiuPVv3D1uM690uoUWxXfMGbtRLbKNTeZVN8Xf-2jjrPb/pub?output=csv';
     const SAVE_URL = 'https://script.google.com/macros/s/AKfycbwwoZw3ezALhgWyXKGA1Uubz9d8vvGA4DeZr8yU_VhKfYFNlIIMz9F5wKa0lmxw399oPQ/exec';
 
@@ -173,24 +167,35 @@
             const csvText = await res.text();
             const lines = csvText.split(/\r?\n/);
             masterList = [];
+            
             for (let i = 1; i < lines.length; i++) {
-                const parts = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                // Smart Split: Handles commas correctly even inside quotes
+                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
                 if (parts.length >= 8) {
-                    masterList.push({
-                        kanji: parts[0].replace(/"/g, '').trim(),
-                        reading: parts[1].replace(/"/g, '').trim(),
-                        meaning: parts[2].replace(/"/g, '').trim(),
-                        type: parts[3].replace(/"/g, '').trim(),
-                        conj: parts[4].replace(/"/g, '').trim(),
-                        sent: parts[5].replace(/"/g, '').trim(),
-                        level: parseInt(parts[6]) || 0,
-                        nextReview: parseInt(parts[7]) || 0
-                    });
+                    const item = {
+                        kanji: parts[0].replace(/^"|"$/g, '').trim(),
+                        reading: parts[1].replace(/^"|"$/g, '').trim(),
+                        meaning: parts[2].replace(/^"|"$/g, '').trim(),
+                        type: parts[3].replace(/^"|"$/g, '').trim(),
+                        conj: parts[4].replace(/^"|"$/g, '').trim(),
+                        sent: parts[5].replace(/^"|"$/g, '').trim(),
+                        level: parseInt(parts[6].replace(/^"|"$/g, '')) || 0,
+                        nextReview: parseInt(parts[7].replace(/^"|"$/g, '')) || 0
+                    };
+
+                    // Safety Check: Only add if Kanji looks like text, not a timestamp
+                    if (item.kanji && isNaN(item.kanji)) {
+                        masterList.push(item);
+                    }
                 }
             }
             refreshQueue();
         } catch (err) { 
-            console.error(err);
+            console.error("Load Error:", err);
             document.getElementById('status').innerText = "SYNC ERROR"; 
         }
     }
@@ -200,11 +205,8 @@
         reviewQueue = masterList.filter(item => item.nextReview <= now);
         if (initialQueueLength === 0 && reviewQueue.length > 0) initialQueueLength = reviewQueue.length;
         document.getElementById('queue-num').innerText = reviewQueue.length;
-        if (reviewQueue.length > 0) { 
-            if (!currentItem) nextItem(); 
-        } else { 
-            showFinished(); 
-        }
+        if (reviewQueue.length > 0) { if (!currentItem) nextItem(); } 
+        else { showFinished(); }
     }
 
     function nextItem() {
@@ -216,12 +218,14 @@
         const info = getWKInfo(currentItem.level);
         document.getElementById('card-back-ui').style.borderBottomColor = info.color;
         document.getElementById('reading-text').style.color = info.color;
+        
         if (!currentItem.conj || currentItem.conj === "" || currentItem.conj === "N/A") {
             document.getElementById('conj-section').style.display = "none";
         } else {
             document.getElementById('conj-section').style.display = "block";
             document.getElementById('conj-text').innerText = currentItem.conj;
         }
+        
         document.getElementById('sent-text').innerHTML = currentItem.sent.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
         document.getElementById('info-tray').style.display = "none";
         document.getElementById('details-btn').innerText = "SHOW DETAILS";
@@ -254,9 +258,10 @@
     }
 
     async function submitResult(isCorrect) {
+        if (!currentItem || !currentItem.kanji) return;
+
         const cardContainer = document.getElementById('card');
         const backFace = document.getElementById('card-back-ui');
-        
         backFace.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
 
         const oldLevel = currentItem.level;
@@ -268,23 +273,23 @@
         document.getElementById('progress-bar').style.width = Math.min((completedCount / initialQueueLength) * 100, 100) + "%";
         
         flashFeedback(isCorrect, newLevel);
-        fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) });
         
-        const localItem = masterList.find(i => i.kanji === currentItem.kanji);
-        if (localItem) {
-            localItem.level = newLevel; localItem.nextReview = newTime;
-        }
+        // Save to Google (The Payload is now safer)
+        fetch(SAVE_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) 
+        });
+        
+        // Local Sync to prevent re-appearance during session
+        currentItem.level = newLevel; currentItem.nextReview = newTime;
 
         setTimeout(() => {
             isFlipped = false;
             cardContainer.classList.remove('is-flipped');
             backFace.classList.remove('apply-pulse-correct', 'apply-pulse-wrong');
             document.getElementById('action-btns').style.visibility = 'hidden';
-            
-            setTimeout(() => { 
-                currentItem = null; 
-                refreshQueue(); 
-            }, 400); 
+            setTimeout(() => { currentItem = null; refreshQueue(); }, 400); 
         }, 600); 
     }
 
