@@ -27,21 +27,20 @@
 
         #app { width: 100%; max-width: 450px; padding: 20px; text-align: center; perspective: 1000px; }
 
-        /* --- STABLE ANIMATIONS --- */
-        @keyframes shake-face {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-10px); }
-            40%, 80% { transform: translateX(10px); }
-        }
+        /* --- PULSE ANIMATIONS --- */
         @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(40, 167, 69, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.8); }
+            70% { box-shadow: 0 0 0 30px rgba(40, 167, 69, 0); }
             100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
         }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.8); }
+            70% { box-shadow: 0 0 0 30px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
         
-        /* Classes to trigger via JS */
-        .apply-shake { animation: shake-face 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        .apply-pulse { animation: pulse-green 0.5s ease-out both; }
+        .apply-pulse-correct { animation: pulse-green 0.6s ease-out both; }
+        .apply-pulse-wrong { animation: pulse-red 0.6s ease-out both; }
 
         #level-feedback {
             position: fixed; top: 15%; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -60,7 +59,6 @@
             width: 100%; height: 400px; position: relative; transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
         }
-        /* Stable Flip */
         .flashcard.is-flipped { transform: rotateY(180deg); }
 
         .card-face {
@@ -72,7 +70,7 @@
         .card-front { background-color: var(--wani-blue); justify-content: center; font-size: 5.5rem; }
         .card-back { 
             background-color: var(--card-bg); 
-            transform: rotateY(180deg); /* This stays locked */
+            transform: rotateY(180deg);
             border-bottom: 10px solid var(--apprentice); 
             justify-content: flex-start; 
         }
@@ -252,16 +250,12 @@
     async function submitResult(isCorrect) {
         const cardContainer = document.getElementById('card');
         const backFace = document.getElementById('card-back-ui');
+        
+        // --- GREEN VS RED PULSE ---
+        backFace.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
+
         const oldLevel = currentItem.level;
         const newLevel = isCorrect ? oldLevel + 1 : Math.max(0, oldLevel - 1);
-        
-        // --- TARGET THE FACE, NOT THE CONTAINER ---
-        if (isCorrect) {
-            backFace.classList.add('apply-pulse');
-        } else {
-            backFace.classList.add('apply-shake');
-        }
-
         const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
         const newTime = Date.now() + intervals[Math.min(newLevel, 8)];
         
@@ -273,12 +267,10 @@
         
         currentItem.level = newLevel; currentItem.nextReview = newTime;
 
-        // Clean transition back
         setTimeout(() => {
             isFlipped = false;
             cardContainer.classList.remove('is-flipped');
-            // Remove animation classes so they can be re-applied next time
-            backFace.classList.remove('apply-shake', 'apply-pulse');
+            backFace.classList.remove('apply-pulse-correct', 'apply-pulse-wrong');
             document.getElementById('action-btns').style.visibility = 'hidden';
             
             setTimeout(() => { 
