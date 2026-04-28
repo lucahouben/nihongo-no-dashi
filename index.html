@@ -192,7 +192,8 @@
 
     function updateDashboard() {
         const dueCount = masterList.filter(i => i.nextReview <= Date.now()).length;
-        document.getElementById('start-btn').innerText = `Start Session (${dueCount})`;
+        // FIXED LINE BELOW: Changed "Start Session" to "Start Cooking"
+        document.getElementById('start-btn').innerText = `Start Cooking (${dueCount})`;
 
         let html = '';
         STAGES.forEach((stage, idx) => {
