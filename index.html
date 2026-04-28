@@ -21,13 +21,14 @@
             overflow-x: hidden;
         }
 
-        #app { width: 90%; max-width: 450px; text-align: center; perspective: 1000px; }
+        #app { width: 90%; max-width: 450px; text-align: center; perspective: 1000px; position: relative; }
 
         /* DASHBOARD */
         #dashboard { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         .dash-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: var(--dashi-gold); }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { padding: 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
+        .stat-box { padding: 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: transform 0.1s; }
+        .stat-box:active { transform: scale(0.98); }
         
         /* PANTRY OVERLAY */
         #pantry-overlay {
@@ -40,12 +41,11 @@
         #progress-container { width: 100%; height: 6px; background: #333; border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
-        /* FLASHCARD - RESTORED SIZE LOGIC */
+        /* FLASHCARD */
         .flashcard { width: 100%; height: 400px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         
-        /* FRONT CARD TEXT - RESTORED TO LARGE */
         .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; overflow: hidden; }
         #display-front { width: 100%; font-weight: bold; font-size: 5rem; line-height: 1.1; word-wrap: break-word; }
 
@@ -64,6 +64,10 @@
         #controls { margin-top: 20px; display: none; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 12px; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; cursor: pointer; }
         .btn-wrong { background: #dc3545; color: white; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; cursor: pointer; }
+
+        /* KEYBOARD HINT LEGEND */
+        #keyboard-legend { margin-top: 30px; display: none; color: #555; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
+        .key-hint { border: 1px solid #444; padding: 1px 4px; border-radius: 3px; color: #888; margin: 0 3px; font-family: monospace; }
 
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(40, 167, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); } }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
@@ -109,6 +113,13 @@
         <button class="btn-correct" onclick="submitResult(true)">CORRECT (1)</button>
         <button class="btn-wrong" onclick="submitResult(false)">INCORRECT (2)</button>
     </div>
+
+    <div id="keyboard-legend">
+        <span class="key-hint">V</span> Audio &nbsp;
+        <span class="key-hint">Space</span> Flip &nbsp;
+        <span class="key-hint">1/2</span> Correct/Wrong &nbsp;
+        <span class="key-hint">F</span> Details
+    </div>
 </div>
 
 <script>
@@ -152,7 +163,6 @@
         } catch (e) { console.error(e); }
     }
 
-    // RESTORED KEYBOARD SHORTCUTS
     window.addEventListener('keydown', e => {
         if (document.getElementById('card').style.display === 'none') return;
         if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
@@ -171,7 +181,6 @@
         window.speechSynthesis.speak(utterance);
     }
 
-    // RESTORED FIT TEXT LOGIC
     function fitText() {
         const el = document.getElementById('display-front');
         const container = el.parentElement;
@@ -193,7 +202,7 @@
                 <div><b style="font-size:1.2rem">${i.kanji}</b><br><small style="color:#888">${i.reading}</small></div>
                 <div style="font-size:0.8rem; color:${stage.color}">Lv ${i.level}</div>
             </div>
-        `).join('') || '<p style="color:#666">No items here.</p>';
+        `).join('') || '<p style="color:#666; text-align:center;">No items in this stage yet.</p>';
         document.getElementById('pantry-overlay').style.display = 'flex';
     }
 
@@ -225,6 +234,7 @@
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('card').style.display = 'block';
+        document.getElementById('keyboard-legend').style.display = 'block';
         nextItem();
     }
 
@@ -271,6 +281,7 @@
         document.getElementById('card').style.display = 'none';
         document.getElementById('controls').style.display = 'none';
         document.getElementById('progress-container').style.display = 'none';
+        document.getElementById('keyboard-legend').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         updateDashboard();
     }
