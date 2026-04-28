@@ -31,7 +31,27 @@
 
         #app { width: 90%; max-width: 400px; text-align: center; position: relative; }
 
-        /* UI CONTROLS */
+        /* --- CHARACTER CSS --- */
+        .profile-card { padding: 10px 0 25px; cursor: pointer; transition: transform 0.3s; }
+        .char-illustration {
+            width: 100px; height: 100px; background: radial-gradient(circle, #fff8e1 0%, var(--dashi-gold) 100%);
+            border-radius: 50%; margin: 0 auto 10px; position: relative; border: 4px solid var(--stage-boiling);
+            overflow: hidden; box-shadow: inset 0 0 15px rgba(0,0,0,0.2); transition: all 0.3s ease;
+        }
+        .hair-noodle { position: absolute; background: #ffe082; border-radius: 10px; width: 80px; height: 10px; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .n1 { top: 15px; left: 10px; transform: rotate(-5deg); }
+        .n2 { top: 30px; left: 5px; transform: rotate(3deg); }
+        .n3 { top: 45px; left: 15px; transform: rotate(-2deg); }
+        .eye { position: absolute; width: 8px; height: 12px; background: var(--dark-kombu); border-radius: 50%; top: 60px; }
+        .eye.left { left: 35px; } .eye.right { right: 35px; }
+        .ajitama-spirit { position: absolute; width: 25px; height: 32px; background: white; border-radius: 50% 50% 40% 40%; top: 5px; right: 10px; animation: float 3s ease-in-out infinite; }
+        .yolk { position: absolute; width: 15px; height: 15px; background: #ff9800; border-radius: 50%; top: 8px; left: 5px; }
+        
+        .profile-card:hover .hair-noodle { height: 18px; width: 120px; background-color: #ffd54f; }
+        .profile-card:hover .char-illustration { border-color: var(--dashi-gold); transform: scale(1.1); }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        /* --- UI CONTROLS --- */
         .theme-switch-wrapper { position: absolute; top: -45px; right: 0; display: flex; align-items: center; z-index: 100; }
         .theme-switch { display: inline-block; height: 18px; position: relative; width: 36px; }
         .theme-switch input { display:none; }
@@ -46,58 +66,43 @@
             border-radius: 8px; cursor: pointer; text-transform: uppercase; z-index: 100;
         }
 
-        /* DRAWER */
         #add-form-overlay {
             position: fixed; top: 100%; left: 0; width: 100%; height: 100%;
             background: var(--dark-kombu); z-index: 2000; transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 40px 25px; box-sizing: border-box; display: flex; flex-direction: column;
         }
         #add-form-overlay.active { top: 0; }
-        
         .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .form-group { text-align: left; margin-bottom: 15px; }
         .form-group label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--dashi-gold); display: block; margin-bottom: 5px; }
-        .form-group input { 
-            width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); 
-            background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 1rem; box-sizing: border-box; outline: none;
-        }
+        .form-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 1rem; box-sizing: border-box; outline: none; }
 
-        /* DASHBOARD */
+        /* --- DASHBOARD --- */
         #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: block; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .dash-title { font-size: 0.9rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; margin: 0; }
-        .btn-add-toggle { 
-            background: var(--dashi-gold); border: none; width: 32px; height: 32px; 
-            border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: 800; color: #1a1a1a;
-        }
-
+        .btn-add-toggle { background: var(--dashi-gold); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: #1a1a1a; }
         .stats-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-radius: 15px; font-weight: 600; color: white; }
-
         .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
         .btn-secondary { background: transparent; color: #888; border: 1px solid rgba(128,128,128,0.4); padding: 12px; border-radius: 15px; width: 100%; margin-top: 10px; cursor: pointer; }
 
-        /* FLASHCARD */
+        /* --- FLASHCARD --- */
         #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 20px; display: none; overflow: hidden; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s; }
-
         .flashcard { width: 100%; height: 480px; max-height: 70vh; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 30px 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); }
         .card-front { background: var(--dashi-gold); color: #1a1a1a; justify-content: center; font-size: 5rem; font-weight: 800; font-family: serif; }
         .card-back { background: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); overflow-y: auto; scrollbar-width: none; }
-
         .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; }
         .meaning { font-size: 1.5rem; color: var(--text); margin-bottom: 15px; }
         #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.2); padding-top: 15px; display: none; margin-bottom: 20px; }
         .tray-label { font-size: 0.55rem; color: #888; text-transform: uppercase; margin-bottom: 4px; font-weight: 800; }
         .tray-content { font-size: 0.85rem; color: var(--text); margin-bottom: 12px; line-height: 1.4; }
-
         .embedded-controls { width: 100%; margin-top: auto; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 8px; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
         .btn-wrong { background: #dc3545; color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
-
         #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .key-hint { border: 1px solid rgba(128,128,128,0.5); padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; }
     </style>
@@ -128,6 +133,18 @@
     </div>
 
     <div id="dashboard">
+        <div class="profile-card">
+            <div class="char-illustration" id="illustration">
+                <div class="hair-noodle n1"></div>
+                <div class="hair-noodle n2"></div>
+                <div class="hair-noodle n3"></div>
+                <div class="eye left"></div>
+                <div class="eye right"></div>
+                <div class="ajitama-spirit"><div class="yolk"></div></div>
+            </div>
+            <div style="font-size: 0.6rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 1px;">DASHI SPIRIT: MENMA</div>
+        </div>
+
         <div class="dash-header">
             <h1 class="dash-title">Nihongo no Dashi</h1>
             <button class="btn-add-toggle" onclick="toggleAddForm()">+</button>
@@ -177,7 +194,7 @@
         return STAGES[4];
     }
 
-    // --- THEME ---
+    // THEME
     const themeToggle = document.getElementById('theme-toggle');
     if (localStorage.getItem('theme') === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
@@ -189,7 +206,7 @@
         localStorage.setItem('theme', t);
     });
 
-    // --- KEYBOARD ---
+    // KEYBOARD
     window.addEventListener('keydown', e => {
         if (document.getElementById('add-form-overlay').classList.contains('active')) return;
         if (document.getElementById('card').style.display !== 'block') return;
@@ -210,7 +227,7 @@
         }
     }
 
-    // --- DATA ---
+    // DATA INIT
     async function init() {
         try {
             const res = await fetch(CSV_URL + '&cb=' + Date.now());
@@ -225,7 +242,7 @@
                 };
             });
             updateDashboard();
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Sheet load failed", e); }
     }
 
     function updateDashboard() {
@@ -262,7 +279,7 @@
     function startSession(practice) {
         isPracticeMode = practice;
         reviewQueue = practice ? [...masterList].sort(() => 0.5 - Math.random()) : masterList.filter(i => i.nextReview <= Date.now());
-        if (reviewQueue.length === 0) return alert("Empty!");
+        if (reviewQueue.length === 0) return alert("Empty pot!");
         initialQueueLength = reviewQueue.length;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('card').style.display = 'block';
@@ -287,11 +304,11 @@
         document.getElementById('reading-text').style.color = s.color;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
-        document.getElementById('sent-text').innerText = currentItem.sent || "...";
+        document.getElementById('sent-text').innerText = currentItem.sent || "No example provided.";
         document.getElementById('info-tray').style.display = "none";
     }
 
-    function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); if(isFlipped) updateBackUI(); } }
+    function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); updateBackUI(); } }
 
     async function submitResult(isCorrect, e) {
         if(e) e.stopPropagation();
