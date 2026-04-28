@@ -6,7 +6,6 @@
     <title>nihongo no dashi</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
     <style>
-        /* CSS VARIABLES */
         :root {
             --stage-prepping: #8c9e82; --stage-simmering: #e9b86d;
             --stage-boiling: #a66b3e; --stage-infusing: #844c2a; 
@@ -25,67 +24,73 @@
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             background-color: var(--dark-kombu); color: var(--text);
             margin: 0; display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; padding: 20px 0; box-sizing: border-box; user-select: none;
+            min-height: 100vh; padding: 40px 0; box-sizing: border-box; user-select: none;
             overflow-x: hidden; transition: background-color 0.3s, color 0.3s;
         }
 
-        #app { width: 90%; max-width: 450px; text-align: center; perspective: 1000px; position: relative; }
+        #app { width: 90%; max-width: 400px; text-align: center; perspective: 1000px; position: relative; }
 
-        /* THEME TOGGLE */
-        .theme-switch-wrapper { position: absolute; top: -40px; right: 0; display: flex; align-items: center; }
-        .theme-switch { display: inline-block; height: 20px; position: relative; width: 40px; }
+        .theme-switch-wrapper { position: absolute; top: -35px; right: 0; display: flex; align-items: center; }
+        .theme-switch { display: inline-block; height: 18px; position: relative; width: 36px; }
         .theme-switch input { display:none; }
         .slider { background-color: var(--toggle-bg); bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 34px; }
-        .slider:before { background-color: var(--dashi-gold); bottom: 3px; content: ""; height: 14px; left: 3px; position: absolute; transition: .4s; width: 14px; border-radius: 50%; }
-        input:checked + .slider:before { transform: translateX(20px); }
+        .slider:before { background-color: var(--dashi-gold); bottom: 3px; content: ""; height: 12px; left: 3px; position: absolute; transition: .4s; width: 12px; border-radius: 50%; }
+        input:checked + .slider:before { transform: translateX(18px); }
 
-        /* DASHBOARD */
-        #dashboard { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
-        .dash-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: var(--dashi-gold); }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { padding: 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
+        /* DASHBOARD - VERTICAL STACK */
+        #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .dash-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 20px; color: var(--dashi-gold); letter-spacing: 1px; }
         
-        /* PANTRY OVERLAY */
+        .stats-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .stat-row { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 20px; border-radius: 15px; font-weight: bold; color: white;
+            cursor: pointer; transition: transform 0.1s, opacity 0.2s;
+        }
+        .stat-row:active { transform: scale(0.98); }
+        .stat-name { font-size: 0.75rem; letter-spacing: 0.5px; }
+        .stat-count { font-size: 1.2rem; }
+
+        /* PANTRY */
         #pantry-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--overlay-bg); z-index: 2000; display: none;
-            flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto;
+            flex-direction: column; padding: 30px 20px; box-sizing: border-box; overflow-y: auto;
         }
-        .pantry-item { background: var(--card-bg); margin-bottom: 8px; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; text-align: left; border: 1px solid rgba(0,0,0,0.05); }
+        .pantry-item { background: var(--card-bg); margin-bottom: 8px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; text-align: left; border: 1px solid rgba(128,128,128,0.1); }
 
-        /* PROGRESS BAR */
-        #progress-container { width: 100%; height: 6px; background: #333; border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
+        #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
         /* FLASHCARD */
-        .flashcard { width: 100%; height: 400px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; display: none; }
+        .flashcard { width: 100%; height: 420px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 25px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
         
-        .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; overflow: hidden; }
+        .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; }
         #display-front { width: 100%; font-weight: bold; font-size: 5rem; line-height: 1.1; }
 
         .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto; }
-        .type-tag { font-size: 0.65rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; }
-        .reading { font-size: 2.2rem; color: var(--stage-prepping); font-weight: bold; margin-bottom: 5px; }
-        .meaning { font-size: 1.6rem; color: var(--text); margin-bottom: 15px; }
+        .type-tag { font-size: 0.65rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: bold; margin-bottom: 12px; }
+        .reading { font-size: 2.4rem; color: var(--stage-prepping); font-weight: bold; margin-bottom: 5px; }
+        .meaning { font-size: 1.7rem; color: var(--text); margin-bottom: 15px; }
 
         #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.3); padding-top: 15px; display: none; }
         .tray-label { font-size: 0.6rem; color: #888; text-transform: uppercase; margin-bottom: 4px; }
-        .tray-content { font-size: 0.95rem; color: var(--text); margin-bottom: 12px; line-height: 1.4; opacity: 0.9; }
+        .tray-content { font-size: 0.95rem; color: var(--text); margin-bottom: 12px; line-height: 1.5; }
 
-        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 16px; border-radius: 15px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-secondary { background: transparent; color: #888; border: 1px solid #444; padding: 12px; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-secondary { background: transparent; color: #888; border: 1px solid rgba(128,128,128,0.4); padding: 12px; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
         
         #controls { margin-top: 20px; display: none; }
-        .btn-correct { background: #28a745; color: white; margin-bottom: 12px; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; cursor: pointer; }
-        .btn-wrong { background: #dc3545; color: white; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        .btn-correct { background: #28a745; color: white; margin-bottom: 12px; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        .btn-wrong { background: #dc3545; color: white; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: bold; cursor: pointer; }
 
-        #keyboard-legend { margin-top: 30px; display: none; color: #888; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; }
-        .key-hint { border: 1px solid #666; padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; font-family: monospace; }
+        #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; }
+        .key-hint { border: 1px solid rgba(128,128,128,0.5); padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; }
 
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(40, 167, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); } }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.6); } 70% { box-shadow: 0 0 0 20px rgba(40, 167, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6); } 70% { box-shadow: 0 0 0 20px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
         .apply-pulse-correct { animation: pulse-green 0.5s ease-out both; }
         .apply-pulse-wrong { animation: pulse-red 0.5s ease-out both; }
     </style>
@@ -93,16 +98,16 @@
 <body>
 
 <div id="pantry-overlay">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 id="pantry-title" style="margin: 0;">Pantry</h2>
-        <button onclick="closePantry()" style="background: none; border: 1px solid #444; color: var(--text); padding: 8px 15px; border-radius: 8px; cursor: pointer;">CLOSE</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h2 id="pantry-title" style="margin: 0; font-size: 1.5rem;">Pantry</h2>
+        <button onclick="closePantry()" style="background: none; border: 1px solid rgba(128,128,128,0.5); color: var(--text); padding: 8px 18px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">CLOSE</button>
     </div>
     <div id="pantry-list"></div>
 </div>
 
 <div id="app">
     <div class="theme-switch-wrapper">
-        <span style="font-size: 0.7rem; margin-right: 8px; opacity: 0.7;">🌙/☀️</span>
+        <span style="font-size: 0.7rem; margin-right: 8px; opacity: 0.6;">🌙/☀️</span>
         <label class="theme-switch" for="checkbox">
             <input type="checkbox" id="checkbox" />
             <div class="slider"></div>
@@ -111,7 +116,7 @@
 
     <div id="dashboard">
         <div class="dash-title">🍲 NIHONGO NO DASHI</div>
-        <div class="stats-grid" id="stats-display"></div>
+        <div class="stats-list" id="stats-display"></div>
         <button class="btn-main" id="start-btn" onclick="startSession(false)">START SESSION (0)</button>
         <button class="btn-secondary" onclick="startSession(true)">PRACTICE ALL (No Sync)</button>
     </div>
@@ -128,7 +133,7 @@
                 <div id="conj-section"><div class="tray-label">Conjugation</div><div id="conj-text" class="tray-content"></div></div>
                 <div class="tray-label">Example Sentence</div><div id="sent-text" class="tray-content"></div>
             </div>
-            <button style="background:none; border:1px solid #444; color:#888; font-size:0.7rem; padding:5px 10px; border-radius:5px; cursor:pointer; margin-top:auto;" onclick="toggleDetails(event)">DETAILS (F)</button>
+            <button style="background:none; border:1px solid rgba(128,128,128,0.3); color:#888; font-size:0.7rem; padding:6px 12px; border-radius:6px; cursor:pointer; margin-top:auto;" onclick="toggleDetails(event)">DETAILS (F)</button>
         </div>
     </div>
 
@@ -141,7 +146,7 @@
         <span class="key-hint">V</span> Audio &nbsp;
         <span class="key-hint">Space</span> Flip &nbsp;
         <span class="key-hint">1/2</span> Result &nbsp;
-        <span class="key-hint">F</span> Details
+        <span class="key-hint">F</span> Info
     </div>
 </div>
 
@@ -164,15 +169,13 @@
         return STAGES[4];
     }
 
-    /* THEME LOGIC */
+    /* THEME */
     const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
     const currentTheme = localStorage.getItem('theme');
-
     if (currentTheme) {
         document.documentElement.setAttribute('data-theme', currentTheme);
         if (currentTheme === 'light') toggleSwitch.checked = true;
     }
-
     toggleSwitch.addEventListener('change', (e) => {
         const theme = e.target.checked ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', theme);
@@ -201,7 +204,7 @@
         } catch (e) { console.error(e); }
     }
 
-    /* SHORTCUTS */
+    /* CONTROLS */
     window.addEventListener('keydown', e => {
         if (document.getElementById('card').style.display === 'none') return;
         if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
@@ -223,8 +226,7 @@
     function fitText() {
         const el = document.getElementById('display-front');
         const container = el.parentElement;
-        let size = 5.0;
-        el.style.fontSize = size + "rem";
+        let size = 5.0; el.style.fontSize = size + "rem";
         while ((el.scrollHeight > container.offsetHeight - 40 || el.scrollWidth > container.offsetWidth - 40) && size > 1.0) {
             size -= 0.1; el.style.fontSize = size + "rem";
         }
@@ -237,10 +239,10 @@
         document.getElementById('pantry-title').style.color = stage.color;
         document.getElementById('pantry-list').innerHTML = filtered.map(i => `
             <div class="pantry-item">
-                <div><b style="font-size:1.2rem">${i.kanji}</b><br><small style="color:#888">${i.reading}</small></div>
-                <div style="font-size:0.8rem; color:${stage.color}">Lv ${i.level}</div>
+                <div><b style="font-size:1.2rem">${i.kanji}</b><br><small style="color:var(--dashi-gold)">${i.reading}</small></div>
+                <div style="font-size:0.8rem; opacity:0.6;">Lv ${i.level}</div>
             </div>
-        `).join('') || '<p style="color:#666; text-align:center;">Empty stage.</p>';
+        `).join('') || '<p style="color:#666; text-align:center; padding:20px;">Empty stage.</p>';
         document.getElementById('pantry-overlay').style.display = 'flex';
     }
 
@@ -255,9 +257,9 @@
             counts[idx]++;
         });
         document.getElementById('stats-display').innerHTML = STAGES.map((s, i) => `
-            <div class="stat-box" style="background:${s.color}" onclick="openPantry(${i})">
-                <div style="opacity:0.7; font-size:0.6rem">${s.name}</div>
-                <div style="font-size:1.1rem">${counts[i]}</div>
+            <div class="stat-row" style="background:${s.color}" onclick="openPantry(${i})">
+                <div class="stat-name">${s.name}</div>
+                <div class="stat-count">${counts[i]}</div>
             </div>
         `).join('');
         document.getElementById('start-btn').innerText = `START SESSION (${reviewQueue.length})`;
@@ -267,8 +269,7 @@
         isPracticeMode = practice;
         if (practice) reviewQueue = [...masterList].sort(() => 0.5 - Math.random());
         else reviewQueue = masterList.filter(i => i.nextReview <= Date.now());
-        initialQueueLength = reviewQueue.length;
-        completedCount = 0;
+        initialQueueLength = reviewQueue.length; completedCount = 0;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('card').style.display = 'block';
