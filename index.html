@@ -294,4 +294,42 @@
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
         document.getElementById('sent-text').innerHTML = currentItem.sent.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-        document.getElementById('info-tray').
+        document.getElementById('info-tray').style.display = "none";
+        document.getElementById('controls').style.display = "none";
+        isFlipped = false;
+        document.getElementById('card').classList.remove('is-flipped');
+    }
+
+    function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); document.getElementById('controls').style.display = "block"; } }
+    function toggleDetails(e) { if(e) e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
+
+    async function submitResult(isCorrect) {
+        const back = document.getElementById('card-back-ui');
+        back.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
+        if (!isPracticeMode) {
+            const nl = isCorrect ? currentItem.level + 1 : Math.max(0, currentItem.level - 1);
+            const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
+            const nt = isCorrect ? (Date.now() + ivs[Math.min(nl, 8)]) : Date.now();
+            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: nl, nextReview: nt }) });
+        }
+        if (isCorrect || !isPracticeMode) {
+            completedCount++;
+            document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
+            reviewQueue = reviewQueue.filter(i => i !== currentItem);
+        }
+        setTimeout(() => { back.classList.remove('apply-pulse-correct', 'apply-pulse-wrong'); nextItem(); }, 500);
+    }
+
+    function showFinished() {
+        document.getElementById('card').style.display = 'none';
+        document.getElementById('controls').style.display = 'none';
+        document.getElementById('progress-container').style.display = 'none';
+        document.getElementById('keyboard-legend').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        updateDashboard();
+    }
+
+    init();
+</script>
+</body>
+</html>
