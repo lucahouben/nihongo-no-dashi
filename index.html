@@ -18,6 +18,7 @@
             background-color: var(--dark-kombu); color: var(--text);
             margin: 0; display: flex; justify-content: center; align-items: center;
             min-height: 100vh; padding: 20px 0; box-sizing: border-box; user-select: none;
+            overflow-x: hidden;
         }
 
         #app { width: 90%; max-width: 450px; text-align: center; perspective: 1000px; }
@@ -26,38 +27,36 @@
         #dashboard { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         .dash-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: var(--dashi-gold); }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { padding: 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: transform 0.2s; }
-        .stat-box:active { transform: scale(0.95); }
+        .stat-box { padding: 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
         
         /* PANTRY OVERLAY */
         #pantry-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--dark-kombu); z-index: 2000; display: none;
-            flex-direction: column; padding: 20px; box-sizing: border-box;
-            overflow-y: auto;
+            flex-direction: column; padding: 20px; box-sizing: border-box; overflow-y: auto;
         }
-        .pantry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .pantry-item { background: #2a2a2a; margin-bottom: 8px; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; text-align: left; }
-        .pantry-item .jp { font-size: 1.2rem; font-weight: bold; }
-        .pantry-item .en { font-size: 0.8rem; color: #aaa; }
 
         #progress-container { width: 100%; height: 6px; background: #333; border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
-        /* FLASHCARD */
-        .flashcard { width: 100%; height: 380px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; display: none; }
+        /* FLASHCARD - RESTORED SIZE LOGIC */
+        .flashcard { width: 100%; height: 400px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 25px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
-        .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; }
-        #display-front { width: 100%; font-weight: bold; white-space: normal; line-height: 1.1; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        
+        /* FRONT CARD TEXT - RESTORED TO LARGE */
+        .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; overflow: hidden; }
+        #display-front { width: 100%; font-weight: bold; font-size: 5rem; line-height: 1.1; word-wrap: break-word; }
+
         .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto; }
         .type-tag { font-size: 0.65rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; }
-        .reading { font-size: 2rem; color: var(--stage-prepping); font-weight: bold; margin-bottom: 5px; }
-        .meaning { font-size: 1.5rem; color: #fff; margin-bottom: 15px; }
+        .reading { font-size: 2.2rem; color: var(--stage-prepping); font-weight: bold; margin-bottom: 5px; }
+        .meaning { font-size: 1.6rem; color: #fff; margin-bottom: 15px; }
 
         #info-tray { width: 100%; text-align: left; border-top: 1px solid #444; padding-top: 15px; display: none; }
         .tray-label { font-size: 0.6rem; color: #666; text-transform: uppercase; margin-bottom: 4px; }
-        .tray-content { font-size: 0.9rem; color: #ddd; margin-bottom: 12px; line-height: 1.4; }
+        .tray-content { font-size: 0.95rem; color: #ddd; margin-bottom: 12px; line-height: 1.4; }
 
         .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 16px; border-radius: 15px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn-secondary { background: transparent; color: #888; border: 1px solid #444; padding: 12px; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
@@ -68,24 +67,22 @@
 
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(40, 167, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); } }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
-        .apply-pulse-correct { animation: pulse-green 0.6s ease-out both; }
-        .apply-pulse-wrong { animation: pulse-red 0.6s ease-out both; }
+        .apply-pulse-correct { animation: pulse-green 0.5s ease-out both; }
+        .apply-pulse-wrong { animation: pulse-red 0.5s ease-out both; }
     </style>
 </head>
 <body>
 
 <div id="pantry-overlay">
-    <div class="pantry-header">
-        <h2 id="pantry-title" style="color: var(--dashi-gold); margin: 0;">Pantry</h2>
-        <button onclick="closePantry()" style="background: none; border: 1px solid #444; color: white; padding: 5px 15px; border-radius: 5px;">Close</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 id="pantry-title" style="margin: 0;">Pantry</h2>
+        <button onclick="closePantry()" style="background: none; border: 1px solid #444; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer;">CLOSE</button>
     </div>
     <div id="pantry-list"></div>
 </div>
 
 <div id="app">
-    <div id="sync-status" style="font-size: 0.7rem; color: #666; margin-bottom: 10px;">Syncing...</div>
-    
-    <div id="dashboard" style="display: none;">
+    <div id="dashboard">
         <div class="dash-title">🍲 NIHONGO NO DASHI</div>
         <div class="stats-grid" id="stats-display"></div>
         <button class="btn-main" id="start-btn" onclick="startSession(false)">START SESSION (0)</button>
@@ -104,13 +101,13 @@
                 <div id="conj-section"><div class="tray-label">Conjugation</div><div id="conj-text" class="tray-content"></div></div>
                 <div class="tray-label">Example Sentence</div><div id="sent-text" class="tray-content"></div>
             </div>
-            <button style="background:none; border:1px solid #444; color:#666; font-size:0.7rem; padding:5px 10px; border-radius:5px; cursor:pointer; margin-top:auto;" onclick="toggleDetails(event)">SHOW DETAILS</button>
+            <button style="background:none; border:1px solid #444; color:#666; font-size:0.7rem; padding:5px 10px; border-radius:5px; cursor:pointer; margin-top:auto;" onclick="toggleDetails(event)">DETAILS (F)</button>
         </div>
     </div>
 
     <div id="controls">
-        <button class="btn-correct" onclick="submitResult(true)">CORRECT</button>
-        <button class="btn-wrong" onclick="submitResult(false)">INCORRECT</button>
+        <button class="btn-correct" onclick="submitResult(true)">CORRECT (1)</button>
+        <button class="btn-wrong" onclick="submitResult(false)">INCORRECT (2)</button>
     </div>
 </div>
 
@@ -151,27 +148,52 @@
                     });
                 }
             }
-            document.getElementById('sync-status').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
             updateDashboard();
         } catch (e) { console.error(e); }
     }
 
-    function openPantry(stageIdx) {
-        const list = document.getElementById('pantry-list');
-        const title = document.getElementById('pantry-title');
-        const stage = STAGES[stageIdx];
-        title.innerText = stage.name;
-        title.style.color = stage.color;
-        
+    // RESTORED KEYBOARD SHORTCUTS
+    window.addEventListener('keydown', e => {
+        if (document.getElementById('card').style.display === 'none') return;
+        if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
+        if (isFlipped) {
+            if (e.key === '1') submitResult(true);
+            if (e.key === '2') submitResult(false);
+            if (e.key === 'f' || e.key === 'F') toggleDetails(e);
+        }
+        if (e.key === 'v' || e.key === 'V') speakReading();
+    });
+
+    function speakReading() {
+        if (!currentItem) return;
+        const utterance = new SpeechSynthesisUtterance(currentItem.reading);
+        utterance.lang = 'ja-JP';
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // RESTORED FIT TEXT LOGIC
+    function fitText() {
+        const el = document.getElementById('display-front');
+        const container = el.parentElement;
+        let size = 5.0;
+        el.style.fontSize = size + "rem";
+        while ((el.scrollHeight > container.offsetHeight - 40 || el.scrollWidth > container.offsetWidth - 40) && size > 1.0) {
+            size -= 0.1;
+            el.style.fontSize = size + "rem";
+        }
+    }
+
+    function openPantry(idx) {
+        const stage = STAGES[idx];
         const filtered = masterList.filter(i => getStage(i.level).name === stage.name);
-        list.innerHTML = filtered.map(i => `
+        document.getElementById('pantry-title').innerText = stage.name;
+        document.getElementById('pantry-title').style.color = stage.color;
+        document.getElementById('pantry-list').innerHTML = filtered.map(i => `
             <div class="pantry-item">
-                <div><div class="jp">${i.kanji}</div><div class="en">${i.reading}</div></div>
-                <div style="font-size: 0.7rem; color: #666;">Level ${i.level}</div>
+                <div><b style="font-size:1.2rem">${i.kanji}</b><br><small style="color:#888">${i.reading}</small></div>
+                <div style="font-size:0.8rem; color:${stage.color}">Lv ${i.level}</div>
             </div>
-        `).join('') || '<div style="text-align:center; padding:20px; color:#666;">No items in this stage yet.</div>';
-        
+        `).join('') || '<p style="color:#666">No items here.</p>';
         document.getElementById('pantry-overlay').style.display = 'flex';
     }
 
@@ -185,22 +207,19 @@
             const idx = STAGES.findIndex(s => s.name === getStage(i.level).name);
             counts[idx]++;
         });
-
         document.getElementById('stats-display').innerHTML = STAGES.map((s, i) => `
             <div class="stat-box" style="background:${s.color}" onclick="openPantry(${i})">
                 <div style="opacity:0.7; font-size:0.6rem">${s.name}</div>
                 <div style="font-size:1.1rem">${counts[i]}</div>
             </div>
         `).join('');
-
-        const startBtn = document.getElementById('start-btn');
-        startBtn.innerText = `START SESSION (${reviewQueue.length})`;
-        startBtn.disabled = reviewQueue.length === 0;
+        document.getElementById('start-btn').innerText = `START SESSION (${reviewQueue.length})`;
     }
 
     function startSession(practice) {
         isPracticeMode = practice;
-        reviewQueue = practice ? [...masterList].sort(() => 0.5 - Math.random()) : masterList.filter(i => i.nextReview <= Date.now());
+        if (practice) reviewQueue = [...masterList].sort(() => 0.5 - Math.random());
+        else reviewQueue = masterList.filter(i => i.nextReview <= Date.now());
         initialQueueLength = reviewQueue.length;
         completedCount = 0;
         document.getElementById('dashboard').style.display = 'none';
@@ -209,21 +228,16 @@
         nextItem();
     }
 
-    function fitText() {
-        const el = document.getElementById('display-front');
-        let size = 5.0; el.style.fontSize = size + "rem";
-        while ((el.scrollHeight > 300 || el.scrollWidth > 380) && size > 1.0) { size -= 0.2; el.style.fontSize = size + "rem"; }
-    }
-
     function nextItem() {
         if (reviewQueue.length === 0) return showFinished();
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
         document.getElementById('display-front').innerText = currentItem.kanji;
-        requestAnimationFrame(fitText);
-        const stage = getStage(currentItem.level);
-        document.getElementById('card-back-ui').style.borderBottomColor = stage.color;
+        setTimeout(fitText, 10);
+        const s = getStage(currentItem.level);
+        const back = document.getElementById('card-back-ui');
+        back.style.borderBottomColor = s.color;
         document.getElementById('reading-text').innerText = currentItem.reading;
-        document.getElementById('reading-text').style.color = stage.color;
+        document.getElementById('reading-text').style.color = s.color;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
         document.getElementById('sent-text').innerHTML = currentItem.sent.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
@@ -234,28 +248,23 @@
     }
 
     function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); document.getElementById('controls').style.display = "block"; } }
-
-    function toggleDetails(e) { e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
+    function toggleDetails(e) { if(e) e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
 
     async function submitResult(isCorrect) {
         const back = document.getElementById('card-back-ui');
         back.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
-
         if (!isPracticeMode) {
-            const oldLevel = currentItem.level;
-            const newLevel = isCorrect ? oldLevel + 1 : Math.max(0, oldLevel - 1);
-            const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
-            const newTime = isCorrect ? (Date.now() + intervals[Math.min(newLevel, 8)]) : Date.now();
-            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) });
+            const nl = isCorrect ? currentItem.level + 1 : Math.max(0, currentItem.level - 1);
+            const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
+            const nt = isCorrect ? (Date.now() + ivs[Math.min(nl, 8)]) : Date.now();
+            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: nl, nextReview: nt }) });
         }
-
         if (isCorrect || !isPracticeMode) {
             completedCount++;
             document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
             reviewQueue = reviewQueue.filter(i => i !== currentItem);
         }
-
-        setTimeout(() => { back.classList.remove('apply-pulse-correct', 'apply-pulse-wrong'); nextItem(); }, 600);
+        setTimeout(() => { back.classList.remove('apply-pulse-correct', 'apply-pulse-wrong'); nextItem(); }, 500);
     }
 
     function showFinished() {
