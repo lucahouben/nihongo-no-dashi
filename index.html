@@ -31,6 +31,16 @@
 
         #app { width: 90%; max-width: 400px; text-align: center; perspective: 1200px; position: relative; }
 
+        /* EXIT BUTTON - Improved Visibility */
+        #exit-btn {
+            position: absolute; top: -40px; left: 0; display: none;
+            background: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.4);
+            color: #888; font-size: 0.65rem; font-weight: 800; padding: 6px 14px;
+            border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.2s; z-index: 10;
+        }
+        #exit-btn:hover { border-color: var(--dashi-gold); color: var(--dashi-gold); background: rgba(255, 204, 102, 0.1); }
+
         .theme-switch-wrapper { position: absolute; top: -35px; right: 0; display: flex; align-items: center; }
         .theme-switch { display: inline-block; height: 18px; position: relative; width: 36px; }
         .theme-switch input { display:none; }
@@ -47,7 +57,6 @@
         #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
-        /* FLASHCARD */
         .flashcard { width: 100%; height: 480px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); transition: background-color 0.3s; }
@@ -56,11 +65,8 @@
         #display-front { width: 100%; font-weight: 800; font-size: 5rem; line-height: 1.1; font-family: serif; word-break: keep-all; }
 
         .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto; }
-        
-        /* IMPROVED WRAPPING */
         .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; word-break: keep-all; overflow-wrap: anywhere; }
         .meaning { font-size: 1.6rem; color: var(--text); margin-bottom: 15px; font-weight: 400; }
-
         .type-tag { font-size: 0.6rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px; }
 
         #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.3); padding-top: 15px; display: none; }
@@ -71,9 +77,6 @@
         .btn-correct, .btn-wrong { border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-family: 'Inter'; font-size: 0.8rem; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 8px; }
         .btn-wrong { background: #dc3545; color: white; }
-
-        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; font-weight: 800; font-size: 0.9rem; cursor: pointer; width: 100%; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; font-family: 'Inter'; }
-        .btn-secondary { background: transparent; color: #888; border: 1px solid rgba(128,128,128,0.4); padding: 12px; border-radius: 15px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; font-size: 0.8rem; font-family: 'Inter'; }
 
         #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .key-hint { border: 1px solid rgba(128,128,128,0.5); padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; }
@@ -86,9 +89,9 @@
 </head>
 <body>
 
-<div id="pantry-overlay" style="display:none;"></div>
-
 <div id="app">
+    <button id="exit-btn" onclick="exitSession()">Exit Session</button>
+
     <div class="theme-switch-wrapper">
         <span style="font-size: 0.6rem; margin-right: 8px; opacity: 0.6; font-weight: 800;">🌙 / ☀️</span>
         <label class="theme-switch" for="checkbox">
@@ -99,7 +102,7 @@
 
     <div id="dashboard">
         <div class="dash-title">Nihongo no Dashi</div>
-        <div class="stats-list" id="stats-display"></div>
+        <div id="stats-display" class="stats-list"></div>
         <button class="btn-main" id="start-btn" onclick="startSession(false)">Start Session (0)</button>
         <button class="btn-secondary" onclick="startSession(true)">Practice All (No Sync)</button>
     </div>
@@ -152,12 +155,10 @@
     }
 
     const cardEl = document.getElementById('card');
+    const exitBtn = document.getElementById('exit-btn');
 
-    // SPOILER PREVENTION: Front updates immediately, back updates only when hidden
     cardEl.addEventListener('transitionend', (e) => {
-        if (e.propertyName === 'transform' && !isFlipped) {
-            updateBackUI();
-        }
+        if (e.propertyName === 'transform' && !isFlipped) updateBackUI();
     });
 
     if (localStorage.getItem('theme') === 'light') {
@@ -193,6 +194,12 @@
         } catch (e) { console.error(e); }
     }
 
+    function exitSession() {
+        if (confirm("End session? Progress on the current card won't be saved.")) {
+            showFinished();
+        }
+    }
+
     window.addEventListener('keydown', e => {
         if (cardEl.style.display === 'none') return;
         if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
@@ -202,6 +209,7 @@
             if (e.key === 'f' || e.key === 'F') toggleDetails(e);
         }
         if (e.key === 'v' || e.key === 'V') speakReading();
+        if (e.key === 'Escape') exitSession();
     });
 
     function speakReading() {
@@ -225,7 +233,7 @@
         const counts = [0,0,0,0,0];
         masterList.forEach(i => counts[STAGES.findIndex(s => s.name === getStage(i.level).name)]++);
         document.getElementById('stats-display').innerHTML = STAGES.map((s, i) => `
-            <div class="stat-row" style="background:${s.color}" onclick="openPantry(${i})">
+            <div class="stat-row" style="background:${s.color}">
                 <div class="stat-name">${s.name}</div><div class="stat-count">${counts[i]}</div>
             </div>`).join('');
         document.getElementById('start-btn').innerText = `Start Session (${reviewQueue.length})`;
@@ -234,23 +242,25 @@
     function startSession(practice) {
         isPracticeMode = practice;
         reviewQueue = practice ? [...masterList].sort(() => 0.5 - Math.random()) : masterList.filter(i => i.nextReview <= Date.now());
+        if (reviewQueue.length === 0 && !practice) return alert("Nothing to review!");
+        
         initialQueueLength = reviewQueue.length; completedCount = 0;
+        
+        // Toggle Visibility
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('progress-container').style.display = 'block';
         cardEl.style.display = 'block';
+        exitBtn.style.display = 'block'; // Ensure button shows in both modes
         document.getElementById('keyboard-legend').style.display = 'block';
+        
         nextItem(true);
     }
 
     function nextItem(firstItem = false) {
         if (reviewQueue.length === 0) return showFinished();
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
-        
-        // Front (Kanji) changes immediately
         document.getElementById('display-front').innerText = currentItem.kanji;
         fitText();
-
-        // If it's the very first item, update back immediately too
         if (firstItem) updateBackUI();
     }
 
@@ -305,6 +315,7 @@
 
     function showFinished() {
         cardEl.style.display = 'none';
+        exitBtn.style.display = 'none';
         document.getElementById('progress-container').style.display = 'none';
         document.getElementById('keyboard-legend').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
