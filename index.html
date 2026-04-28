@@ -38,37 +38,35 @@
         .slider:before { background-color: var(--dashi-gold); bottom: 3px; content: ""; height: 12px; left: 3px; position: absolute; transition: .4s; width: 12px; border-radius: 50%; }
         input:checked + .slider:before { transform: translateX(18px); }
 
-        #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: background-color 0.3s; }
+        #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .dash-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; }
         
         .stats-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-radius: 15px; font-weight: 600; color: white; cursor: pointer; }
-        .stat-name { font-size: 0.7rem; letter-spacing: 1px; }
-
-        #pantry-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); z-index: 2000; display: none; flex-direction: column; padding: 30px 20px; box-sizing: border-box; overflow-y: auto; }
-        .pantry-item { background: var(--card-bg); margin-bottom: 8px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(128,128,128,0.1); }
 
         #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
-        /* FLASHCARD ENHANCEMENTS */
-        .flashcard { width: 100%; height: 480px; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
+        /* FLASHCARD */
+        .flashcard { width: 100%; height: 480px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); transition: background-color 0.3s; }
         
         .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; }
-        #display-front { width: 100%; font-weight: 800; font-size: 5rem; line-height: 1.1; font-family: serif; }
+        #display-front { width: 100%; font-weight: 800; font-size: 5rem; line-height: 1.1; font-family: serif; word-break: keep-all; }
 
         .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto; }
-        .type-tag { font-size: 0.6rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px; }
-        .reading { font-size: 2.4rem; color: var(--stage-prepping); font-weight: 800; margin-bottom: 5px; }
+        
+        /* IMPROVED WRAPPING */
+        .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; word-break: keep-all; overflow-wrap: anywhere; }
         .meaning { font-size: 1.6rem; color: var(--text); margin-bottom: 15px; font-weight: 400; }
+
+        .type-tag { font-size: 0.6rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px; }
 
         #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.3); padding-top: 15px; display: none; }
         .tray-label { font-size: 0.55rem; color: #888; text-transform: uppercase; margin-bottom: 4px; font-weight: 800; letter-spacing: 1px; }
-        .tray-content { font-size: 0.9rem; color: var(--text); margin-bottom: 12px; line-height: 1.5; }
+        .tray-content { font-size: 0.9rem; color: var(--text); margin-bottom: 12px; line-height: 1.5; word-break: keep-all; }
 
-        /* EMBEDDED CONTROLS */
         .embedded-controls { width: 100%; margin-top: auto; padding-top: 20px; }
         .btn-correct, .btn-wrong { border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-family: 'Inter'; font-size: 0.8rem; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 8px; }
@@ -88,13 +86,7 @@
 </head>
 <body>
 
-<div id="pantry-overlay">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-        <h2 id="pantry-title" style="margin: 0; font-size: 1.5rem; font-weight: 800;">Pantry</h2>
-        <button onclick="closePantry()" style="background: none; border: 1px solid rgba(128,128,128,0.5); color: var(--text); padding: 8px 18px; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 0.7rem;">CLOSE</button>
-    </div>
-    <div id="pantry-list"></div>
-</div>
+<div id="pantry-overlay" style="display:none;"></div>
 
 <div id="app">
     <div class="theme-switch-wrapper">
@@ -146,7 +138,6 @@
 
     let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false;
     let completedCount = 0, initialQueueLength = 0, isPracticeMode = false;
-    let pendingReset = false;
 
     const STAGES = [
         { name: "PREPPING", color: "#8c9e82" }, { name: "SIMMERING", color: "#e9b86d" },
@@ -160,23 +151,21 @@
         return STAGES[4];
     }
 
-    const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
     const cardEl = document.getElementById('card');
 
-    /* FLIP SYNC: Only update UI when the card is hidden from the user's view */
-    cardEl.addEventListener('transitionend', () => {
-        if (!isFlipped && pendingReset) {
-            updateCardUI();
-            pendingReset = false;
+    // SPOILER PREVENTION: Front updates immediately, back updates only when hidden
+    cardEl.addEventListener('transitionend', (e) => {
+        if (e.propertyName === 'transform' && !isFlipped) {
+            updateBackUI();
         }
     });
 
     if (localStorage.getItem('theme') === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
-        toggleSwitch.checked = true;
+        document.getElementById('checkbox').checked = true;
     }
 
-    toggleSwitch.addEventListener('change', (e) => {
+    document.getElementById('checkbox').addEventListener('change', (e) => {
         const theme = e.target.checked ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
@@ -250,20 +239,23 @@
         document.getElementById('progress-container').style.display = 'block';
         cardEl.style.display = 'block';
         document.getElementById('keyboard-legend').style.display = 'block';
-        nextItem();
+        nextItem(true);
     }
 
-    function nextItem() {
+    function nextItem(firstItem = false) {
         if (reviewQueue.length === 0) return showFinished();
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
-        // The first item loads immediately; subsequent ones load after transitionend
-        if (!pendingReset) updateCardUI();
+        
+        // Front (Kanji) changes immediately
+        document.getElementById('display-front').innerText = currentItem.kanji;
+        fitText();
+
+        // If it's the very first item, update back immediately too
+        if (firstItem) updateBackUI();
     }
 
-    function updateCardUI() {
+    function updateBackUI() {
         if (!currentItem) return;
-        document.getElementById('display-front').innerText = currentItem.kanji;
-        setTimeout(fitText, 10);
         const s = getStage(currentItem.level);
         const back = document.getElementById('card-back-ui');
         back.style.borderBottomColor = s.color;
@@ -307,25 +299,9 @@
             back.classList.remove('apply-pulse-correct', 'apply-pulse-wrong');
             isFlipped = false;
             cardEl.classList.remove('is-flipped');
-            pendingReset = true; // Signal to update UI once flipped back
             nextItem();
         }, 400);
     }
-
-    function openPantry(idx) {
-        const stage = STAGES[idx];
-        const filtered = masterList.filter(i => getStage(i.level).name === stage.name);
-        document.getElementById('pantry-title').innerText = stage.name;
-        document.getElementById('pantry-title').style.color = stage.color;
-        document.getElementById('pantry-list').innerHTML = filtered.map(i => `
-            <div class="pantry-item">
-                <div><b style="font-size:1.1rem">${i.kanji}</b><br><small style="color:var(--dashi-gold); font-weight:600;">${i.reading}</small></div>
-                <div style="font-size:0.7rem; opacity:0.6; font-weight:800;">LV ${i.level}</div>
-            </div>`).join('') || '<p style="text-align:center; padding:20px; opacity:0.5;">Empty stage.</p>';
-        document.getElementById('pantry-overlay').style.display = 'flex';
-    }
-
-    function closePantry() { document.getElementById('pantry-overlay').style.display = 'none'; }
 
     function showFinished() {
         cardEl.style.display = 'none';
