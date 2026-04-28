@@ -22,17 +22,15 @@
         }
 
         body {
-            /* 'Inter' for UI/English, standard Fallbacks for Japanese */
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--dark-kombu); color: var(--text);
             margin: 0; display: flex; justify-content: center; align-items: center;
             min-height: 100vh; padding: 40px 0; box-sizing: border-box; user-select: none;
-            overflow-x: hidden; transition: background-color 0.3s, color 0.3s;
+            overflow: hidden; transition: background-color 0.3s;
         }
 
-        #app { width: 90%; max-width: 400px; text-align: center; perspective: 1000px; position: relative; }
+        #app { width: 90%; max-width: 400px; text-align: center; perspective: 1200px; position: relative; }
 
-        /* THEME TOGGLE */
         .theme-switch-wrapper { position: absolute; top: -35px; right: 0; display: flex; align-items: center; }
         .theme-switch { display: inline-block; height: 18px; position: relative; width: 36px; }
         .theme-switch input { display:none; }
@@ -40,39 +38,26 @@
         .slider:before { background-color: var(--dashi-gold); bottom: 3px; content: ""; height: 12px; left: 3px; position: absolute; transition: .4s; width: 12px; border-radius: 50%; }
         input:checked + .slider:before { transform: translateX(18px); }
 
-        /* DASHBOARD */
-        #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: background-color 0.3s; }
         .dash-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; }
         
         .stats-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-        .stat-row { 
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 14px 20px; border-radius: 15px; font-weight: 600; color: white;
-            cursor: pointer; transition: transform 0.1s, opacity 0.2s;
-        }
-        .stat-row:active { transform: scale(0.98); }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-radius: 15px; font-weight: 600; color: white; cursor: pointer; }
         .stat-name { font-size: 0.7rem; letter-spacing: 1px; }
-        .stat-count { font-size: 1.2rem; }
 
-        /* PANTRY */
-        #pantry-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--overlay-bg); z-index: 2000; display: none;
-            flex-direction: column; padding: 30px 20px; box-sizing: border-box; overflow-y: auto;
-        }
-        .pantry-item { background: var(--card-bg); margin-bottom: 8px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; text-align: left; border: 1px solid rgba(128,128,128,0.1); }
+        #pantry-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--overlay-bg); z-index: 2000; display: none; flex-direction: column; padding: 30px 20px; box-sizing: border-box; overflow-y: auto; }
+        .pantry-item { background: var(--card-bg); margin-bottom: 8px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(128,128,128,0.1); }
 
         #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
-        /* FLASHCARD */
-        .flashcard { width: 100%; height: 420px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; display: none; }
+        /* FLASHCARD ENHANCEMENTS */
+        .flashcard { width: 100%; height: 480px; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 25px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); transition: background-color 0.3s; }
         
-        /* Ensure Japanese text stays in its own font style */
         .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; }
-        #display-front { width: 100%; font-weight: 800; font-size: 5rem; line-height: 1.1; font-family: serif; } /* Japanese serif look */
+        #display-front { width: 100%; font-weight: 800; font-size: 5rem; line-height: 1.1; font-family: serif; }
 
         .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto; }
         .type-tag { font-size: 0.6rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px; }
@@ -81,14 +66,16 @@
 
         #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.3); padding-top: 15px; display: none; }
         .tray-label { font-size: 0.55rem; color: #888; text-transform: uppercase; margin-bottom: 4px; font-weight: 800; letter-spacing: 1px; }
-        .tray-content { font-size: 0.95rem; color: var(--text); margin-bottom: 12px; line-height: 1.5; font-weight: 400; }
+        .tray-content { font-size: 0.9rem; color: var(--text); margin-bottom: 12px; line-height: 1.5; }
 
-        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; font-weight: 800; font-size: 0.9rem; cursor: pointer; width: 100%; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .btn-secondary { background: transparent; color: #888; border: 1px solid rgba(128,128,128,0.4); padding: 12px; border-radius: 15px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; font-size: 0.8rem; }
-        
-        #controls { margin-top: 20px; display: none; }
-        .btn-correct { background: #28a745; color: white; margin-bottom: 12px; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
-        .btn-wrong { background: #dc3545; color: white; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
+        /* EMBEDDED CONTROLS */
+        .embedded-controls { width: 100%; margin-top: auto; padding-top: 20px; }
+        .btn-correct, .btn-wrong { border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-family: 'Inter'; font-size: 0.8rem; }
+        .btn-correct { background: #28a745; color: white; margin-bottom: 8px; }
+        .btn-wrong { background: #dc3545; color: white; }
+
+        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; font-weight: 800; font-size: 0.9rem; cursor: pointer; width: 100%; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; font-family: 'Inter'; }
+        .btn-secondary { background: transparent; color: #888; border: 1px solid rgba(128,128,128,0.4); padding: 12px; border-radius: 15px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; font-size: 0.8rem; font-family: 'Inter'; }
 
         #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .key-hint { border: 1px solid rgba(128,128,128,0.5); padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; }
@@ -134,16 +121,15 @@
             <div id="reading-text" class="reading"></div>
             <div id="meaning-text" class="meaning"></div>
             <div id="info-tray">
-                <div id="conj-section"><div class="tray-label">Conjugation</div><div id="conj-text" class="tray-content"></div></div>
-                <div class="tray-label">Example Sentence</div><div id="sent-text" class="tray-content"></div>
+                <div class="tray-label">Conjugation</div><div id="conj-text" class="tray-content"></div>
+                <div class="tray-label">Example</div><div id="sent-text" class="tray-content"></div>
             </div>
-            <button style="background:none; border:1px solid rgba(128,128,128,0.3); color:#888; font-size:0.6rem; padding:6px 12px; border-radius:6px; cursor:pointer; margin-top:auto; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
+            <div class="embedded-controls">
+                <button class="btn-correct" onclick="submitResult(true, event)">Correct (1)</button>
+                <button class="btn-wrong" onclick="submitResult(false, event)">Wrong (2)</button>
+                <button style="background:none; border:none; color:#888; font-size:0.55rem; width:100%; margin-top:5px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
+            </div>
         </div>
-    </div>
-
-    <div id="controls">
-        <button class="btn-correct" onclick="submitResult(true)">Correct (1)</button>
-        <button class="btn-wrong" onclick="submitResult(false)">Incorrect (2)</button>
     </div>
 
     <div id="keyboard-legend">
@@ -160,6 +146,7 @@
 
     let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false;
     let completedCount = 0, initialQueueLength = 0, isPracticeMode = false;
+    let pendingReset = false;
 
     const STAGES = [
         { name: "PREPPING", color: "#8c9e82" }, { name: "SIMMERING", color: "#e9b86d" },
@@ -173,13 +160,22 @@
         return STAGES[4];
     }
 
-    /* THEME */
     const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
-    const currentTheme = localStorage.getItem('theme');
-    if (currentTheme) {
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        if (currentTheme === 'light') toggleSwitch.checked = true;
+    const cardEl = document.getElementById('card');
+
+    /* FLIP SYNC: Only update UI when the card is hidden from the user's view */
+    cardEl.addEventListener('transitionend', () => {
+        if (!isFlipped && pendingReset) {
+            updateCardUI();
+            pendingReset = false;
+        }
+    });
+
+    if (localStorage.getItem('theme') === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        toggleSwitch.checked = true;
     }
+
     toggleSwitch.addEventListener('change', (e) => {
         const theme = e.target.checked ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', theme);
@@ -208,9 +204,8 @@
         } catch (e) { console.error(e); }
     }
 
-    /* CONTROLS */
     window.addEventListener('keydown', e => {
-        if (document.getElementById('card').style.display === 'none') return;
+        if (cardEl.style.display === 'none') return;
         if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
         if (isFlipped) {
             if (e.key === '1') submitResult(true);
@@ -221,10 +216,10 @@
     });
 
     function speakReading() {
-        if (!currentItem) return;
-        const utterance = new SpeechSynthesisUtterance(currentItem.reading);
-        utterance.lang = 'ja-JP';
-        window.speechSynthesis.speak(utterance);
+        if (currentItem) {
+            const u = new SpeechSynthesisUtterance(currentItem.reading);
+            u.lang = 'ja-JP'; window.speechSynthesis.speak(u);
+        }
     }
 
     function fitText() {
@@ -236,47 +231,24 @@
         }
     }
 
-    function openPantry(idx) {
-        const stage = STAGES[idx];
-        const filtered = masterList.filter(i => getStage(i.level).name === stage.name);
-        document.getElementById('pantry-title').innerText = stage.name;
-        document.getElementById('pantry-title').style.color = stage.color;
-        document.getElementById('pantry-list').innerHTML = filtered.map(i => `
-            <div class="pantry-item">
-                <div><b style="font-size:1.2rem">${i.kanji}</b><br><small style="color:var(--dashi-gold); font-weight:600;">${i.reading}</small></div>
-                <div style="font-size:0.8rem; opacity:0.6; font-weight:800;">LV ${i.level}</div>
-            </div>
-        `).join('') || '<p style="color:#666; text-align:center; padding:20px;">Empty stage.</p>';
-        document.getElementById('pantry-overlay').style.display = 'flex';
-    }
-
-    function closePantry() { document.getElementById('pantry-overlay').style.display = 'none'; }
-
     function updateDashboard() {
-        const now = Date.now();
-        reviewQueue = masterList.filter(i => i.nextReview <= now);
+        reviewQueue = masterList.filter(i => i.nextReview <= Date.now());
         const counts = [0,0,0,0,0];
-        masterList.forEach(i => {
-            const idx = STAGES.findIndex(s => s.name === getStage(i.level).name);
-            counts[idx]++;
-        });
+        masterList.forEach(i => counts[STAGES.findIndex(s => s.name === getStage(i.level).name)]++);
         document.getElementById('stats-display').innerHTML = STAGES.map((s, i) => `
             <div class="stat-row" style="background:${s.color}" onclick="openPantry(${i})">
-                <div class="stat-name">${s.name}</div>
-                <div class="stat-count">${counts[i]}</div>
-            </div>
-        `).join('');
+                <div class="stat-name">${s.name}</div><div class="stat-count">${counts[i]}</div>
+            </div>`).join('');
         document.getElementById('start-btn').innerText = `Start Session (${reviewQueue.length})`;
     }
 
     function startSession(practice) {
         isPracticeMode = practice;
-        if (practice) reviewQueue = [...masterList].sort(() => 0.5 - Math.random());
-        else reviewQueue = masterList.filter(i => i.nextReview <= Date.now());
+        reviewQueue = practice ? [...masterList].sort(() => 0.5 - Math.random()) : masterList.filter(i => i.nextReview <= Date.now());
         initialQueueLength = reviewQueue.length; completedCount = 0;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('progress-container').style.display = 'block';
-        document.getElementById('card').style.display = 'block';
+        cardEl.style.display = 'block';
         document.getElementById('keyboard-legend').style.display = 'block';
         nextItem();
     }
@@ -284,6 +256,12 @@
     function nextItem() {
         if (reviewQueue.length === 0) return showFinished();
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
+        // The first item loads immediately; subsequent ones load after transitionend
+        if (!pendingReset) updateCardUI();
+    }
+
+    function updateCardUI() {
+        if (!currentItem) return;
         document.getElementById('display-front').innerText = currentItem.kanji;
         setTimeout(fitText, 10);
         const s = getStage(currentItem.level);
@@ -294,35 +272,63 @@
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
         document.getElementById('sent-text').innerHTML = currentItem.sent.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        document.getElementById('conj-text').innerText = currentItem.conj || "None";
         document.getElementById('info-tray').style.display = "none";
-        document.getElementById('controls').style.display = "none";
-        isFlipped = false;
-        document.getElementById('card').classList.remove('is-flipped');
     }
 
-    function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); document.getElementById('controls').style.display = "block"; } }
-    function toggleDetails(e) { if(e) e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
+    function handleCardClick() { 
+        if(!isFlipped) { isFlipped = true; cardEl.classList.add('is-flipped'); } 
+    }
 
-    async function submitResult(isCorrect) {
+    function toggleDetails(e) { 
+        if(e) e.stopPropagation(); 
+        const t = document.getElementById('info-tray'); 
+        t.style.display = t.style.display === "block" ? "none" : "block"; 
+    }
+
+    async function submitResult(isCorrect, e) {
+        if(e) e.stopPropagation();
         const back = document.getElementById('card-back-ui');
         back.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
+        
         if (!isPracticeMode) {
             const nl = isCorrect ? currentItem.level + 1 : Math.max(0, currentItem.level - 1);
             const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
-            const nt = isCorrect ? (Date.now() + ivs[Math.min(nl, 8)]) : Date.now();
-            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: nl, nextReview: nt }) });
+            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: nl, nextReview: (Date.now() + ivs[Math.min(nl, 8)]) }) });
         }
+
         if (isCorrect || !isPracticeMode) {
             completedCount++;
             document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
             reviewQueue = reviewQueue.filter(i => i !== currentItem);
         }
-        setTimeout(() => { back.classList.remove('apply-pulse-correct', 'apply-pulse-wrong'); nextItem(); }, 500);
+
+        setTimeout(() => { 
+            back.classList.remove('apply-pulse-correct', 'apply-pulse-wrong');
+            isFlipped = false;
+            cardEl.classList.remove('is-flipped');
+            pendingReset = true; // Signal to update UI once flipped back
+            nextItem();
+        }, 400);
     }
 
+    function openPantry(idx) {
+        const stage = STAGES[idx];
+        const filtered = masterList.filter(i => getStage(i.level).name === stage.name);
+        document.getElementById('pantry-title').innerText = stage.name;
+        document.getElementById('pantry-title').style.color = stage.color;
+        document.getElementById('pantry-list').innerHTML = filtered.map(i => `
+            <div class="pantry-item">
+                <div><b style="font-size:1.1rem">${i.kanji}</b><br><small style="color:var(--dashi-gold); font-weight:600;">${i.reading}</small></div>
+                <div style="font-size:0.7rem; opacity:0.6; font-weight:800;">LV ${i.level}</div>
+            </div>`).join('') || '<p style="text-align:center; padding:20px; opacity:0.5;">Empty stage.</p>';
+        document.getElementById('pantry-overlay').style.display = 'flex';
+    }
+
+    function closePantry() { document.getElementById('pantry-overlay').style.display = 'none'; }
+
     function showFinished() {
-        document.getElementById('card').style.display = 'none';
-        document.getElementById('controls').style.display = 'none';
+        cardEl.style.display = 'none';
         document.getElementById('progress-container').style.display = 'none';
         document.getElementById('keyboard-legend').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
