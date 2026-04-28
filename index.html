@@ -31,7 +31,8 @@
 
         #app { width: 90%; max-width: 400px; text-align: center; position: relative; }
 
-        .theme-switch-wrapper { position: absolute; top: -45px; right: 0; display: flex; align-items: center; z-index: 10; }
+        /* UI CONTROLS */
+        .theme-switch-wrapper { position: absolute; top: -45px; right: 0; display: flex; align-items: center; z-index: 100; }
         .theme-switch { display: inline-block; height: 18px; position: relative; width: 36px; }
         .theme-switch input { display:none; }
         .slider { background-color: var(--toggle-bg); bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 34px; }
@@ -42,27 +43,29 @@
             position: absolute; top: -45px; left: 0; display: none;
             background: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.4);
             color: #888; font-size: 0.65rem; font-weight: 800; padding: 6px 14px;
-            border-radius: 8px; cursor: pointer; text-transform: uppercase; z-index: 10;
+            border-radius: 8px; cursor: pointer; text-transform: uppercase; z-index: 100;
         }
 
+        /* DRAWER */
         #add-form-overlay {
             position: fixed; top: 100%; left: 0; width: 100%; height: 100%;
-            background: var(--dark-kombu); z-index: 2000; transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--dark-kombu); z-index: 2000; transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             padding: 40px 25px; box-sizing: border-box; display: flex; flex-direction: column;
         }
         #add-form-overlay.active { top: 0; }
         
-        .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .form-group { text-align: left; margin-bottom: 18px; }
-        .form-group label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--dashi-gold); display: block; margin-bottom: 6px; letter-spacing: 1px; }
+        .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .form-group { text-align: left; margin-bottom: 15px; }
+        .form-group label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--dashi-gold); display: block; margin-bottom: 5px; }
         .form-group input { 
-            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.2); 
+            width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); 
             background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 1rem; box-sizing: border-box; outline: none;
         }
 
-        #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        /* DASHBOARD */
+        #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: block; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .dash-title { font-size: 1rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; margin: 0; }
+        .dash-title { font-size: 0.9rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; margin: 0; }
         .btn-add-toggle { 
             background: var(--dashi-gold); border: none; width: 32px; height: 32px; 
             border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -72,26 +75,26 @@
         .stats-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-radius: 15px; font-weight: 600; color: white; }
 
-        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; font-weight: 800; font-size: 0.9rem; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
         .btn-secondary { background: transparent; color: #888; border: 1px solid rgba(128,128,128,0.4); padding: 12px; border-radius: 15px; width: 100%; margin-top: 10px; cursor: pointer; }
 
-        #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 20px; overflow: hidden; display: none; }
-        #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
+        /* FLASHCARD */
+        #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 20px; display: none; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s; }
 
-        .flashcard { width: 100%; height: 480px; max-height: 70vh; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
+        .flashcard { width: 100%; height: 480px; max-height: 70vh; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 30px 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); transition: background-color 0.3s; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 30px 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); }
         .card-front { background: var(--dashi-gold); color: #1a1a1a; justify-content: center; font-size: 5rem; font-weight: 800; font-family: serif; }
         .card-back { background: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); overflow-y: auto; scrollbar-width: none; }
-        
+
         .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; }
         .meaning { font-size: 1.5rem; color: var(--text); margin-bottom: 15px; }
-
         #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.2); padding-top: 15px; display: none; margin-bottom: 20px; }
         .tray-label { font-size: 0.55rem; color: #888; text-transform: uppercase; margin-bottom: 4px; font-weight: 800; }
-        .tray-content { font-size: 0.9rem; color: var(--text); margin-bottom: 12px; line-height: 1.5; }
+        .tray-content { font-size: 0.85rem; color: var(--text); margin-bottom: 12px; line-height: 1.4; }
 
-        .embedded-controls { width: 100%; margin-top: auto; padding-top: 10px; }
+        .embedded-controls { width: 100%; margin-top: auto; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 8px; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
         .btn-wrong { background: #dc3545; color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
 
@@ -105,23 +108,23 @@
     <button id="exit-btn" onclick="location.reload()">Exit Session</button>
 
     <div class="theme-switch-wrapper">
-        <label class="theme-switch" for="checkbox">
-            <input type="checkbox" id="checkbox" />
+        <label class="theme-switch">
+            <input type="checkbox" id="theme-toggle" />
             <div class="slider"></div>
         </label>
     </div>
 
     <div id="add-form-overlay">
         <div class="form-header">
-            <h2 class="dash-title">Add New Word</h2>
+            <h2 class="dash-title">Add to Pantry</h2>
             <button class="btn-add-toggle" onclick="toggleAddForm()" style="background:#444; color:white;">×</button>
         </div>
-        <div class="form-group"><label>Kanji / Word</label><input type="text" id="new-kanji" placeholder="食べる"></div>
-        <div class="form-group"><label>Reading</label><input type="text" id="new-reading" placeholder="たべる"></div>
-        <div class="form-group"><label>Meaning</label><input type="text" id="new-meaning" placeholder="To eat"></div>
-        <div class="form-group"><label>Word Type</label><input type="text" id="new-type" placeholder="Verb"></div>
-        <div class="form-group"><label>Example Sentence</label><input type="text" id="new-example" placeholder="Optional"></div>
-        <button class="btn-main" onclick="submitNewWord()" id="add-submit-btn" style="margin-top:auto;">Save to Pot</button>
+        <div class="form-group"><label>Kanji</label><input type="text" id="new-kanji"></div>
+        <div class="form-group"><label>Reading</label><input type="text" id="new-reading"></div>
+        <div class="form-group"><label>Meaning</label><input type="text" id="new-meaning"></div>
+        <div class="form-group"><label>Type</label><input type="text" id="new-type"></div>
+        <div class="form-group"><label>Example</label><input type="text" id="new-example"></div>
+        <button class="btn-main" onclick="submitNewWord()" id="add-submit-btn" style="margin-top:auto;">Save Word</button>
     </div>
 
     <div id="dashboard">
@@ -135,7 +138,6 @@
     </div>
 
     <div id="progress-container"><div id="progress-bar"></div></div>
-    
     <div class="flashcard" id="card" onclick="handleCardClick()">
         <div class="card-face card-front" id="display-front">...</div>
         <div class="card-face card-back" id="card-back-ui">
@@ -146,16 +148,13 @@
             <div class="embedded-controls">
                 <button class="btn-correct" onclick="submitResult(true, event)">Correct (1)</button>
                 <button class="btn-wrong" onclick="submitResult(false, event)">Wrong (2)</button>
-                <button style="background:none; border:none; color:#888; font-size:0.55rem; width:100%; margin-top:5px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
+                <button style="background:none; border:none; color:#888; font-size:0.55rem; width:100%; margin-top:10px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
             </div>
         </div>
     </div>
 
     <div id="keyboard-legend">
-        <span class="key-hint">V</span> Audio &nbsp;
-        <span class="key-hint">Space</span> Flip &nbsp;
-        <span class="key-hint">1/2</span> Result &nbsp;
-        <span class="key-hint">F</span> Info
+        <span class="key-hint">V</span> Audio &nbsp; <span class="key-hint">Space</span> Flip &nbsp; <span class="key-hint">1/2</span> Result &nbsp; <span class="key-hint">F</span> Info
     </div>
 </div>
 
@@ -178,33 +177,30 @@
         return STAGES[4];
     }
 
+    // --- THEME ---
+    const themeToggle = document.getElementById('theme-toggle');
     if (localStorage.getItem('theme') === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
-        document.getElementById('checkbox').checked = true;
+        themeToggle.checked = true;
     }
-    document.getElementById('checkbox').addEventListener('change', (e) => {
-        const theme = e.target.checked ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+    themeToggle.addEventListener('change', (e) => {
+        const t = e.target.checked ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('theme', t);
     });
 
-    // KEYBOARD SHORTCUTS
+    // --- KEYBOARD ---
     window.addEventListener('keydown', e => {
-        // Don't trigger if drawer is open or card is hidden
         if (document.getElementById('add-form-overlay').classList.contains('active')) return;
-        if (document.getElementById('card').style.display === 'none') return;
+        if (document.getElementById('card').style.display !== 'block') return;
 
-        if (e.code === 'Space' || e.code === 'Enter') { 
-            e.preventDefault(); 
-            if (!isFlipped) handleCardClick(); 
-        }
+        if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
         if (isFlipped) {
             if (e.key === '1') submitResult(true);
             if (e.key === '2') submitResult(false);
-            if (e.key === 'f' || e.key === 'F') toggleDetails(e);
+            if (e.key === 'f' || e.key === 'F') toggleDetails();
         }
         if (e.key === 'v' || e.key === 'V') speakReading();
-        if (e.key === 'Escape') location.reload();
     });
 
     function speakReading() {
@@ -214,25 +210,31 @@
         }
     }
 
+    // --- DATA ---
     async function init() {
-        const res = await fetch(CSV_URL + '&cb=' + Date.now());
-        const text = await res.text();
-        const lines = text.split(/\r?\n/).slice(1);
-        masterList = lines.filter(l => l.trim()).map(line => {
-            const p = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            return {
-                kanji: p[0]?.replace(/"/g, '').trim(), reading: p[1]?.replace(/"/g, '').trim(),
-                meaning: p[2]?.replace(/"/g, '').trim(), type: p[3]?.replace(/"/g, '').trim(),
-                sent: p[5]?.replace(/"/g, '').trim(), level: parseInt(p[6]) || 0, nextReview: parseInt(p[7]) || 0
-            };
-        });
-        updateDashboard();
+        try {
+            const res = await fetch(CSV_URL + '&cb=' + Date.now());
+            const text = await res.text();
+            const lines = text.split(/\r?\n/).slice(1);
+            masterList = lines.filter(l => l.trim()).map(line => {
+                const p = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return {
+                    kanji: p[0]?.replace(/"/g, '').trim(), reading: p[1]?.replace(/"/g, '').trim(),
+                    meaning: p[2]?.replace(/"/g, '').trim(), type: p[3]?.replace(/"/g, '').trim(),
+                    sent: p[5]?.replace(/"/g, '').trim(), level: parseInt(p[6]) || 0, nextReview: parseInt(p[7]) || 0
+                };
+            });
+            updateDashboard();
+        } catch (e) { console.error(e); }
     }
 
     function updateDashboard() {
         reviewQueue = masterList.filter(i => i.nextReview <= Date.now());
         const counts = [0,0,0,0,0];
-        masterList.forEach(i => counts[STAGES.findIndex(s => s.name === getStage(i.level).name)]++);
+        masterList.forEach(i => {
+            const stageIdx = STAGES.findIndex(s => s.name === getStage(i.level).name);
+            if(stageIdx !== -1) counts[stageIdx]++;
+        });
         document.getElementById('stats-display').innerHTML = STAGES.map((s, i) => `
             <div class="stat-row" style="background:${s.color}"><div>${s.name}</div><div>${counts[i]}</div></div>`).join('');
         document.getElementById('start-btn').innerText = `Start Session (${reviewQueue.length})`;
@@ -251,16 +253,16 @@
             example: document.getElementById('new-example').value,
             conj: ""
         };
-        if(!data.kanji || !data.meaning) return alert("Enter Kanji and Meaning.");
+        if(!data.kanji || !data.meaning) return alert("Missing data.");
         btn.innerText = "Saving..."; btn.disabled = true;
         await fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-        alert("Added!"); location.reload();
+        location.reload();
     }
 
     function startSession(practice) {
         isPracticeMode = practice;
         reviewQueue = practice ? [...masterList].sort(() => 0.5 - Math.random()) : masterList.filter(i => i.nextReview <= Date.now());
-        if (reviewQueue.length === 0) return alert("Nothing to review!");
+        if (reviewQueue.length === 0) return alert("Empty!");
         initialQueueLength = reviewQueue.length;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('card').style.display = 'block';
@@ -285,8 +287,29 @@
         document.getElementById('reading-text').style.color = s.color;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
-        document.getElementById('sent-text').innerText = currentItem.sent || "No example.";
+        document.getElementById('sent-text').innerText = currentItem.sent || "...";
         document.getElementById('info-tray').style.display = "none";
     }
 
-    function handleCardClick() { if(!isFlipped) { is
+    function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); if(isFlipped) updateBackUI(); } }
+
+    async function submitResult(isCorrect, e) {
+        if(e) e.stopPropagation();
+        if (!isPracticeMode) {
+            const nl = isCorrect ? currentItem.level + 1 : Math.max(0, currentItem.level - 1);
+            const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
+            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: nl, nextReview: (Date.now() + ivs[Math.min(nl, 8)]) }) });
+        }
+        completedCount++;
+        document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
+        reviewQueue = reviewQueue.filter(i => i !== currentItem);
+        isFlipped = false; document.getElementById('card').classList.remove('is-flipped');
+        setTimeout(() => nextItem(), 300);
+    }
+
+    function toggleDetails(e) { if(e) e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
+
+    init();
+</script>
+</body>
+</html>
