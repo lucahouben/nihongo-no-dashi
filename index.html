@@ -4,68 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>nihongo no dashi</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏮</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
     <style>
         :root {
-            --apprentice: #dd0093; --guru: #882d9e; --master: #294ddb;
-            --enlightened: #0093dd; --burned: #434343; --wani-blue: #00aaff;
-            --wani-pink: #f100a1; --dark: #1a1a1a; --text: #ffffff; --card-bg: #2a2a2a;
+            /* SOUP THEME COLORS */
+            --stage-raw: #8c9e82;      /* Raw Ingredients */
+            --stage-simmer: #e9b86d;   /* Simmering */
+            --stage-boil: #a66b3e;     /* Boiling */
+            --stage-rich: #844c2a;     /* Rich Broth */
+            --stage-perfect: #d32f2f;  /* The Perfect Dashi */
+            
+            --dashi-gold: #ffcc66;
+            --dark-kombu: #121412;
+            --text: #f4f4f4;
+            --card-bg: #222522;
         }
 
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: var(--dark); color: var(--text);
+            background-color: var(--dark-kombu); color: var(--text);
             margin: 0; display: flex; justify-content: center; align-items: center;
-            min-height: 100vh;
-            padding: 20px 0;
-            box-sizing: border-box;
-            user-select: none;
+            min-height: 100vh; padding: 20px 0; box-sizing: border-box; user-select: none;
         }
 
-        #app { 
-            width: 90%; 
-            max-width: 450px; 
-            padding: 10px; 
-            text-align: center; 
-            perspective: 1000px; 
-        }
+        #app { width: 90%; max-width: 450px; text-align: center; perspective: 1000px; }
 
-        /* --- FEEDBACK ANIMATIONS --- */
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.8); }
-            70% { box-shadow: 0 0 0 30px rgba(40, 167, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
-        }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.8); }
-            70% { box-shadow: 0 0 0 30px rgba(220, 53, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-        }
+        /* --- DASHBOARD STYLES --- */
+        #dashboard { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        .dash-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: var(--dashi-gold); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; }
+        .stat-box { padding: 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; text-align: center; color: white; }
         
-        .apply-pulse-correct { animation: pulse-green 0.6s ease-out both; }
-        .apply-pulse-wrong { animation: pulse-red 0.6s ease-out both; }
-
-        #level-feedback {
-            position: fixed; top: 5%; left: 50%; transform: translateX(-50%) translateY(20px);
-            padding: 10px 25px; border-radius: 50px; font-weight: bold; font-size: 0.9rem;
-            z-index: 1000; opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.4); color: white;
-            white-space: nowrap;
-        }
-        #level-feedback.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-        #progress-container { width: 100%; height: 6px; background: #333; border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: var(--wani-blue); transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        .info-bar { font-size: 0.7rem; color: #666; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        /* --- PROGRESS BAR --- */
+        #progress-container { width: 100%; height: 6px; background: #333; border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
+        #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
         .flashcard {
-            width: 100%; 
-            height: 380px; /* Fixed height for consistent measurement */
-            position: relative; 
-            transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
-            cursor: pointer;
+            width: 100%; height: 380px; position: relative; 
+            transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+            cursor: pointer; display: none;
         }
         .flashcard.is-flipped { transform: rotateY(180deg); }
 
@@ -75,102 +52,63 @@
             padding: 25px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
 
-        .card-front { 
-            background-color: var(--wani-blue); 
-            justify-content: center; 
-            overflow: hidden; 
-        }
-
-        #display-front {
-            width: 100%;
-            font-weight: bold;
-            white-space: normal;
-            word-break: keep-all;
-            overflow-wrap: break-word;
-            line-height: 1.2;
-        }
+        .card-front { background-color: var(--dashi-gold); color: #222; justify-content: center; }
+        #display-front { width: 100%; font-weight: bold; white-space: normal; word-break: keep-all; overflow-wrap: break-word; line-height: 1.1; }
 
         .card-back { 
-            background-color: var(--card-bg); 
-            transform: rotateY(180deg);
-            border-bottom: 10px solid var(--apprentice); 
-            justify-content: flex-start;
-            overflow-y: auto;
+            background-color: var(--card-bg); transform: rotateY(180deg);
+            border-bottom: 10px solid var(--stage-raw); justify-content: flex-start; overflow-y: auto;
         }
 
-        .type-tag { font-size: 0.65rem; color: var(--wani-blue); border: 1px solid var(--wani-blue); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; }
-        .reading { font-size: 2rem; color: var(--apprentice); font-weight: bold; margin-bottom: 5px; }
+        .type-tag { font-size: 0.65rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; }
+        .reading { font-size: 2rem; color: var(--stage-raw); font-weight: bold; margin-bottom: 5px; }
         .meaning { font-size: 1.5rem; color: #fff; margin-bottom: 15px; }
 
         #info-tray { width: 100%; text-align: left; border-top: 1px solid #444; padding-top: 15px; display: none; }
         .tray-label { font-size: 0.6rem; color: #666; text-transform: uppercase; margin-bottom: 4px; }
         .tray-content { font-size: 0.9rem; color: #ddd; margin-bottom: 12px; line-height: 1.4; }
-        .tray-content b { color: var(--wani-pink); font-weight: bold; }
 
-        #controls { min-height: 140px; margin-top: 20px; display: flex; flex-direction: column; justify-content: center; width: 100%; }
-        button { width: 100%; padding: 16px; border-radius: 15px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }
-        button:active { transform: scale(0.96); }
-
+        .btn-main { background: var(--dashi-gold); color: #222; padding: 16px; border-radius: 15px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 12px; }
         .btn-wrong { background: #dc3545; color: white; }
-        .btn-details { background: none; color: #666; border: 1px solid #333; padding: 8px 15px; font-size: 0.7rem; width: auto; margin: 10px auto; }
+        
+        #controls { margin-top: 20px; display: none; }
 
-        .stats-area { margin-top: 15px; width: 100%; }
-        .stats { font-size: 0.75rem; color: #555; font-weight: bold; margin-bottom: 8px; }
-        .shortcut-legend { font-size: 0.6rem; color: #444; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; letter-spacing: 0.5px; }
-        .key { border: 1px solid #333; padding: 1px 4px; border-radius: 3px; margin-right: 2px; color: #666; }
-
-        @media (max-width: 480px) {
-            #app { padding: 5px; }
-            .flashcard { height: 350px; }
-            .card-face { padding: 20px; }
-            .reading { font-size: 1.8rem; }
-            .meaning { font-size: 1.3rem; }
-            button { padding: 14px; }
-            .shortcut-legend { display: none; }
-        }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(40, 167, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
+        .apply-pulse-correct { animation: pulse-green 0.6s ease-out both; }
+        .apply-pulse-wrong { animation: pulse-red 0.6s ease-out both; }
     </style>
 </head>
 <body>
 
-<div id="level-feedback"></div>
-
 <div id="app">
+    <div id="dashboard">
+        <div class="dash-title">Soup Progress</div>
+        <div class="stats-grid" id="stats-display">
+            </div>
+        <button class="btn-main" id="start-btn" onclick="startSession()">START SIMMERING (0)</button>
+    </div>
+
     <div id="progress-container"><div id="progress-bar"></div></div>
-    <div class="info-bar" id="status">Syncing Database...</div>
     
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front">
-            <div id="display-front">...</div>
-        </div>
+        <div class="card-face card-front"><div id="display-front">...</div></div>
         <div class="card-face card-back" id="card-back-ui">
             <div id="type-text" class="type-tag"></div>
             <div id="reading-text" class="reading"></div>
             <div id="meaning-text" class="meaning"></div>
             <div id="info-tray">
-                <div id="conj-section"><div class="tray-label">Conjugation / Forms</div><div id="conj-text" class="tray-content"></div></div>
-                <div class="tray-label">Example Sentence</div><div id="sent-text" class="tray-content"></div>
+                <div id="conj-section"><div class="tray-label">Conjugation</div><div id="conj-text" class="tray-content"></div></div>
+                <div class="tray-label">Example</div><div id="sent-text" class="tray-content"></div>
             </div>
-            <button class="btn-details" id="details-btn" onclick="toggleDetails(event)">SHOW DETAILS</button>
+            <button style="background:none; border:1px solid #444; color:#666; font-size:0.7rem; padding:5px 10px; border-radius:5px; cursor:pointer; margin-top:auto;" onclick="toggleDetails(event)">DETAILS</button>
         </div>
     </div>
 
     <div id="controls">
-        <div id="action-btns" style="visibility: hidden;">
-            <button class="btn-correct" onclick="submitResult(true)">CORRECT</button>
-            <button class="btn-wrong" onclick="submitResult(false)">INCORRECT</button>
-        </div>
-    </div>
-
-    <div class="stats-area">
-        <div class="stats">ITEMS REMAINING: <span id="queue-num">0</span></div>
-        <div class="shortcut-legend">
-            <span><span class="key">SPACE</span> Flip</span>
-            <span><span class="key">F</span> Info</span>
-            <span><span class="key">V</span> Audio</span>
-            <span><span class="key">1</span> OK</span>
-            <span><span class="key">2</span> No</span>
-        </div>
+        <button class="btn-correct" onclick="submitResult(true)">CORRECT</button>
+        <button class="btn-wrong" onclick="submitResult(false)">INCORRECT</button>
     </div>
 </div>
 
@@ -178,203 +116,142 @@
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ7pDV2s1fCr9E_RI-47f8XTwMUWUQ9bvNiuPVv3D1uM690uoUWxXfMGbtRLbKNTeZVN8Xf-2jjrPb/pub?output=csv';
     const SAVE_URL = 'https://script.google.com/macros/s/AKfycbxFMuiEDLfqrDdGSVBezgZ6EG3kEJonGdtJ9JcGxw9_Zwua_MhjN_CQkLHG3gC_d8wo9Q/exec';
 
-    let masterList = [], currentItem = null, reviewQueue = [], isFlipped = false;
-    let initialQueueLength = 0, completedCount = 0;
+    let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false;
+    let completedCount = 0, initialQueueLength = 0;
 
-    const WK_STAGES = [
-        { name: "APPRENTICE", color: "#dd0093" }, { name: "GURU", color: "#882d9e" },
-        { name: "MASTER", color: "#294ddb" }, { name: "ENLIGHTENED", color: "#0093dd" }, { name: "BURNED", color: "#434343" }
+    const STAGES = [
+        { name: "PREPPING", color: "#8c9e82" },    // Level 0-4
+        { name: "SIMMERING", color: "#e9b86d" },   // Level 5-6
+        { name: "BOILING", color: "#a66b3e" },     // Level 7
+        { name: "INFUSING", color: "#844c2a" },    // Level 8
+        { name: "THE PERFECT DASHI", color: "#d32f2f" } // Burned
     ];
 
-    function fitText() {
-        const el = document.getElementById('display-front');
-        const parent = el.parentElement;
-        
-        let size = 5.0; 
-        el.style.fontSize = size + "rem";
-
-        // Constraints with padding safety
-        const maxHeight = parent.offsetHeight - 60;
-        const maxWidth = parent.offsetWidth - 40;
-
-        // Shrink if text overflows height OR width
-        while ((el.scrollHeight > maxHeight || el.scrollWidth > maxWidth) && size > 1.0) {
-            size -= 0.2;
-            el.style.fontSize = size + "rem";
-        }
-    }
-
-    function handleCardClick() {
-        if (!isFlipped) flipCard();
-    }
-
-    function speakCurrentItem() {
-        if (!currentItem) return;
-        const textToSpeak = currentItem.reading || currentItem.kanji;
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'ja-JP'; utterance.rate = 0.9;
-        window.speechSynthesis.speak(utterance);
-    }
-
-    function getWKInfo(level) {
-        if (level <= 4) return WK_STAGES[0];
-        if (level <= 6) return WK_STAGES[1];
-        if (level === 7) return WK_STAGES[2];
-        if (level === 8) return WK_STAGES[3];
-        return WK_STAGES[4];
+    function getStage(level) {
+        if (level <= 4) return STAGES[0];
+        if (level <= 6) return STAGES[1];
+        if (level === 7) return STAGES[2];
+        if (level === 8) return STAGES[3];
+        return STAGES[4];
     }
 
     async function init() {
         try {
             const res = await fetch(CSV_URL + '&t=' + Date.now());
             const csvText = await res.text();
-            const lines = csvText.split(/\r?\n/);
-            masterList = [];
-            
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                
-                if (parts.length >= 8) {
-                    const item = {
-                        kanji: parts[0].replace(/^"|"$/g, '').trim(),
-                        reading: parts[1].replace(/^"|"$/g, '').trim(),
-                        meaning: parts[2].replace(/^"|"$/g, '').trim(),
-                        type: parts[3].replace(/^"|"$/g, '').trim(),
-                        conj: parts[4].replace(/^"|"$/g, '').trim(),
-                        sent: parts[5].replace(/^"|"$/g, '').trim(),
-                        level: parseInt(parts[6].replace(/^"|"$/g, '')) || 0,
-                        nextReview: parseInt(parts[7].replace(/^"|"$/g, '')) || 0
-                    };
-                    if (item.kanji && isNaN(item.kanji)) masterList.push(item);
-                }
-            }
-            refreshQueue();
-        } catch (err) { 
-            console.error("Load Error:", err);
-            document.getElementById('status').innerText = "SYNC ERROR"; 
-        }
+            const lines = csvText.split(/\r?\n/).slice(1);
+            masterList = lines.map(line => {
+                const p = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
+                return { kanji: p[0], reading: p[1], meaning: p[2], type: p[3], conj: p[4], sent: p[5], level: parseInt(p[6]) || 0, nextReview: parseInt(p[7]) || 0 };
+            }).filter(i => i.kanji && isNaN(i.kanji));
+
+            updateDashboard();
+        } catch (e) { document.querySelector('.dash-title').innerText = "CONNECTION ERROR"; }
     }
 
-    function refreshQueue() {
+    function updateDashboard() {
         const now = Date.now();
-        reviewQueue = masterList.filter(item => item.nextReview <= now);
-        if (initialQueueLength === 0 && reviewQueue.length > 0) initialQueueLength = reviewQueue.length;
-        document.getElementById('queue-num').innerText = reviewQueue.length;
-        if (reviewQueue.length > 0) { if (!currentItem) nextItem(); } 
-        else { showFinished(); }
+        reviewQueue = masterList.filter(i => i.nextReview <= now);
+        
+        const counts = [0,0,0,0,0];
+        masterList.forEach(i => {
+            const s = getStage(i.level);
+            counts[STAGES.indexOf(s)]++;
+        });
+
+        const grid = document.getElementById('stats-display');
+        grid.innerHTML = STAGES.map((s, idx) => `
+            <div class="stat-box" style="background:${s.color}">
+                <div style="opacity:0.8">${s.name}</div>
+                <div style="font-size:1.2rem">${counts[idx]}</div>
+            </div>
+        `).join('');
+
+        document.getElementById('start-btn').innerText = `START SESSION (${reviewQueue.length})`;
+        if(reviewQueue.length === 0) document.getElementById('start-btn').disabled = true;
+    }
+
+    function startSession() {
+        initialQueueLength = reviewQueue.length;
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('progress-container').style.display = 'block';
+        document.getElementById('card').style.display = 'block';
+        nextItem();
+    }
+
+    function fitText() {
+        const el = document.getElementById('display-front');
+        let size = 5.0; el.style.fontSize = size + "rem";
+        while ((el.scrollHeight > 300 || el.scrollWidth > 380) && size > 1.0) {
+            size -= 0.2; el.style.fontSize = size + "rem";
+        }
     }
 
     function nextItem() {
+        if (reviewQueue.length === 0) return showFinished();
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
+        
         const display = document.getElementById('display-front');
         display.innerText = currentItem.kanji;
-        
-        // Wait for DOM to render content before measuring
-        requestAnimationFrame(() => {
-            fitText();
-        });
+        requestAnimationFrame(fitText);
 
+        const stage = getStage(currentItem.level);
+        document.getElementById('card-back-ui').style.borderBottomColor = stage.color;
         document.getElementById('reading-text').innerText = currentItem.reading;
+        document.getElementById('reading-text').style.color = stage.color;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
-        const info = getWKInfo(currentItem.level);
-        document.getElementById('card-back-ui').style.borderBottomColor = info.color;
-        document.getElementById('reading-text').style.color = info.color;
-        
-        if (!currentItem.conj || currentItem.conj === "" || currentItem.conj === "N/A") {
-            document.getElementById('conj-section').style.display = "none";
-        } else {
-            document.getElementById('conj-section').style.display = "block";
-            document.getElementById('conj-text').innerText = currentItem.conj;
-        }
-        
         document.getElementById('sent-text').innerHTML = currentItem.sent.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        
         document.getElementById('info-tray').style.display = "none";
-        document.getElementById('details-btn').innerText = "SHOW DETAILS";
-        document.getElementById('status').innerText = "Reviewing Kanji";
+        document.getElementById('controls').style.display = "none";
+        isFlipped = false;
+        document.getElementById('card').classList.remove('is-flipped');
     }
 
+    function handleCardClick() { if(!isFlipped) flipCard(); }
     function flipCard() {
-        if (isFlipped || !currentItem) return;
         isFlipped = true;
         document.getElementById('card').classList.add('is-flipped');
-        document.getElementById('action-btns').style.visibility = 'visible';
+        document.getElementById('controls').style.display = "block";
     }
 
     function toggleDetails(e) {
-        if(e) e.stopPropagation(); if(!isFlipped) return;
+        e.stopPropagation();
         const tray = document.getElementById('info-tray');
-        const btn = document.getElementById('details-btn');
-        const isOpen = tray.style.display === "block";
-        tray.style.display = isOpen ? "none" : "block";
-        btn.innerText = isOpen ? "SHOW DETAILS" : "HIDE DETAILS";
+        tray.style.display = tray.style.display === "block" ? "none" : "block";
     }
 
-    function flashFeedback(isUp, newLevel) {
-        const info = getWKInfo(newLevel);
-        const fb = document.getElementById('level-feedback');
-        fb.innerHTML = `${isUp ? '↑' : '↓'} ${info.name} ${newLevel}`;
-        fb.style.backgroundColor = info.color;
-        fb.classList.add('show');
-        setTimeout(() => fb.classList.remove('show'), 1500);
-    }
-
-   async function submitResult(isCorrect) {
-        if (!currentItem || !currentItem.kanji) return;
-        const cardContainer = document.getElementById('card');
-        const backFace = document.getElementById('card-back-ui');
-        backFace.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
+    async function submitResult(isCorrect) {
+        const back = document.getElementById('card-back-ui');
+        back.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
 
         const oldLevel = currentItem.level;
         const newLevel = isCorrect ? oldLevel + 1 : Math.max(0, oldLevel - 1);
         const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
         const newTime = isCorrect ? (Date.now() + intervals[Math.min(newLevel, 8)]) : Date.now();
-        
-        if (isCorrect) {
-            completedCount++;
-            const progressPercent = Math.min((completedCount / initialQueueLength) * 100, 100);
-            document.getElementById('progress-bar').style.width = progressPercent + "%";
-        }
-        
-        flashFeedback(isCorrect, newLevel);
+
         fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) });
-        currentItem.level = newLevel; 
-        currentItem.nextReview = newTime;
+
+        if(isCorrect) {
+            completedCount++;
+            document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
+            reviewQueue = reviewQueue.filter(i => i !== currentItem);
+        }
 
         setTimeout(() => {
-            isFlipped = false;
-            cardContainer.classList.remove('is-flipped');
-            backFace.classList.remove('apply-pulse-correct', 'apply-pulse-wrong');
-            document.getElementById('action-btns').style.visibility = 'hidden';
-            setTimeout(() => { currentItem = null; refreshQueue(); }, 400); 
-        }, 600); 
+            back.classList.remove('apply-pulse-correct', 'apply-pulse-wrong');
+            nextItem();
+        }, 600);
     }
 
     function showFinished() {
-        currentItem = null;
-        const front = document.getElementById('display-front');
-        front.style.fontSize = "1.5rem";
-        front.innerHTML = `
-            <div style="font-size: 3rem; margin-bottom: 20px;">🎉</div>
-            <div style="font-size: 1.5rem; font-weight: bold;">お疲れ様でした！</div>
-        `;
-        document.getElementById('status').innerText = "SESSION COMPLETE";
-        document.getElementById('queue-num').innerText = "0";
-        document.getElementById('progress-bar').style.width = "100%";
-        document.getElementById('action-btns').style.visibility = 'hidden';
+        document.getElementById('card').style.display = 'none';
+        document.getElementById('controls').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        updateDashboard();
+        alert("Broth Perfected! Session Complete.");
     }
-
-    window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space') { e.preventDefault(); flipCard(); }
-        if (e.key.toLowerCase() === 'f') { toggleDetails(); }
-        if (e.key.toLowerCase() === 'v') { speakCurrentItem(); }
-        if (isFlipped) {
-            if (e.key === '1') submitResult(true);
-            if (e.key === '2') submitResult(false);
-        }
-    });
 
     init();
 </script>
