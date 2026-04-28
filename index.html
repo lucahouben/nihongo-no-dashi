@@ -16,7 +16,7 @@
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
             background-color: var(--dark); color: var(--text);
             margin: 0; display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; /* Changed from height: 100vh to allow scrolling on small screens */
+            min-height: 100vh;
             padding: 20px 0;
             box-sizing: border-box;
             user-select: none;
@@ -59,10 +59,9 @@
 
         .info-bar { font-size: 0.7rem; color: #666; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* Responsive Card Container */
         .flashcard {
             width: 100%; 
-            min-height: 380px; /* Base height */
+            height: 380px; /* Fixed height for consistent measurement */
             position: relative; 
             transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -85,8 +84,10 @@
         #display-front {
             width: 100%;
             font-weight: bold;
-            white-space: normal; /* Allow wrap if JS doesn't shrink enough */
-            word-break: break-all;
+            white-space: normal;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+            line-height: 1.2;
         }
 
         .card-back { 
@@ -94,7 +95,7 @@
             transform: rotateY(180deg);
             border-bottom: 10px solid var(--apprentice); 
             justify-content: flex-start;
-            overflow-y: auto; /* Allow scrolling inside the card back if info is long */
+            overflow-y: auto;
         }
 
         .type-tag { font-size: 0.65rem; color: var(--wani-blue); border: 1px solid var(--wani-blue); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; }
@@ -119,15 +120,14 @@
         .shortcut-legend { font-size: 0.6rem; color: #444; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; letter-spacing: 0.5px; }
         .key { border: 1px solid #333; padding: 1px 4px; border-radius: 3px; margin-right: 2px; color: #666; }
 
-        /* --- MOBILE ADJUSTMENTS --- */
         @media (max-width: 480px) {
             #app { padding: 5px; }
-            .flashcard { min-height: 350px; }
+            .flashcard { height: 350px; }
             .card-face { padding: 20px; }
             .reading { font-size: 1.8rem; }
             .meaning { font-size: 1.3rem; }
             button { padding: 14px; }
-            .shortcut-legend { display: none; } /* Hide shortcuts on mobile as there's no keyboard */
+            .shortcut-legend { display: none; }
         }
     </style>
 </head>
@@ -189,10 +189,16 @@
     function fitText() {
         const el = document.getElementById('display-front');
         const parent = el.parentElement;
+        
         let size = 5.0; 
         el.style.fontSize = size + "rem";
 
-        while (el.scrollWidth > (parent.offsetWidth - 40) && size > 1.2) {
+        // Constraints with padding safety
+        const maxHeight = parent.offsetHeight - 60;
+        const maxWidth = parent.offsetWidth - 40;
+
+        // Shrink if text overflows height OR width
+        while ((el.scrollHeight > maxHeight || el.scrollWidth > maxWidth) && size > 1.0) {
             size -= 0.2;
             el.style.fontSize = size + "rem";
         }
@@ -265,7 +271,10 @@
         const display = document.getElementById('display-front');
         display.innerText = currentItem.kanji;
         
-        fitText();
+        // Wait for DOM to render content before measuring
+        requestAnimationFrame(() => {
+            fitText();
+        });
 
         document.getElementById('reading-text').innerText = currentItem.reading;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
