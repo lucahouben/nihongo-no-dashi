@@ -7,16 +7,10 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
     <style>
         :root {
-            --stage-prepping: #8c9e82; 
-            --stage-simmering: #e9b86d;
-            --stage-boiling: #a66b3e;  
-            --stage-infusing: #844c2a; 
-            --stage-perfect: #d32f2f;  
-            
-            --dashi-gold: #ffcc66;
-            --dark-kombu: #121412;
-            --text: #f4f4f4;
-            --card-bg: #222522;
+            --stage-prepping: #8c9e82; --stage-simmering: #e9b86d;
+            --stage-boiling: #a66b3e; --stage-infusing: #844c2a; 
+            --stage-perfect: #d32f2f; --dashi-gold: #ffcc66;
+            --dark-kombu: #121412; --text: #f4f4f4; --card-bg: #222522;
         }
 
         body {
@@ -29,35 +23,34 @@
         #app { width: 90%; max-width: 450px; text-align: center; perspective: 1000px; }
 
         /* DASHBOARD */
-        #dashboard { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); margin-bottom: 20px; }
-        .dash-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: var(--dashi-gold); letter-spacing: 1px; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; }
-        .stat-box { padding: 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); }
+        #dashboard { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .dash-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: var(--dashi-gold); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { padding: 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: transform 0.2s; }
+        .stat-box:active { transform: scale(0.95); }
         
+        /* PANTRY OVERLAY */
+        #pantry-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark-kombu); z-index: 2000; display: none;
+            flex-direction: column; padding: 20px; box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .pantry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .pantry-item { background: #2a2a2a; margin-bottom: 8px; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; text-align: left; }
+        .pantry-item .jp { font-size: 1.2rem; font-weight: bold; }
+        .pantry-item .en { font-size: 0.8rem; color: #aaa; }
+
         #progress-container { width: 100%; height: 6px; background: #333; border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
-        .flashcard {
-            width: 100%; height: 380px; position: relative; 
-            transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
-            cursor: pointer; display: none;
-        }
+        /* FLASHCARD */
+        .flashcard { width: 100%; height: 380px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
-
-        .card-face {
-            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
-            border-radius: 25px; display: flex; flex-direction: column; align-items: center;
-            padding: 25px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-        }
-
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 25px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; }
-        #display-front { width: 100%; font-weight: bold; white-space: normal; word-break: keep-all; line-height: 1.1; }
-
-        .card-back { 
-            background-color: var(--card-bg); transform: rotateY(180deg);
-            border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto;
-        }
-
+        #display-front { width: 100%; font-weight: bold; white-space: normal; line-height: 1.1; }
+        .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto; }
         .type-tag { font-size: 0.65rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; }
         .reading { font-size: 2rem; color: var(--stage-prepping); font-weight: bold; margin-bottom: 5px; }
         .meaning { font-size: 1.5rem; color: #fff; margin-bottom: 15px; }
@@ -66,8 +59,8 @@
         .tray-label { font-size: 0.6rem; color: #666; text-transform: uppercase; margin-bottom: 4px; }
         .tray-content { font-size: 0.9rem; color: #ddd; margin-bottom: 12px; line-height: 1.4; }
 
-        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 16px; border-radius: 15px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; transition: opacity 0.2s; }
-        .btn-main:disabled { opacity: 0.3; cursor: default; }
+        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 16px; border-radius: 15px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-secondary { background: transparent; color: #888; border: 1px solid #444; padding: 12px; border-radius: 15px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
         
         #controls { margin-top: 20px; display: none; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 12px; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; cursor: pointer; }
@@ -81,11 +74,22 @@
 </head>
 <body>
 
+<div id="pantry-overlay">
+    <div class="pantry-header">
+        <h2 id="pantry-title" style="color: var(--dashi-gold); margin: 0;">Pantry</h2>
+        <button onclick="closePantry()" style="background: none; border: 1px solid #444; color: white; padding: 5px 15px; border-radius: 5px;">Close</button>
+    </div>
+    <div id="pantry-list"></div>
+</div>
+
 <div id="app">
-    <div id="dashboard">
+    <div id="sync-status" style="font-size: 0.7rem; color: #666; margin-bottom: 10px;">Syncing...</div>
+    
+    <div id="dashboard" style="display: none;">
         <div class="dash-title">🍲 NIHONGO NO DASHI</div>
         <div class="stats-grid" id="stats-display"></div>
-        <button class="btn-main" id="start-btn" onclick="startSession()">START SESSION (0)</button>
+        <button class="btn-main" id="start-btn" onclick="startSession(false)">START SESSION (0)</button>
+        <button class="btn-secondary" onclick="startSession(true)">PRACTICE ALL (No Sync)</button>
     </div>
 
     <div id="progress-container"><div id="progress-bar"></div></div>
@@ -115,66 +119,75 @@
     const SAVE_URL = 'https://script.google.com/macros/s/AKfycbxFMuiEDLfqrDdGSVBezgZ6EG3kEJonGdtJ9JcGxw9_Zwua_MhjN_CQkLHG3gC_d8wo9Q/exec';
 
     let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false;
-    let completedCount = 0, initialQueueLength = 0;
+    let completedCount = 0, initialQueueLength = 0, isPracticeMode = false;
 
     const STAGES = [
-        { name: "PREPPING", color: "#8c9e82" },
-        { name: "SIMMERING", color: "#e9b86d" },
-        { name: "BOILING", color: "#a66b3e" },
-        { name: "INFUSING", color: "#844c2a" },
+        { name: "PREPPING", color: "#8c9e82" }, { name: "SIMMERING", color: "#e9b86d" },
+        { name: "BOILING", color: "#a66b3e" }, { name: "INFUSING", color: "#844c2a" },
         { name: "PERFECT DASHI", color: "#d32f2f" }
     ];
 
     function getStage(level) {
-        if (level <= 4) return STAGES[0];
-        if (level <= 6) return STAGES[1];
-        if (level === 7) return STAGES[2];
-        if (level === 8) return STAGES[3];
+        if (level <= 2) return STAGES[0]; if (level <= 4) return STAGES[1];
+        if (level <= 6) return STAGES[2]; if (level <= 8) return STAGES[3];
         return STAGES[4];
     }
 
     async function init() {
         try {
-            const res = await fetch(CSV_URL + '&t=' + Date.now());
+            const res = await fetch(CSV_URL + '&cb=' + Date.now());
             const csvText = await res.text();
             const lines = csvText.split(/\r?\n/);
-            
             masterList = [];
-            // USING YOUR ORIGINAL ROBUST PARSER
             for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                
-                if (parts.length >= 8) {
+                const line = lines[i].trim(); if (!line) continue;
+                const p = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                if (p.length >= 8) {
                     masterList.push({
-                        kanji: parts[0].replace(/^"|"$/g, '').trim(),
-                        reading: parts[1].replace(/^"|"$/g, '').trim(),
-                        meaning: parts[2].replace(/^"|"$/g, '').trim(),
-                        type: parts[3].replace(/^"|"$/g, '').trim(),
-                        conj: parts[4].replace(/^"|"$/g, '').trim(),
-                        sent: parts[5].replace(/^"|"$/g, '').trim(),
-                        level: parseInt(parts[6].replace(/^"|"$/g, '')) || 0,
-                        nextReview: parseInt(parts[7].replace(/^"|"$/g, '')) || 0
+                        kanji: p[0].replace(/^"|"$/g, '').trim(), reading: p[1].replace(/^"|"$/g, '').trim(),
+                        meaning: p[2].replace(/^"|"$/g, '').trim(), type: p[3].replace(/^"|"$/g, '').trim(),
+                        conj: p[4].replace(/^"|"$/g, '').trim(), sent: p[5].replace(/^"|"$/g, '').trim(),
+                        level: parseInt(p[6].replace(/^"|"$/g, '')) || 0, nextReview: parseInt(p[7].replace(/^"|"$/g, '')) || 0
                     });
                 }
             }
+            document.getElementById('sync-status').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
             updateDashboard();
         } catch (e) { console.error(e); }
     }
 
+    function openPantry(stageIdx) {
+        const list = document.getElementById('pantry-list');
+        const title = document.getElementById('pantry-title');
+        const stage = STAGES[stageIdx];
+        title.innerText = stage.name;
+        title.style.color = stage.color;
+        
+        const filtered = masterList.filter(i => getStage(i.level).name === stage.name);
+        list.innerHTML = filtered.map(i => `
+            <div class="pantry-item">
+                <div><div class="jp">${i.kanji}</div><div class="en">${i.reading}</div></div>
+                <div style="font-size: 0.7rem; color: #666;">Level ${i.level}</div>
+            </div>
+        `).join('') || '<div style="text-align:center; padding:20px; color:#666;">No items in this stage yet.</div>';
+        
+        document.getElementById('pantry-overlay').style.display = 'flex';
+    }
+
+    function closePantry() { document.getElementById('pantry-overlay').style.display = 'none'; }
+
     function updateDashboard() {
         const now = Date.now();
         reviewQueue = masterList.filter(i => i.nextReview <= now);
-        
         const counts = [0,0,0,0,0];
         masterList.forEach(i => {
-            const idx = STAGES.indexOf(getStage(i.level));
+            const idx = STAGES.findIndex(s => s.name === getStage(i.level).name);
             counts[idx]++;
         });
 
         document.getElementById('stats-display').innerHTML = STAGES.map((s, i) => `
-            <div class="stat-box" style="background:${s.color}">
+            <div class="stat-box" style="background:${s.color}" onclick="openPantry(${i})">
                 <div style="opacity:0.7; font-size:0.6rem">${s.name}</div>
                 <div style="font-size:1.1rem">${counts[i]}</div>
             </div>
@@ -185,12 +198,13 @@
         startBtn.disabled = reviewQueue.length === 0;
     }
 
-    function startSession() {
+    function startSession(practice) {
+        isPracticeMode = practice;
+        reviewQueue = practice ? [...masterList].sort(() => 0.5 - Math.random()) : masterList.filter(i => i.nextReview <= Date.now());
         initialQueueLength = reviewQueue.length;
         completedCount = 0;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('progress-container').style.display = 'block';
-        document.getElementById('progress-bar').style.width = '0%';
         document.getElementById('card').style.display = 'block';
         nextItem();
     }
@@ -198,18 +212,14 @@
     function fitText() {
         const el = document.getElementById('display-front');
         let size = 5.0; el.style.fontSize = size + "rem";
-        while ((el.scrollHeight > 300 || el.scrollWidth > 380) && size > 1.0) {
-            size -= 0.2; el.style.fontSize = size + "rem";
-        }
+        while ((el.scrollHeight > 300 || el.scrollWidth > 380) && size > 1.0) { size -= 0.2; el.style.fontSize = size + "rem"; }
     }
 
     function nextItem() {
         if (reviewQueue.length === 0) return showFinished();
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
-        
         document.getElementById('display-front').innerText = currentItem.kanji;
         requestAnimationFrame(fitText);
-
         const stage = getStage(currentItem.level);
         document.getElementById('card-back-ui').style.borderBottomColor = stage.color;
         document.getElementById('reading-text').innerText = currentItem.reading;
@@ -217,47 +227,35 @@
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
         document.getElementById('sent-text').innerHTML = currentItem.sent.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-        
         document.getElementById('info-tray').style.display = "none";
         document.getElementById('controls').style.display = "none";
         isFlipped = false;
         document.getElementById('card').classList.remove('is-flipped');
     }
 
-    function handleCardClick() { if(!isFlipped) flipCard(); }
-    function flipCard() {
-        isFlipped = true;
-        document.getElementById('card').classList.add('is-flipped');
-        document.getElementById('controls').style.display = "block";
-    }
+    function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); document.getElementById('controls').style.display = "block"; } }
 
-    function toggleDetails(e) {
-        e.stopPropagation();
-        const tray = document.getElementById('info-tray');
-        tray.style.display = tray.style.display === "block" ? "none" : "block";
-    }
+    function toggleDetails(e) { e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
 
     async function submitResult(isCorrect) {
         const back = document.getElementById('card-back-ui');
         back.classList.add(isCorrect ? 'apply-pulse-correct' : 'apply-pulse-wrong');
 
-        const oldLevel = currentItem.level;
-        const newLevel = isCorrect ? oldLevel + 1 : Math.max(0, oldLevel - 1);
-        const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
-        const newTime = isCorrect ? (Date.now() + intervals[Math.min(newLevel, 8)]) : Date.now();
+        if (!isPracticeMode) {
+            const oldLevel = currentItem.level;
+            const newLevel = isCorrect ? oldLevel + 1 : Math.max(0, oldLevel - 1);
+            const intervals = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
+            const newTime = isCorrect ? (Date.now() + intervals[Math.min(newLevel, 8)]) : Date.now();
+            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) });
+        }
 
-        fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: newLevel, nextReview: newTime }) });
-
-        if(isCorrect) {
+        if (isCorrect || !isPracticeMode) {
             completedCount++;
             document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
             reviewQueue = reviewQueue.filter(i => i !== currentItem);
         }
 
-        setTimeout(() => {
-            back.classList.remove('apply-pulse-correct', 'apply-pulse-wrong');
-            nextItem();
-        }, 600);
+        setTimeout(() => { back.classList.remove('apply-pulse-correct', 'apply-pulse-wrong'); nextItem(); }, 600);
     }
 
     function showFinished() {
