@@ -105,6 +105,26 @@
         .btn-wrong { background: #dc3545; color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
         #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .key-hint { border: 1px solid rgba(128,128,128,0.5); padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; }
+
+        /* Better Face Details */
+.blush { position: absolute; width: 12px; height: 6px; background: #ffb7b7; border-radius: 50%; top: 75px; opacity: 0.6; }
+.blush.left { left: 28px; } .blush.right { right: 28px; }
+
+.mouth { position: absolute; width: 10px; height: 5px; border-bottom: 2px solid var(--dark-kombu); border-radius: 0 0 10px 10px; top: 78px; left: 45px; }
+
+/* Naruto-maki Clip */
+.naruto-clip {
+    position: absolute; width: 25px; height: 25px; background: white; border-radius: 50%;
+    top: 15px; left: 60px; border: 2px solid #ff99cc; display: flex; align-items: center; justify-content: center;
+}
+.naruto-swirl {
+    width: 15px; height: 15px; border: 2px solid #ff99cc; border-radius: 50%;
+    border-top-color: transparent; transform: rotate(45deg);
+}
+
+/* Eye upgrade */
+.eye { background: #1a1a1a; width: 6px; height: 10px; top: 65px; transition: height 0.2s; }
+.profile-card:hover .eye { height: 2px; margin-top: 4px; } /* Makes them "smile" on hover */
     </style>
 </head>
 <body>
@@ -134,16 +154,25 @@
 
     <div id="dashboard">
         <div class="profile-card">
-            <div class="char-illustration" id="illustration">
-                <div class="hair-noodle n1"></div>
-                <div class="hair-noodle n2"></div>
-                <div class="hair-noodle n3"></div>
-                <div class="eye left"></div>
-                <div class="eye right"></div>
-                <div class="ajitama-spirit"><div class="yolk"></div></div>
-            </div>
-            <div style="font-size: 0.6rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 1px;">DASHI SPIRIT: MENMA</div>
+    <div class="char-illustration" id="illustration">
+        <div class="hair-noodle n1"></div>
+        <div class="hair-noodle n2"></div>
+        <div class="hair-noodle n3"></div>
+        
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+        <div class="blush left"></div>
+        <div class="blush right"></div>
+        <div class="mouth"></div>
+
+        <div class="naruto-clip">
+            <div class="naruto-swirl"></div>
         </div>
+
+        <div class="ajitama-spirit"><div class="yolk"></div></div>
+    </div>
+    <div style="font-size: 0.65rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 1px; margin-top: 10px;">MENMA: THE DASHI KAMI</div>
+</div>
 
         <div class="dash-header">
             <h1 class="dash-title">Nihongo no Dashi</h1>
