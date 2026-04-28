@@ -31,52 +31,71 @@
 
         #app { width: 90%; max-width: 400px; text-align: center; perspective: 1200px; position: relative; }
 
-        /* EXIT BUTTON - Improved Visibility */
+        /* EXIT BUTTON */
         #exit-btn {
-            position: absolute; top: -40px; left: 0; display: none;
+            position: absolute; top: -45px; left: 0; display: none;
             background: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.4);
             color: #888; font-size: 0.65rem; font-weight: 800; padding: 6px 14px;
             border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
             transition: all 0.2s; z-index: 10;
         }
-        #exit-btn:hover { border-color: var(--dashi-gold); color: var(--dashi-gold); background: rgba(255, 204, 102, 0.1); }
+        #exit-btn:hover { border-color: var(--dashi-gold); color: var(--dashi-gold); }
 
-        .theme-switch-wrapper { position: absolute; top: -35px; right: 0; display: flex; align-items: center; }
+        .theme-switch-wrapper { position: absolute; top: -40px; right: 0; display: flex; align-items: center; }
         .theme-switch { display: inline-block; height: 18px; position: relative; width: 36px; }
         .theme-switch input { display:none; }
         .slider { background-color: var(--toggle-bg); bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 34px; }
         .slider:before { background-color: var(--dashi-gold); bottom: 3px; content: ""; height: 12px; left: 3px; position: absolute; transition: .4s; width: 12px; border-radius: 50%; }
         input:checked + .slider:before { transform: translateX(18px); }
 
+        /* DASHBOARD & BUTTONS FIXED */
         #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .dash-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; }
         
         .stats-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-radius: 15px; font-weight: 600; color: white; cursor: pointer; }
 
-        #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
+        .btn-main { 
+            background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; 
+            font-weight: 800; font-size: 0.9rem; cursor: pointer; width: 100%; margin-top: 10px; 
+            text-transform: uppercase; letter-spacing: 1px; font-family: 'Inter'; transition: transform 0.1s;
+        }
+        .btn-main:active { transform: scale(0.98); }
+
+        .btn-secondary { 
+            background: transparent; color: #888; border: 1px solid rgba(128,128,128,0.4); padding: 12px; 
+            border-radius: 15px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; 
+            font-size: 0.8rem; font-family: 'Inter'; transition: all 0.2s;
+        }
+        .btn-secondary:hover { color: var(--text); border-color: var(--text); }
+
+        #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 20px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
-        .flashcard { width: 100%; height: 480px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
+        /* FLASHCARD - Fixed Stretching */
+        .flashcard { width: 100%; height: 480px; max-height: 70vh; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); transition: background-color 0.3s; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 30px 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); transition: background-color 0.3s; }
         
         .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; }
         #display-front { width: 100%; font-weight: 800; font-size: 5rem; line-height: 1.1; font-family: serif; word-break: keep-all; }
 
-        .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto; }
+        .card-back { background-color: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto; scrollbar-width: none; }
+        .card-back::-webkit-scrollbar { display: none; }
+
         .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; word-break: keep-all; overflow-wrap: anywhere; }
-        .meaning { font-size: 1.6rem; color: var(--text); margin-bottom: 15px; font-weight: 400; }
+        .meaning { font-size: 1.5rem; color: var(--text); margin-bottom: 15px; font-weight: 400; opacity: 0.9; }
         .type-tag { font-size: 0.6rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: 800; margin-bottom: 12px; letter-spacing: 1px; }
 
-        #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.3); padding-top: 15px; display: none; }
+        #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.2); padding-top: 15px; display: none; margin-bottom: 20px; }
         .tray-label { font-size: 0.55rem; color: #888; text-transform: uppercase; margin-bottom: 4px; font-weight: 800; letter-spacing: 1px; }
         .tray-content { font-size: 0.9rem; color: var(--text); margin-bottom: 12px; line-height: 1.5; word-break: keep-all; }
 
-        .embedded-controls { width: 100%; margin-top: auto; padding-top: 20px; }
-        .btn-correct, .btn-wrong { border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-family: 'Inter'; font-size: 0.8rem; }
+        .embedded-controls { width: 100%; margin-top: auto; padding-top: 10px; }
+        .btn-correct, .btn-wrong { border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-family: 'Inter'; font-size: 0.8rem; transition: opacity 0.2s; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 8px; }
         .btn-wrong { background: #dc3545; color: white; }
+        .btn-correct:hover, .btn-wrong:hover { opacity: 0.9; }
 
         #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .key-hint { border: 1px solid rgba(128,128,128,0.5); padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; }
@@ -223,7 +242,7 @@
         const el = document.getElementById('display-front');
         const container = el.parentElement;
         let size = 5.0; el.style.fontSize = size + "rem";
-        while ((el.scrollHeight > container.offsetHeight - 40 || el.scrollWidth > container.offsetWidth - 40) && size > 1.0) {
+        while ((el.scrollHeight > container.offsetHeight - 60 || el.scrollWidth > container.offsetWidth - 40) && size > 1.0) {
             size -= 0.1; el.style.fontSize = size + "rem";
         }
     }
@@ -245,14 +264,11 @@
         if (reviewQueue.length === 0 && !practice) return alert("Nothing to review!");
         
         initialQueueLength = reviewQueue.length; completedCount = 0;
-        
-        // Toggle Visibility
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('progress-container').style.display = 'block';
         cardEl.style.display = 'block';
-        exitBtn.style.display = 'block'; // Ensure button shows in both modes
+        exitBtn.style.display = 'block';
         document.getElementById('keyboard-legend').style.display = 'block';
-        
         nextItem(true);
     }
 
