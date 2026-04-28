@@ -7,12 +7,11 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
     <style>
         :root {
-            /* SOUP THEME COLORS */
-            --stage-raw: #8c9e82;      /* Raw Ingredients */
-            --stage-simmer: #e9b86d;   /* Simmering */
-            --stage-boil: #a66b3e;     /* Boiling */
-            --stage-rich: #844c2a;     /* Rich Broth */
-            --stage-perfect: #d32f2f;  /* The Perfect Dashi */
+            --stage-prepping: #8c9e82; 
+            --stage-simmering: #e9b86d;
+            --stage-boiling: #a66b3e;  
+            --stage-infusing: #844c2a; 
+            --stage-perfect: #d32f2f;  
             
             --dashi-gold: #ffcc66;
             --dark-kombu: #121412;
@@ -29,13 +28,12 @@
 
         #app { width: 90%; max-width: 450px; text-align: center; perspective: 1000px; }
 
-        /* --- DASHBOARD STYLES --- */
+        /* DASHBOARD */
         #dashboard { background: var(--card-bg); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); margin-bottom: 20px; }
-        .dash-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: var(--dashi-gold); }
+        .dash-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: var(--dashi-gold); letter-spacing: 1px; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; }
-        .stat-box { padding: 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; text-align: center; color: white; }
+        .stat-box { padding: 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* --- PROGRESS BAR --- */
         #progress-container { width: 100%; height: 6px; background: #333; border-radius: 10px; margin-bottom: 15px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
@@ -52,27 +50,28 @@
             padding: 25px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
         }
 
-        .card-front { background-color: var(--dashi-gold); color: #222; justify-content: center; }
-        #display-front { width: 100%; font-weight: bold; white-space: normal; word-break: keep-all; overflow-wrap: break-word; line-height: 1.1; }
+        .card-front { background-color: var(--dashi-gold); color: #1a1a1a; justify-content: center; }
+        #display-front { width: 100%; font-weight: bold; white-space: normal; word-break: keep-all; line-height: 1.1; }
 
         .card-back { 
             background-color: var(--card-bg); transform: rotateY(180deg);
-            border-bottom: 10px solid var(--stage-raw); justify-content: flex-start; overflow-y: auto;
+            border-bottom: 10px solid var(--stage-prepping); justify-content: flex-start; overflow-y: auto;
         }
 
         .type-tag { font-size: 0.65rem; color: var(--dashi-gold); border: 1px solid var(--dashi-gold); padding: 2px 10px; border-radius: 100px; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; }
-        .reading { font-size: 2rem; color: var(--stage-raw); font-weight: bold; margin-bottom: 5px; }
+        .reading { font-size: 2rem; color: var(--stage-prepping); font-weight: bold; margin-bottom: 5px; }
         .meaning { font-size: 1.5rem; color: #fff; margin-bottom: 15px; }
 
         #info-tray { width: 100%; text-align: left; border-top: 1px solid #444; padding-top: 15px; display: none; }
         .tray-label { font-size: 0.6rem; color: #666; text-transform: uppercase; margin-bottom: 4px; }
         .tray-content { font-size: 0.9rem; color: #ddd; margin-bottom: 12px; line-height: 1.4; }
 
-        .btn-main { background: var(--dashi-gold); color: #222; padding: 16px; border-radius: 15px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; }
-        .btn-correct { background: #28a745; color: white; margin-bottom: 12px; }
-        .btn-wrong { background: #dc3545; color: white; }
+        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 16px; border-radius: 15px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; transition: opacity 0.2s; }
+        .btn-main:disabled { opacity: 0.3; cursor: default; }
         
         #controls { margin-top: 20px; display: none; }
+        .btn-correct { background: #28a745; color: white; margin-bottom: 12px; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; cursor: pointer; }
+        .btn-wrong { background: #dc3545; color: white; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: bold; cursor: pointer; }
 
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(40, 167, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); } }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.8); } 70% { box-shadow: 0 0 0 30px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
@@ -84,10 +83,9 @@
 
 <div id="app">
     <div id="dashboard">
-        <div class="dash-title">Soup Progress</div>
-        <div class="stats-grid" id="stats-display">
-            </div>
-        <button class="btn-main" id="start-btn" onclick="startSession()">START SIMMERING (0)</button>
+        <div class="dash-title">🍲 NIHONGO NO DASHI</div>
+        <div class="stats-grid" id="stats-display"></div>
+        <button class="btn-main" id="start-btn" onclick="startSession()">START SESSION (0)</button>
     </div>
 
     <div id="progress-container"><div id="progress-bar"></div></div>
@@ -100,9 +98,9 @@
             <div id="meaning-text" class="meaning"></div>
             <div id="info-tray">
                 <div id="conj-section"><div class="tray-label">Conjugation</div><div id="conj-text" class="tray-content"></div></div>
-                <div class="tray-label">Example</div><div id="sent-text" class="tray-content"></div>
+                <div class="tray-label">Example Sentence</div><div id="sent-text" class="tray-content"></div>
             </div>
-            <button style="background:none; border:1px solid #444; color:#666; font-size:0.7rem; padding:5px 10px; border-radius:5px; cursor:pointer; margin-top:auto;" onclick="toggleDetails(event)">DETAILS</button>
+            <button style="background:none; border:1px solid #444; color:#666; font-size:0.7rem; padding:5px 10px; border-radius:5px; cursor:pointer; margin-top:auto;" onclick="toggleDetails(event)">SHOW DETAILS</button>
         </div>
     </div>
 
@@ -120,11 +118,11 @@
     let completedCount = 0, initialQueueLength = 0;
 
     const STAGES = [
-        { name: "PREPPING", color: "#8c9e82" },    // Level 0-4
-        { name: "SIMMERING", color: "#e9b86d" },   // Level 5-6
-        { name: "BOILING", color: "#a66b3e" },     // Level 7
-        { name: "INFUSING", color: "#844c2a" },    // Level 8
-        { name: "THE PERFECT DASHI", color: "#d32f2f" } // Burned
+        { name: "PREPPING", color: "#8c9e82" },
+        { name: "SIMMERING", color: "#e9b86d" },
+        { name: "BOILING", color: "#a66b3e" },
+        { name: "INFUSING", color: "#844c2a" },
+        { name: "PERFECT DASHI", color: "#d32f2f" }
     ];
 
     function getStage(level) {
@@ -139,14 +137,30 @@
         try {
             const res = await fetch(CSV_URL + '&t=' + Date.now());
             const csvText = await res.text();
-            const lines = csvText.split(/\r?\n/).slice(1);
-            masterList = lines.map(line => {
-                const p = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
-                return { kanji: p[0], reading: p[1], meaning: p[2], type: p[3], conj: p[4], sent: p[5], level: parseInt(p[6]) || 0, nextReview: parseInt(p[7]) || 0 };
-            }).filter(i => i.kanji && isNaN(i.kanji));
-
+            const lines = csvText.split(/\r?\n/);
+            
+            masterList = [];
+            // USING YOUR ORIGINAL ROBUST PARSER
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                if (parts.length >= 8) {
+                    masterList.push({
+                        kanji: parts[0].replace(/^"|"$/g, '').trim(),
+                        reading: parts[1].replace(/^"|"$/g, '').trim(),
+                        meaning: parts[2].replace(/^"|"$/g, '').trim(),
+                        type: parts[3].replace(/^"|"$/g, '').trim(),
+                        conj: parts[4].replace(/^"|"$/g, '').trim(),
+                        sent: parts[5].replace(/^"|"$/g, '').trim(),
+                        level: parseInt(parts[6].replace(/^"|"$/g, '')) || 0,
+                        nextReview: parseInt(parts[7].replace(/^"|"$/g, '')) || 0
+                    });
+                }
+            }
             updateDashboard();
-        } catch (e) { document.querySelector('.dash-title').innerText = "CONNECTION ERROR"; }
+        } catch (e) { console.error(e); }
     }
 
     function updateDashboard() {
@@ -155,26 +169,28 @@
         
         const counts = [0,0,0,0,0];
         masterList.forEach(i => {
-            const s = getStage(i.level);
-            counts[STAGES.indexOf(s)]++;
+            const idx = STAGES.indexOf(getStage(i.level));
+            counts[idx]++;
         });
 
-        const grid = document.getElementById('stats-display');
-        grid.innerHTML = STAGES.map((s, idx) => `
+        document.getElementById('stats-display').innerHTML = STAGES.map((s, i) => `
             <div class="stat-box" style="background:${s.color}">
-                <div style="opacity:0.8">${s.name}</div>
-                <div style="font-size:1.2rem">${counts[idx]}</div>
+                <div style="opacity:0.7; font-size:0.6rem">${s.name}</div>
+                <div style="font-size:1.1rem">${counts[i]}</div>
             </div>
         `).join('');
 
-        document.getElementById('start-btn').innerText = `START SESSION (${reviewQueue.length})`;
-        if(reviewQueue.length === 0) document.getElementById('start-btn').disabled = true;
+        const startBtn = document.getElementById('start-btn');
+        startBtn.innerText = `START SESSION (${reviewQueue.length})`;
+        startBtn.disabled = reviewQueue.length === 0;
     }
 
     function startSession() {
         initialQueueLength = reviewQueue.length;
+        completedCount = 0;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('progress-container').style.display = 'block';
+        document.getElementById('progress-bar').style.width = '0%';
         document.getElementById('card').style.display = 'block';
         nextItem();
     }
@@ -191,8 +207,7 @@
         if (reviewQueue.length === 0) return showFinished();
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
         
-        const display = document.getElementById('display-front');
-        display.innerText = currentItem.kanji;
+        document.getElementById('display-front').innerText = currentItem.kanji;
         requestAnimationFrame(fitText);
 
         const stage = getStage(currentItem.level);
@@ -248,9 +263,9 @@
     function showFinished() {
         document.getElementById('card').style.display = 'none';
         document.getElementById('controls').style.display = 'none';
+        document.getElementById('progress-container').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         updateDashboard();
-        alert("Broth Perfected! Session Complete.");
     }
 
     init();
