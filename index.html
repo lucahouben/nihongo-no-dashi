@@ -31,7 +31,6 @@
 
         #app { width: 90%; max-width: 400px; text-align: center; position: relative; }
 
-        /* THEME TOGGLE */
         .theme-switch-wrapper { position: absolute; top: -45px; right: 0; display: flex; align-items: center; z-index: 10; }
         .theme-switch { display: inline-block; height: 18px; position: relative; width: 36px; }
         .theme-switch input { display:none; }
@@ -39,7 +38,6 @@
         .slider:before { background-color: var(--dashi-gold); bottom: 3px; content: ""; height: 12px; left: 3px; position: absolute; transition: .4s; width: 12px; border-radius: 50%; }
         input:checked + .slider:before { transform: translateX(18px); }
 
-        /* EXIT BUTTON */
         #exit-btn {
             position: absolute; top: -45px; left: 0; display: none;
             background: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.4);
@@ -47,7 +45,6 @@
             border-radius: 8px; cursor: pointer; text-transform: uppercase; z-index: 10;
         }
 
-        /* QUICK ADD DRAWER - Now fully hidden */
         #add-form-overlay {
             position: fixed; top: 100%; left: 0; width: 100%; height: 100%;
             background: var(--dark-kombu); z-index: 2000; transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -63,14 +60,13 @@
             background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 1rem; box-sizing: border-box; outline: none;
         }
 
-        /* DASHBOARD */
         #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
         .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .dash-title { font-size: 1rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; margin: 0; }
         .btn-add-toggle { 
             background: var(--dashi-gold); border: none; width: 32px; height: 32px; 
             border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: 800; color: #1a1a1a; transition: transform 0.2s;
+            font-size: 1.2rem; font-weight: 800; color: #1a1a1a;
         }
 
         .stats-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
@@ -79,7 +75,6 @@
         .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; font-weight: 800; font-size: 0.9rem; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
         .btn-secondary { background: transparent; color: #888; border: 1px solid rgba(128,128,128,0.4); padding: 12px; border-radius: 15px; width: 100%; margin-top: 10px; cursor: pointer; }
 
-        /* FLASHCARD */
         #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 20px; overflow: hidden; display: none; }
         #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s ease; }
 
@@ -87,7 +82,7 @@
         .flashcard.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 30px 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); transition: background-color 0.3s; }
         .card-front { background: var(--dashi-gold); color: #1a1a1a; justify-content: center; font-size: 5rem; font-weight: 800; font-family: serif; }
-        .card-back { background: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); }
+        .card-back { background: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); overflow-y: auto; scrollbar-width: none; }
         
         .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; }
         .meaning { font-size: 1.5rem; color: var(--text); margin-bottom: 15px; }
@@ -99,6 +94,9 @@
         .embedded-controls { width: 100%; margin-top: auto; padding-top: 10px; }
         .btn-correct { background: #28a745; color: white; margin-bottom: 8px; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
         .btn-wrong { background: #dc3545; color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
+
+        #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .key-hint { border: 1px solid rgba(128,128,128,0.5); padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; }
     </style>
 </head>
 <body>
@@ -123,7 +121,7 @@
         <div class="form-group"><label>Meaning</label><input type="text" id="new-meaning" placeholder="To eat"></div>
         <div class="form-group"><label>Word Type</label><input type="text" id="new-type" placeholder="Verb"></div>
         <div class="form-group"><label>Example Sentence</label><input type="text" id="new-example" placeholder="Optional"></div>
-        <button class="btn-main" onclick="submitNewWord()" id="add-submit-btn" style="margin-top:auto;">Add to Pot</button>
+        <button class="btn-main" onclick="submitNewWord()" id="add-submit-btn" style="margin-top:auto;">Save to Pot</button>
     </div>
 
     <div id="dashboard">
@@ -152,6 +150,13 @@
             </div>
         </div>
     </div>
+
+    <div id="keyboard-legend">
+        <span class="key-hint">V</span> Audio &nbsp;
+        <span class="key-hint">Space</span> Flip &nbsp;
+        <span class="key-hint">1/2</span> Result &nbsp;
+        <span class="key-hint">F</span> Info
+    </div>
 </div>
 
 <script>
@@ -173,7 +178,6 @@
         return STAGES[4];
     }
 
-    // Theme logic
     if (localStorage.getItem('theme') === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
         document.getElementById('checkbox').checked = true;
@@ -183,6 +187,32 @@
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
     });
+
+    // KEYBOARD SHORTCUTS
+    window.addEventListener('keydown', e => {
+        // Don't trigger if drawer is open or card is hidden
+        if (document.getElementById('add-form-overlay').classList.contains('active')) return;
+        if (document.getElementById('card').style.display === 'none') return;
+
+        if (e.code === 'Space' || e.code === 'Enter') { 
+            e.preventDefault(); 
+            if (!isFlipped) handleCardClick(); 
+        }
+        if (isFlipped) {
+            if (e.key === '1') submitResult(true);
+            if (e.key === '2') submitResult(false);
+            if (e.key === 'f' || e.key === 'F') toggleDetails(e);
+        }
+        if (e.key === 'v' || e.key === 'V') speakReading();
+        if (e.key === 'Escape') location.reload();
+    });
+
+    function speakReading() {
+        if (currentItem) {
+            const u = new SpeechSynthesisUtterance(currentItem.reading);
+            u.lang = 'ja-JP'; window.speechSynthesis.speak(u);
+        }
+    }
 
     async function init() {
         const res = await fetch(CSV_URL + '&cb=' + Date.now());
@@ -236,6 +266,7 @@
         document.getElementById('card').style.display = 'block';
         document.getElementById('exit-btn').style.display = 'block';
         document.getElementById('progress-container').style.display = 'block';
+        document.getElementById('keyboard-legend').style.display = 'block';
         nextItem(true);
     }
 
@@ -258,25 +289,4 @@
         document.getElementById('info-tray').style.display = "none";
     }
 
-    function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); } }
-
-    async function submitResult(isCorrect, e) {
-        if(e) e.stopPropagation();
-        if (!isPracticeMode) {
-            const nl = isCorrect ? currentItem.level + 1 : Math.max(0, currentItem.level - 1);
-            const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
-            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: nl, nextReview: (Date.now() + ivs[Math.min(nl, 8)]) }) });
-        }
-        completedCount++;
-        document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
-        reviewQueue = reviewQueue.filter(i => i !== currentItem);
-        isFlipped = false; document.getElementById('card').classList.remove('is-flipped');
-        setTimeout(() => nextItem(), 400);
-    }
-
-    function toggleDetails(e) { e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
-
-    init();
-</script>
-</body>
-</html>
+    function handleCardClick() { if(!isFlipped) { is
