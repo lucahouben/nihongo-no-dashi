@@ -170,7 +170,6 @@
         return STAGES.findIndex(s => level >= s.min && level <= s.max);
     }
 
-    // THEME
     const themeToggle = document.getElementById('theme-toggle');
     if (localStorage.getItem('theme') === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = true; }
     themeToggle.addEventListener('change', (e) => {
@@ -180,7 +179,8 @@
 
     async function init() {
         try {
-            const res = await fetch(CSV_URL + '&cb=' + Date.now());
+            // CACHE BUSTING: Added unique timestamp to URL to force fresh Google data
+            const res = await fetch(`${CSV_URL}&t=${Date.now()}`);
             const text = await res.text();
             const lines = text.split(/\r?\n/).slice(1);
             masterList = lines.filter(l => l.trim()).map(line => {
@@ -196,7 +196,9 @@
     }
 
     function updateDashboard() {
-        const dueCount = masterList.filter(i => i.nextReview <= Date.now()).length;
+        const now = Date.now();
+        // Recalculate precisely what is due right now
+        const dueCount = masterList.filter(i => i.nextReview <= now).length;
         document.getElementById('start-btn').innerText = `Start Cooking (${dueCount})`;
 
         let html = '';
@@ -225,10 +227,13 @@
 
     function startSession(mode, stageIdx = null, event = null) {
         if(event) event.stopPropagation();
-        if (mode === 'due') reviewQueue = masterList.filter(i => i.nextReview <= Date.now());
+        const now = Date.now();
+        
+        if (mode === 'due') reviewQueue = masterList.filter(i => i.nextReview <= now);
         else if (mode === 'all') reviewQueue = [...masterList].sort(() => 0.5 - Math.random());
         else if (mode === 'stage') reviewQueue = masterList.filter(i => getStageIdx(i.level) === stageIdx);
-        if (reviewQueue.length === 0) return alert("Nothing to cook!");
+        
+        if (reviewQueue.length === 0) return alert("Nothing to cook right now!");
 
         initialQueueLength = reviewQueue.length;
         completedCount = 0;
@@ -241,7 +246,11 @@
     }
 
     function nextItem(first = false) {
-        if (reviewQueue.length === 0) return location.reload();
+        if (reviewQueue.length === 0) {
+            // RELOAD: Ensure fresh fetch after session
+            location.reload(); 
+            return;
+        }
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
         document.getElementById('display-front').innerText = currentItem.kanji;
         if (first) updateBackUI();
@@ -263,15 +272,30 @@
 
     async function submitResult(isCorrect, e) {
         if(e) e.stopPropagation();
-        const nl = isCorrect ? currentItem.level + 1 : Math.max(0, currentItem.level - 1);
+        const oldItem = currentItem;
+        const nl = isCorrect ? oldItem.level + 1 : Math.max(0, oldItem.level - 1);
         const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
-        fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: currentItem.kanji, level: nl, nextReview: (Date.now() + ivs[Math.min(nl, 8)]) }) });
+        
+        // Instant removal from current study session
+        reviewQueue = reviewQueue.filter(i => i !== oldItem);
+        
+        fetch(SAVE_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify({ 
+                kanji: oldItem.kanji, 
+                level: nl, 
+                nextReview: (Date.now() + ivs[Math.min(nl, 8)]) 
+            }) 
+        });
 
         completedCount++;
         document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
-        reviewQueue = reviewQueue.filter(i => i !== currentItem);
-        isFlipped = false; document.getElementById('card').classList.remove('is-flipped');
-        setTimeout(() => nextItem(), 300);
+        isFlipped = false; 
+        document.getElementById('card').classList.remove('is-flipped');
+        
+        // Short delay for animation before moving to next item
+        setTimeout(() => nextItem(), 250);
     }
 
     function toggleDetails(e) { if(e) e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
@@ -282,7 +306,7 @@
         if (isFlipped) {
             if (e.key === '1') submitResult(true);
             if (e.key === '2') submitResult(false);
-            if (e.key === 'f' || e.key === 'F') toggleDetails(); // RESTORED KEY LISTENER
+            if (e.key === 'f' || e.key === 'F') toggleDetails();
         }
         if (e.key === 'v' || e.key === 'V') {
             const u = new SpeechSynthesisUtterance(currentItem.reading);
@@ -291,6 +315,8 @@
     });
 
     function toggleAddForm() { document.getElementById('add-form-overlay').classList.toggle('active'); }
+    
+    // Initial load
     init();
 </script>
 </body>
