@@ -160,6 +160,7 @@
             const display = document.getElementById('display-front');
             if (audioMode) {
                 display.innerText = "👂";
+                playAudio();
             } else {
                 display.innerText = currentItem.kanji;
             }
