@@ -56,7 +56,7 @@
         .flashcard { width: 100%; height: 480px; max-height: 70vh; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
         .flashcard.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 30px 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); }
-        .card-front { background: var(--dashi-gold); color: #1a1a1a; justify-content: center; font-size: 5rem; font-weight: 800; font-family: serif; }
+        .card-front { background: var(--dashi-gold); color: #1a1a1a; justify-content: center; font-size: 5rem; font-weight: 800; font-family: serif; word-break: break-word; overflow-wrap: break-word; line-height: 1.1; }
         .card-back { background: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); overflow-y: auto; scrollbar-width: none; }
         .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; }
         .meaning { font-size: 1.5rem; color: var(--text); margin-bottom: 15px; }
@@ -214,8 +214,9 @@
         
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
         
-        // Reset font size for standard Kanji display
-        document.getElementById('display-front').style.fontSize = "5rem";
+        // Dynamic font sizing for longer phrases
+        const kanjiLength = currentItem.kanji.length;
+        document.getElementById('display-front').style.fontSize = kanjiLength > 8 ? "2.5rem" : kanjiLength > 4 ? "3.5rem" : "5rem";
         document.getElementById('display-front').innerText = currentItem.kanji;
         
         if (first) updateBackUI();
