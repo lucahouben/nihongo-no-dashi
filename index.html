@@ -155,6 +155,15 @@
 
     document.getElementById('audio-mode-checkbox').addEventListener('change', (e) => {
         audioMode = e.target.checked;
+        // If in a session and card is not flipped, update the display immediately
+        if (currentItem && !isFlipped && document.getElementById('card').style.display === 'block') {
+            const display = document.getElementById('display-front');
+            if (audioMode) {
+                display.innerText = "👂";
+            } else {
+                display.innerText = currentItem.kanji;
+            }
+        }
     });
 
     async function init() {
