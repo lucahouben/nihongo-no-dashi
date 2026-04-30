@@ -125,7 +125,7 @@
     </div>
 
     <div id="keyboard-legend">
-        <span class="key-hint">V</span> Audio &nbsp; <span class="key-hint">Space</span> Flip &nbsp; <span class="key-hint">1/2</span> Result &nbsp; <span class="key-hint">F</span> Info
+        <span class="key-hint">V</span> Audio &nbsp; <span class="key-hint">Space</span> Flip &nbsp; <span class="key-hint">1/2</span> Result &nbsp; <span class="key-hint">F</span> Info &nbsp; <span class="key-hint">Esc</span> Exit
     </div>
 </div>
 
@@ -299,6 +299,7 @@
     /* Global keyboard shortcuts for session navigation */
     window.addEventListener('keydown', e => {
         if (document.getElementById('card').style.display !== 'block') return;
+        if (e.key === 'Escape') location.reload();
         if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
         if (isFlipped) {
             if (e.key === '1') submitResult(true);
