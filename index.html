@@ -80,6 +80,11 @@
     <button id="exit-btn" onclick="location.reload()">Exit Session</button>
     <div class="theme-switch-wrapper"><label class="theme-switch"><input type="checkbox" id="theme-toggle" /><div class="slider"></div></label></div>
 
+    <div id="audio-mode-toggle" style="position: absolute; top: -45px; right: 50px; display: none; align-items: center; gap: 5px; font-size: 0.6rem; font-weight: 800; color: #888;">
+        <span>AUDIO MODE</span>
+        <label class="theme-switch"><input type="checkbox" id="audio-mode-checkbox" /><div class="slider"></div></label>
+    </div>
+
     <div id="add-form-overlay">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
             <h2 class="dash-title">Add to Pantry</h2>
@@ -129,7 +134,7 @@
     const SAVE_URL = 'https://script.google.com/macros/s/AKfycbyjyKbLIkUqjZAFW0P3vKPg5Oo1amVGliLz28NKEbyjHqQY1Kz4PELMAB9Hu8gs7nZ2qg/exec';
 
     let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false;
-    let completedCount = 0, initialQueueLength = 0;
+    let completedCount = 0, initialQueueLength = 0, audioMode = false;
 
     const STAGES = [
         { name: "PREPPING", color: "#8c9e82", min: 0, max: 2 },
@@ -146,6 +151,10 @@
     themeToggle.addEventListener('change', (e) => {
         const t = e.target.checked ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', t); localStorage.setItem('theme', t);
+    });
+
+    document.getElementById('audio-mode-checkbox').addEventListener('change', (e) => {
+        audioMode = e.target.checked;
     });
 
     async function init() {
@@ -192,6 +201,7 @@
         document.getElementById('exit-btn').style.display = 'block';
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('keyboard-legend').style.display = 'block';
+        document.getElementById('audio-mode-toggle').style.display = 'flex';
         nextItem(true);
     }
 
@@ -217,10 +227,17 @@
         // Dynamic font sizing for longer phrases
         const kanjiLength = currentItem.kanji.length;
         document.getElementById('display-front').style.fontSize = kanjiLength > 8 ? "2.5rem" : kanjiLength > 4 ? "3.5rem" : "5rem";
-        document.getElementById('display-front').innerText = currentItem.kanji;
+        
+        if (audioMode) {
+            document.getElementById('display-front').innerText = "👂";
+            playAudio();
+        } else {
+            document.getElementById('display-front').innerText = currentItem.kanji;
+        }
         
         if (first) updateBackUI();
     }
+
     function updateBackUI() {
         if (!currentItem) return;
         const s = STAGES[getStageIdx(currentItem.level)];
@@ -231,6 +248,11 @@
         document.getElementById('type-text').innerText = currentItem.type;
         document.getElementById('sent-text').innerText = currentItem.sent || "No example provided.";
         document.getElementById('info-tray').style.display = "none";
+    }
+
+    function playAudio() {
+        const u = new SpeechSynthesisUtterance(currentItem.reading);
+        u.lang = 'ja-JP'; window.speechSynthesis.speak(u);
     }
 
     function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); updateBackUI(); } }
@@ -265,7 +287,7 @@
             if (e.key === '2') submitResult(false);
             if (e.key === 'f' || e.key === 'F') toggleDetails();
         }
-        if (e.key === 'v' || e.key === 'V') { const u = new SpeechSynthesisUtterance(currentItem.reading); u.lang = 'ja-JP'; window.speechSynthesis.speak(u); }
+        if (e.key === 'v' || e.key === 'V') playAudio();
     });
     function toggleGroup(idx) { document.querySelectorAll('.stat-group').forEach((g, i) => { if(i === idx) g.classList.toggle('active'); else g.classList.remove('active'); }); }
     function toggleAddForm() { document.getElementById('add-form-overlay').classList.toggle('active'); }
