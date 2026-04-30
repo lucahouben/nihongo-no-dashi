@@ -197,16 +197,29 @@
 
     function nextItem(first = false) {
         if (reviewQueue.length === 0) {
-            document.getElementById('display-front').innerText = "🍲 Dashi Ready!";
-            document.getElementById('card-back-ui').style.display = "none";
-            setTimeout(() => { location.reload(); }, 2000);
+            // Reset card flip state
+            document.getElementById('card').classList.remove('is-flipped');
+            isFlipped = false;
+
+            // Restore the original "Hard work" message
+            document.getElementById('display-front').innerText = "お疲れ様でした";
+            document.getElementById('display-front').style.fontSize = "3rem"; // Slightly smaller to fit the long word
+            
+            // Allow the Google Sheet to finish simmering, then reload to dashboard
+            setTimeout(() => { 
+                location.reload(); 
+            }, 2000);
             return;
         }
+        
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
+        
+        // Reset font size for standard Kanji display
+        document.getElementById('display-front').style.fontSize = "5rem";
         document.getElementById('display-front').innerText = currentItem.kanji;
+        
         if (first) updateBackUI();
     }
-
     function updateBackUI() {
         if (!currentItem) return;
         const s = STAGES[getStageIdx(currentItem.level)];
