@@ -14,6 +14,8 @@
             --dark-kombu: #121412; --text: #f4f4f4; --card-bg: #222522;
             --toggle-bg: #333;
         }
+        .card-correct { border: 4px solid #28a745 !important; }
+        .card-wrong { border: 4px solid #dc3545 !important; }
         [data-theme="light"] {
             --dark-kombu: #f0f0f0; --text: #1a1a1a;
             --card-bg: #ffffff; --dashi-gold: #d4a017;
@@ -58,6 +60,7 @@
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 30px 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); }
         .card-front { background: var(--dashi-gold); color: #1a1a1a; justify-content: center; font-size: 5rem; font-weight: 800; font-family: serif; word-break: break-word; overflow-wrap: break-word; line-height: 1.1; }
         .card-back { background: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); overflow-y: auto; scrollbar-width: none; }
+        #level-indicator { position: absolute; top: 15px; right: 20px; font-size: 0.7rem; font-weight: 800; }
         .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; }
         .meaning { font-size: 1.5rem; color: var(--text); margin-bottom: 15px; }
         #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.2); padding-top: 15px; display: none; margin-bottom: 20px; }
@@ -119,6 +122,7 @@
         </div>
         <div class="card-face card-back" id="card-back-ui">
             <div id="type-text" style="font-size:0.6rem; color:var(--dashi-gold); border:1px solid var(--dashi-gold); padding:2px 10px; border-radius:100px; text-transform:uppercase; font-weight:800; margin-bottom:12px;"></div>
+            <div id="level-indicator"></div>
             <div id="reading-text" class="reading"></div>
             <div id="meaning-text" class="meaning"></div>
             <div id="info-tray">
@@ -275,6 +279,7 @@
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
         document.getElementById('sent-text').innerText = currentItem.sent || "No example provided.";
+        document.getElementById('level-indicator').innerText = `LVL ${currentItem.level}`;
         document.getElementById('info-tray').style.display = "none";
     }
 
@@ -290,14 +295,22 @@
     /* Process user feedback, update SRS level, and sync with Google Sheets */
     async function submitResult(isCorrect, e) {
         if(e) e.stopPropagation();
+        const cardEl = document.getElementById('card');
         const oldItem = currentItem;
         const nl = isCorrect ? oldItem.level + 1 : Math.max(0, oldItem.level - 1);
         const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
         
+        const levelInd = document.getElementById('level-indicator');
         if (isCorrect) {
+            cardEl.classList.add('card-correct');
+            levelInd.innerText = `LVL ${oldItem.level} → ${nl}`;
+            levelInd.style.color = "#28a745";
             reviewQueue = reviewQueue.filter(i => i !== oldItem);
             completedCount++;
         } else {
+            cardEl.classList.add('card-wrong');
+            levelInd.innerText = `LVL ${oldItem.level} → ${nl}`;
+            levelInd.style.color = "#dc3545";
             sessionWrongCount++;
         }
 
@@ -309,7 +322,11 @@
         document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
         isFlipped = false; 
         document.getElementById('card').classList.remove('is-flipped');
-        setTimeout(() => nextItem(), 250);
+        setTimeout(() => {
+            cardEl.classList.remove('card-correct', 'card-wrong');
+            levelInd.style.color = "inherit";
+            nextItem();
+        }, 400);
     }
 
     /* Toggle visibility of the example sentence tray */
