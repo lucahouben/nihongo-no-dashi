@@ -142,7 +142,7 @@
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ7pDV2s1fCr9E_RI-47f8XTwMUWUQ9bvNiuPVv3D1uM690uoUWxXfMGbtRLbKNTeZVN8Xf-2jjrPb/pub?output=csv';
     const SAVE_URL = 'https://script.google.com/macros/s/AKfycbyjyKbLIkUqjZAFW0P3vKPg5Oo1amVGliLz28NKEbyjHqQY1Kz4PELMAB9Hu8gs7nZ2qg/exec';
 
-    let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false;
+    let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false, isPracticeMode = false;
     let completedCount = 0, initialQueueLength = 0, audioMode = false, sessionWrongCount = 0;
 
     const STAGES = [
@@ -212,9 +212,14 @@
     function startSession(mode, stageIdx = null, event = null) {
         if(event) event.stopPropagation();
         const now = Date.now();
-        if (mode === 'due') reviewQueue = masterList.filter(i => i.nextReview <= now);
-        else if (mode === 'all') reviewQueue = [...masterList].sort(() => 0.5 - Math.random());
-        else if (mode === 'stage') reviewQueue = masterList.filter(i => getStageIdx(i.level) === stageIdx);
+        if (mode === 'due') {
+            reviewQueue = masterList.filter(i => i.nextReview <= now);
+            isPracticeMode = false;
+        } else {
+            if (mode === 'all') reviewQueue = [...masterList].sort(() => 0.5 - Math.random());
+            else if (mode === 'stage') reviewQueue = masterList.filter(i => getStageIdx(i.level) === stageIdx);
+            isPracticeMode = true;
+        }
         if (reviewQueue.length === 0) return alert("Nothing to cook right now!");
         initialQueueLength = reviewQueue.length;
         completedCount = 0;
@@ -296,8 +301,10 @@
             sessionWrongCount++;
         }
 
-        /* Send updated SRS data to Google Apps Script endpoint */
-        fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: oldItem.kanji, level: nl, nextReview: (Date.now() + ivs[Math.min(nl, 8)]) }) });
+        /* Send updated SRS data to Google Apps Script endpoint only if not in practice mode */
+        if (!isPracticeMode) {
+            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ kanji: oldItem.kanji, level: nl, nextReview: (Date.now() + ivs[Math.min(nl, 8)]) }) });
+        }
 
         document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
         isFlipped = false; 
