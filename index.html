@@ -270,15 +270,26 @@
 
     function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); updateBackUI(); } }
 
-    async function submitResult(isCorrect, e) {
+  async function submitResult(isCorrect, e) {
         if(e) e.stopPropagation();
         const oldItem = currentItem;
+        
+        // 1. Calculate new level and next review interval
         const nl = isCorrect ? oldItem.level + 1 : Math.max(0, oldItem.level - 1);
         const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
         
-        // Instant removal from current study session
-        reviewQueue = reviewQueue.filter(i => i !== oldItem);
-        
+        // 2. Logic for the "Session Loop"
+        if (isCorrect) {
+            // Remove from the current session queue only if correct
+            reviewQueue = reviewQueue.filter(i => i !== oldItem);
+            completedCount++;
+        } else {
+            // If wrong, we keep it in reviewQueue. 
+            // It will come up again randomly until you get it right.
+            console.log(`Incorrect! Keeping ${oldItem.kanji} in the pot to simmer longer.`);
+        }
+
+        // 3. Save progress to Google Sheets (happens in background)
         fetch(SAVE_URL, { 
             method: 'POST', 
             mode: 'no-cors', 
@@ -289,7 +300,7 @@
             }) 
         });
 
-        completedCount++;
+        // 4. UI Updates
         document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
         isFlipped = false; 
         document.getElementById('card').classList.remove('is-flipped');
