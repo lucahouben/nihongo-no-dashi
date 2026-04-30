@@ -17,16 +17,17 @@
         .card-correct .card-face { border: 4px solid #28a745 !important; }
         .card-wrong .card-face { border: 4px solid #dc3545 !important; }
         [data-theme="light"] {
-            --dark-kombu: #f0f0f0; --text: #1a1a1a;
+            --dark-kombu: #e8e8e4; --text: #1a1a1a;
             --card-bg: #ffffff; --dashi-gold: #d4a017;
             --toggle-bg: #ddd;
         }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--dark-kombu); color: var(--text);
+            background: radial-gradient(circle at top, #1e221e, var(--dark-kombu));
+            color: var(--text);
             margin: 0; display: flex; justify-content: center; align-items: center;
             min-height: 100vh; padding: 40px 0; box-sizing: border-box; user-select: none;
-            overflow: hidden; transition: background-color 0.3s;
+            overflow: hidden; transition: background 0.3s;
         }
         #app { width: 90%; max-width: 400px; text-align: center; position: relative; }
         .theme-switch-wrapper { position: absolute; top: -45px; right: 0; display: flex; align-items: center; z-index: 100; }
