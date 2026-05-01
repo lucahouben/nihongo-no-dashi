@@ -357,6 +357,43 @@
     });
     function toggleGroup(idx) { document.querySelectorAll('.stat-group').forEach((g, i) => { if(i === idx) g.classList.toggle('active'); else g.classList.remove('active'); }); }
     function toggleAddForm() { document.getElementById('add-form-overlay').classList.toggle('active'); }
+    function submitNewWord() {
+        const kanji = document.getElementById('new-kanji').value.trim();
+        const reading = document.getElementById('new-reading').value.trim();
+        const meaning = document.getElementById('new-meaning').value.trim();
+        const type = document.getElementById('new-type').value.trim();
+        const example = document.getElementById('new-example').value.trim();
+        if (!kanji || !reading || !meaning) {
+            alert('Please fill in at least Kanji, Reading, and Meaning.');
+            return;
+        }
+        const newItem = {
+            kanji: kanji,
+            reading: reading,
+            meaning: meaning,
+            type: type || 'Unknown',
+            sent: example || '',
+            level: 0,
+            nextReview: Date.now()
+        };
+        masterList.push(newItem);
+        updateDashboard();
+
+        // Sync to Google Sheets
+        fetch(SAVE_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify({ ...newItem, action: 'add' }) 
+        });
+
+        // Clear form
+        document.getElementById('new-kanji').value = '';
+        document.getElementById('new-reading').value = '';
+        document.getElementById('new-meaning').value = '';
+        document.getElementById('new-type').value = '';
+        document.getElementById('new-example').value = '';
+        toggleAddForm();
+    }
     init();
 </script>
 </body>
