@@ -328,11 +328,14 @@
 
         /* Send updated SRS data to Google Apps Script endpoint only if not in practice mode */
         if (!isPracticeMode) {
-            const updatedData = { 
+            const updatedData = {
+                action: 'update',
                 kanji: oldItem.kanji, 
                 level: nl, 
-                nextReview: (Date.now() + ivs[Math.min(nl, 8)]) 
+                nextReview: (Date.now() + ivs[Math.min(nl, 8)])
             };
+            console.log('Syncing review result:', updatedData);
+
             // Update local masterList immediately so data persists if session continues
             const localIdx = masterList.findIndex(i => i.kanji === oldItem.kanji);
             if (localIdx !== -1) masterList[localIdx] = { ...masterList[localIdx], ...updatedData };
@@ -381,6 +384,7 @@
             reading: reading,
             meaning: meaning,
             type: type || 'Unknown',
+            conjugation: '', // Matches Column E (index 4) in the spreadsheet schema
             sent: example || '',
             level: 0,
             nextReview: Date.now()
@@ -390,15 +394,17 @@
 
         // Sync to Google Sheets - Ensure action is included in the flat object
         const syncData = {
+            action: 'add',
             kanji: newItem.kanji,
             reading: newItem.reading,
             meaning: newItem.meaning,
             type: newItem.type,
+            conjugation: newItem.conjugation,
             sent: newItem.sent,
             level: newItem.level,
-            nextReview: newItem.nextReview,
-            action: 'add'
+            nextReview: newItem.nextReview
         };
+        console.log('Syncing new word:', syncData);
 
         fetch(SAVE_URL, {
             method: 'POST',
