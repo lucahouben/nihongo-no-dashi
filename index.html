@@ -202,6 +202,7 @@
                 return {
                     kanji: p[0]?.replace(/"/g, '').trim(), reading: p[1]?.replace(/"/g, '').trim(),
                     meaning: p[2]?.replace(/"/g, '').trim(), type: p[3]?.replace(/"/g, '').trim(),
+                    conjugation: p[4]?.replace(/"/g, '').trim() || '',
                     sent: p[5]?.replace(/"/g, '').trim(), level: parseInt(p[6]) || 0, nextReview: parseInt(p[7]) || 0
                 };
             });
@@ -295,6 +296,21 @@
         document.getElementById('info-tray').style.display = "none";
     }
 
+    /* Centralized sync function to communicate with Google Apps Script */
+    async function syncToDatabase(data) {
+        try {
+            // Using text/plain to avoid CORS preflight while sending JSON string
+            await fetch(SAVE_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(data)
+            });
+        } catch (e) {
+            console.error("Sync failed", e);
+        }
+    }
+
     /* Trigger browser text-to-speech for the current reading */
     function playAudio() {
         const u = new SpeechSynthesisUtterance(currentItem.reading);
@@ -328,19 +344,16 @@
 
         /* Send updated SRS data to Google Apps Script endpoint only if not in practice mode */
         if (!isPracticeMode) {
-            const updatedData = {
+            // Update local masterList immediately so data persists if session continues
+            const localIdx = masterList.findIndex(i => i.kanji === oldItem.kanji);
+            if (localIdx !== -1) masterList[localIdx].level = nl;
+
+            syncToDatabase({
                 action: 'update',
                 kanji: oldItem.kanji, 
                 level: nl, 
                 nextReview: (Date.now() + ivs[Math.min(nl, 8)])
-            };
-            console.log('Syncing review result:', updatedData);
-
-            // Update local masterList immediately so data persists if session continues
-            const localIdx = masterList.findIndex(i => i.kanji === oldItem.kanji);
-            if (localIdx !== -1) masterList[localIdx] = { ...masterList[localIdx], ...updatedData };
-            
-            fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(updatedData) });
+            });
         }
 
         document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
@@ -369,16 +382,22 @@
     });
     function toggleGroup(idx) { document.querySelectorAll('.stat-group').forEach((g, i) => { if(i === idx) g.classList.toggle('active'); else g.classList.remove('active'); }); }
     function toggleAddForm() { document.getElementById('add-form-overlay').classList.toggle('active'); }
-    function submitNewWord() {
+    async function submitNewWord() {
         const kanji = document.getElementById('new-kanji').value.trim();
         const reading = document.getElementById('new-reading').value.trim();
         const meaning = document.getElementById('new-meaning').value.trim();
         const type = document.getElementById('new-type').value.trim();
         const example = document.getElementById('new-example').value.trim();
+        const btn = document.getElementById('add-submit-btn');
+
         if (!kanji || !reading || !meaning) {
             alert('Please fill in at least Kanji, Reading, and Meaning.');
             return;
         }
+
+        btn.innerText = "Simmering...";
+        btn.disabled = true;
+
         const newItem = {
             kanji: kanji,
             reading: reading,
@@ -389,28 +408,12 @@
             level: 0,
             nextReview: Date.now()
         };
+
+        // Sync to Google Sheets
+        await syncToDatabase({ action: 'add', ...newItem });
+        
         masterList.push(newItem);
         updateDashboard();
-
-        // Sync to Google Sheets - Ensure action is included in the flat object
-        const syncData = {
-            action: 'add',
-            kanji: newItem.kanji,
-            reading: newItem.reading,
-            meaning: newItem.meaning,
-            type: newItem.type,
-            conjugation: newItem.conjugation,
-            sent: newItem.sent,
-            level: newItem.level,
-            nextReview: newItem.nextReview
-        };
-        console.log('Syncing new word:', syncData);
-
-        fetch(SAVE_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(syncData)
-        });
 
         // Clear form
         document.getElementById('new-kanji').value = '';
@@ -418,6 +421,9 @@
         document.getElementById('new-meaning').value = '';
         document.getElementById('new-type').value = '';
         document.getElementById('new-example').value = '';
+        
+        btn.innerText = "Add to Pot";
+        btn.disabled = false;
         toggleAddForm();
     }
     init();
