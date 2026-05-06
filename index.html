@@ -81,9 +81,24 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .sync-text { font-size: 0.7rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        #toast-container {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 4000; display: flex; flex-direction: column; align-items: center; pointer-events: none;
+        }
+        .toast {
+            background: var(--card-bg); color: var(--text); padding: 10px 20px; border-radius: 12px;
+            margin-bottom: 10px; font-size: 0.7rem; font-weight: 800; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-left: 4px solid var(--dashi-gold); animation: toast-in 0.3s ease, toast-out 0.3s ease 1.5s forwards;
+            white-space: nowrap; text-transform: uppercase; letter-spacing: 1px;
+        }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes toast-out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
     </style>
 </head>
 <body>
+
+<div id="toast-container"></div>
 
 <div id="sync-loader">
     <div class="spinner"></div>
@@ -317,6 +332,17 @@
         u.lang = 'ja-JP'; window.speechSynthesis.speak(u);
     }
 
+    /* Show a brief notification for SRS level changes */
+    function showToast(msg, color) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.borderLeftColor = color || 'var(--dashi-gold)';
+        toast.innerText = msg;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
+
     /* Flip the card to reveal the answer */
     function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); updateBackUI(); } }
 
@@ -347,6 +373,9 @@
             // Update local masterList immediately so data persists if session continues
             const localIdx = masterList.findIndex(i => i.kanji === oldItem.kanji);
             if (localIdx !== -1) masterList[localIdx].level = nl;
+
+            const stage = STAGES[getStageIdx(nl)];
+            showToast(`SRS ${isCorrect ? '↑' : '↓'} ${stage.name} (LVL ${nl})`, stage.color);
 
             syncToDatabase({
                 action: 'update',
