@@ -107,6 +107,7 @@
 
 <div id="app">
     <button id="exit-btn" onclick="location.reload()">Exit Session</button>
+    <div id="session-counter" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); display: none; font-size: 0.65rem; font-weight: 800; color: #888; letter-spacing: 1px; z-index: 100; text-transform: uppercase;"></div>
     <div class="theme-switch-wrapper"><label class="theme-switch"><input type="checkbox" id="theme-toggle" /><div class="slider"></div></label></div>
 
     <div id="audio-mode-toggle" style="position: absolute; top: -45px; right: 50px; display: none; align-items: center; gap: 5px; font-size: 0.6rem; font-weight: 800; color: #888;">
@@ -261,6 +262,7 @@
         document.getElementById('exit-btn').style.display = 'block';
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('keyboard-legend').style.display = 'block';
+        document.getElementById('session-counter').style.display = 'block';
         document.getElementById('audio-mode-toggle').style.display = 'flex';
         nextItem(true);
     }
@@ -274,12 +276,14 @@
             document.getElementById('display-front').style.display = "none";
             document.getElementById('session-summary').style.display = "flex";
             
+            document.getElementById('session-counter').style.display = 'none';
             document.getElementById('summary-total').innerText = initialQueueLength;
             document.getElementById('summary-correct').innerText = initialQueueLength - sessionWrongCount;
             document.getElementById('summary-wrong').innerText = sessionWrongCount;
 
             return;
         }
+        document.getElementById('session-counter').innerText = `${reviewQueue.length} LEFT`;
         
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
         
