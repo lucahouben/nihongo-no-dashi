@@ -15,11 +15,13 @@
             --text: #c0caf5;
             --muted: #565f89;
             --dashi-gold: #e0af68;
+            --action-bg: #e0af68;
             --accent: #7dcfff;
             --success: #9ece6a;
             --error: #f7768e;
             --feedback-text: #1a1b26;
             --toggle-bg: #292e42;
+            --toggle-active: #7dcfff;
             --button-text: #1a1b26;
             --card-front-bg: #e0af68;
             --card-front-text: #1a1b26;
@@ -39,12 +41,14 @@
             --text: #3760bf;
             --muted: #6172b0;
             --dashi-gold: #8c6c00;
+            --action-bg: #e0af68;
             --accent: #5a4a9c;
-            --success: #485e30;
+            --success: #9ece6a;
             --error: #f7768e;
             --feedback-text: #1a1b26;
             --toggle-bg: #c0c2c9;
-            --button-text: #f7f7fb;
+            --toggle-active: #bb9af7;
+            --button-text: #1a1b26;
             --card-front-bg: #d5d6db;
             --card-front-text: #3760bf;
             --stage-prepping: #485e30;
@@ -82,18 +86,23 @@
             position: absolute; top: -42px; right: 0; z-index: 100;
             display: flex; align-items: center;
         }
-        .theme-switch { position: relative; display: inline-block; width: 42px; height: 22px; }
+        .theme-switch { position: relative; display: inline-block; width: 42px; height: 22px; flex: 0 0 42px; vertical-align: middle; }
         .theme-switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
         .slider {
             position: absolute; inset: 0; cursor: pointer;
-            border: 1px solid var(--card-border); border-radius: 22px;
+            border: 1px solid var(--card-border); border-radius: 999px;
             background: var(--toggle-bg); transition: 0.3s ease;
         }
         .slider:before {
             position: absolute; bottom: 3px; left: 3px; width: 14px; height: 14px;
             content: ""; border-radius: 50%; background: var(--accent); transition: 0.3s ease;
         }
-        .theme-switch input:checked + .slider:before { transform: translateX(20px); background: var(--dashi-gold); }
+        .theme-switch input:checked + .slider:before { transform: translateX(20px); background: var(--toggle-active); }
+        #audio-mode-toggle {
+            top: -42px !important; height: 22px; align-items: center !important;
+            line-height: 1;
+        }
+        #audio-mode-toggle > span { display: inline-flex; height: 22px; align-items: center; line-height: 1; }
         #exit-btn {
             position: absolute; top: -44px; left: 0; z-index: 100; display: none;
             padding: 7px 12px; border: 1px solid var(--card-border); border-radius: 8px;
@@ -115,7 +124,8 @@
             border: 1px solid var(--card-border); border-radius: 9px; background: var(--dashi-gold);
             color: var(--button-text); cursor: pointer; font-size: 1.2rem; font-weight: 800;
         }
-        .btn-add-toggle:hover, .btn-main:hover, .btn-secondary:hover, .btn-lookup:hover, .btn-mini-play:hover, .btn-audio:hover {
+        .btn-add-toggle:hover, .btn-main:hover, .btn-secondary:hover, .btn-lookup:hover, .btn-mini-play:hover, .btn-audio:hover,
+        .btn-correct:hover, .btn-wrong:hover {
             box-shadow: 0 0 15px rgba(125, 207, 255, 0.15);
             transform: translateY(-1px);
         }
@@ -144,17 +154,21 @@
         }
         .btn-mini-play::before { content: "> "; }
         .btn-main {
-            width: 100%; padding: 16px; border: 1px solid var(--dashi-gold); border-radius: 9px;
-            background: var(--dashi-gold); color: var(--button-text); cursor: pointer;
+            width: 100%; padding: 16px; border: 1px solid var(--action-bg); border-radius: 9px;
+            background: var(--action-bg); color: var(--button-text); cursor: pointer;
             font: 800 0.82rem 'JetBrains Mono', 'Fira Code', monospace;
             letter-spacing: 0.4px; text-transform: uppercase;
         }
         .btn-main::before { content: "> "; }
+        [data-theme="light"] .btn-main { color: #1a1b26; }
         .btn-secondary {
             width: 100%; margin-top: 10px; padding: 12px; border: 1px solid var(--card-border);
             border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer;
             font: 600 0.75rem 'JetBrains Mono', 'Fira Code', monospace;
         }
+        .btn-secondary:hover, .btn-secondary:focus-visible { color: var(--text); }
+        .btn-main:hover, .btn-main:focus-visible { color: var(--button-text); }
+        .btn-lookup:hover, .btn-lookup:focus-visible { background: var(--card-bg); color: var(--dashi-gold); }
         #progress-container {
             display: none; width: 100%; height: 5px; margin-bottom: 20px; overflow: hidden;
             border: 1px solid var(--card-border); border-radius: 6px; background: var(--card-bg);
@@ -258,8 +272,11 @@
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .btn-correct { border: 1px solid var(--success) !important; border-radius: 8px !important; background: var(--success) !important; color: var(--button-text) !important; font: 700 0.8rem 'JetBrains Mono', 'Fira Code', monospace !important; }
         .btn-wrong { border: 1px solid var(--error) !important; border-radius: 8px !important; background: var(--error) !important; color: var(--feedback-text) !important; font: 700 0.8rem 'JetBrains Mono', 'Fira Code', monospace !important; }
+        .btn-correct:hover, .btn-correct:focus-visible { border-color: var(--success) !important; background: var(--success) !important; color: var(--feedback-text) !important; }
+        .btn-wrong:hover, .btn-wrong:focus-visible { border-color: var(--error) !important; background: var(--error) !important; color: var(--feedback-text) !important; }
         .btn-correct::before { content: "> "; }
         .btn-wrong::before { content: "> "; }
+        #type-text { padding: 4px 11px !important; font-size: 0.72rem !important; letter-spacing: 0.06em; line-height: 1.35; }
         .card-back-actions > button:last-child { color: var(--muted) !important; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
         #summary-correct { color: var(--success) !important; }
         #summary-wrong { color: var(--error) !important; }
