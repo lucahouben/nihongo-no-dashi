@@ -176,8 +176,7 @@
 
     <div id="progress-container"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><span id="front-prompt">...</span></div>
-        <button id="front-audio-button" class="btn-audio front-audio-button" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button>
+        <div class="card-face card-front" id="display-front"><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
         <div id="session-summary" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;">SESSION RECIPE</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
@@ -192,7 +191,6 @@
             <div class="card-back-content">
                 <div id="type-text" style="font-size:0.6rem; color:var(--dashi-gold); border:1px solid var(--dashi-gold); padding:2px 10px; border-radius:100px; text-transform:uppercase; font-weight:800; margin-bottom:12px;"></div>
                 <div id="reading-text" class="reading" lang="ja"></div>
-                <button class="btn-audio" onclick="playAudio(event)" aria-label="Play Japanese pronunciation">Play pronunciation</button>
                 <div id="meaning-text" class="meaning"></div>
                 <div id="info-tray">
                     <div style="font-size: 0.55rem; color: #888; text-transform: uppercase; margin-bottom: 4px; font-weight: 800;">Example</div>
@@ -632,7 +630,7 @@
             cardEl.classList.remove('card-correct', 'card-wrong');
             levelInd.style.color = "inherit";
             nextItem();
-        }, 400);
+        }, 600);
     }
 
     /* Toggle visibility of the example sentence tray */
