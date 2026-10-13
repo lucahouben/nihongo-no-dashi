@@ -115,6 +115,10 @@
             text-align: left; transition: background 0.3s ease, border-color 0.3s ease;
         }
         .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .dash-tagline {
+            margin: 5px 0 0; color: var(--muted); font: 600 0.6rem 'JetBrains Mono', 'Fira Code', monospace;
+            letter-spacing: 2px; text-transform: uppercase;
+        }
         .dash-title {
             margin: 0; color: var(--dashi-gold); font: 800 0.9rem 'JetBrains Mono', 'Fira Code', monospace;
             letter-spacing: 1.5px; text-transform: uppercase;
@@ -299,6 +303,7 @@
             #app { width: calc(100% - 32px); }
             #dashboard { padding: 20px 16px; }
             .dash-header { gap: 12px; }
+            .dash-header > div { min-width: 0; }
             .dash-title {
                 min-width: 0; font-size: clamp(0.72rem, 4vw, 0.9rem);
                 letter-spacing: clamp(0.5px, 0.4vw, 1.5px);
@@ -333,25 +338,25 @@
 </div>
 
 <div id="app">
-    <button id="exit-btn" onclick="location.reload()">Exit Session</button>
-    <div id="session-counter" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); display: none; font-size: 0.65rem; font-weight: 800; color: #888; letter-spacing: 1px; z-index: 100; text-transform: uppercase;"></div>
-    <div class="theme-switch-wrapper"><label class="theme-switch"><input type="checkbox" id="theme-toggle" /><div class="slider"></div></label></div>
+    <button id="exit-btn" type="button" title="Return to dashboard" aria-label="Return to dashboard" onclick="location.reload()">&gt; ABORT_LINK</button>
+    <div id="session-counter" title="Number of review cards remaining in this session" aria-live="polite" style="position: absolute; top: -45px; left: 50%; transform: translateX(-50%); display: none; font-size: 0.65rem; font-weight: 800; color: #888; letter-spacing: 1px; z-index: 100; text-transform: uppercase;"></div>
+    <div class="theme-switch-wrapper"><label class="theme-switch" title="Switch between dark and light color themes"><input type="checkbox" id="theme-toggle" aria-label="Switch between dark and light color themes" /><div class="slider"></div></label></div>
 
     <div id="audio-mode-toggle" style="position: absolute; top: -45px; right: 50px; display: none; align-items: center; gap: 5px; font-size: 0.6rem; font-weight: 800; color: #888;">
-        <span>AUDIO MODE</span>
-        <label class="theme-switch"><input type="checkbox" id="audio-mode-checkbox" /><div class="slider"></div></label>
+        <span title="Hear the Japanese reading instead of seeing the kanji prompt">AUDIO MODE</span>
+        <label class="theme-switch" title="Hear the Japanese reading instead of seeing the kanji prompt"><input type="checkbox" id="audio-mode-checkbox" aria-label="Hear the Japanese reading instead of seeing the kanji prompt" /><div class="slider"></div></label>
     </div>
 
     <div id="add-form-overlay">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <h2 class="dash-title">Add to Pot</h2>
-            <button class="btn-add-toggle" onclick="toggleAddForm()" style="background:#444; color:white;">×</button>
+            <h2 class="dash-title">CAPTURE_DATA</h2>
+            <button class="btn-add-toggle" type="button" title="Close the new-word capture form" aria-label="Close the new-word capture form" onclick="toggleAddForm()">×</button>
         </div>
         <div class="form-group">
             <label for="new-kanji">Kanji</label>
             <div class="kanji-input-row">
                 <input type="text" id="new-kanji">
-                <button type="button" class="btn-lookup" id="lookup-btn" onclick="lookupNewWord()">Auto-fill</button>
+                <button type="button" class="btn-lookup" id="lookup-btn" title="Look up this word and fill in available dictionary details" onclick="lookupNewWord()">Auto-fill</button>
             </div>
             <div id="lookup-status" aria-live="polite"></div>
         </div>
@@ -359,32 +364,32 @@
         <div class="form-group"><label>Meaning</label><input type="text" id="new-meaning"></div>
         <div class="form-group"><label>Type</label><input type="text" id="new-type"></div>
         <div class="form-group"><label>Example</label><input type="text" id="new-example"></div>
-        <button class="btn-main" onclick="submitNewWord()" id="add-submit-btn" style="margin-top:auto;">Add to Pot</button>
+        <button class="btn-main" title="Add new word to database" onclick="submitNewWord()" id="add-submit-btn" style="margin-top:auto;">CAPTURE_DATA</button>
     </div>
 
     <div id="dashboard">
-        <div class="dash-header"><h1 class="dash-title">Nihongo no Dashi</h1><button class="btn-add-toggle" onclick="toggleAddForm()">+</button></div>
+        <div class="dash-header"><div><h1 class="dash-title">Nihongo no Dashi</h1><p class="dash-tagline">CYBERNETIC MEMORY BUFFER</p></div><button class="btn-add-toggle" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
         <div id="stats-display" class="stats-list"></div>
-        <button class="btn-main" id="start-btn" onclick="startSession('due')">Start Cooking (0)</button>
-        <button class="btn-secondary" onclick="startSession('all')">Cooking Practice (all)</button>
+        <button class="btn-main" id="start-btn" title="Start reviewing due cards" onclick="startSession('due')">INITIALIZE_SESSION (0)</button>
+        <button class="btn-secondary" title="Practice all words without SRS level penalties" onclick="startSession('all')">&gt; MEMORY_SIMULATION (all)</button>
     </div>
 
-    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
+        <div class="card-face card-front" id="display-front"><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation of this word" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
         <div id="session-summary" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
-            <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;">SESSION RECIPE</h2>
+            <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">SESSION_DIAGNOSTICS</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span>Items Prepped</span><span id="summary-total">0</span></div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span>Perfectly Seasoned</span><span id="summary-correct">0</span></div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--error);"><span>Needs More Salt</span><span id="summary-wrong">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span title="Total number of cards in this session">DATA_PROCESSED</span><span id="summary-total" title="Total number of cards in this session">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span title="Cards marked correct during this session">SUCCESS_RATE</span><span id="summary-correct" title="Cards marked correct during this session">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--error);"><span title="Cards marked incorrect during this session">RETENTION_ERRORS</span><span id="summary-wrong" title="Cards marked incorrect during this session">0</span></div>
             </div>
-            <button class="btn-secondary" onclick="location.reload()" style="margin-top:30px;">Back to Kitchen</button>
+            <button class="btn-secondary" title="Return to dashboard" onclick="location.reload()" style="margin-top:30px;">&gt; RETURN_TO_DASHBOARD</button>
         </div>
         <div class="card-face card-back" id="card-back-ui">
-            <div id="level-indicator"></div>
+            <div id="level-indicator" title="Current SRS level and memory stage"></div>
             <div class="card-back-content">
-                <div id="type-text" style="font-size:0.6rem; color:var(--dashi-gold); border:1px solid var(--dashi-gold); padding:2px 10px; border-radius:100px; text-transform:uppercase; font-weight:800; margin-bottom:12px;"></div>
+                <div id="type-text" title="Vocabulary classification, such as noun or verb" style="font-size:0.6rem; color:var(--dashi-gold); border:1px solid var(--dashi-gold); padding:2px 10px; border-radius:100px; text-transform:uppercase; font-weight:800; margin-bottom:12px;"></div>
                 <div id="reading-text" class="reading" lang="ja"></div>
                 <div id="meaning-text" class="meaning"></div>
                 <div id="info-tray">
@@ -393,9 +398,9 @@
                 </div>
             </div>
             <div class="card-back-actions">
-                <button class="btn-correct" onclick="submitResult(true, event)" style="background:var(--success); color:var(--button-text); margin-bottom:8px; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Correct (1)</button>
-                <button class="btn-wrong" onclick="submitResult(false, event)" style="background:var(--error); color:var(--button-text); border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
-                <button style="background:none; border:none; color:var(--muted); font-size:0.55rem; width:100%; margin-top:10px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
+                <button class="btn-correct" title="Mark correct and advance this card's SRS review interval" onclick="submitResult(true, event)" style="background:var(--success); color:var(--button-text); margin-bottom:8px; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Correct (1)</button>
+                <button class="btn-wrong" title="Mark incorrect and move this card back one SRS level" onclick="submitResult(false, event)" style="background:var(--error); color:var(--button-text); border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
+                <button title="Show or hide the example sentence and conjugation details" style="background:none; border:none; color:var(--muted); font-size:0.55rem; width:100%; margin-top:10px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
             </div>
         </div>
     </div>
@@ -403,7 +408,7 @@
     <aside id="kanji-info" hidden role="dialog" aria-labelledby="kanji-info-heading">
         <div class="kanji-info-header">
             <div><div id="kanji-info-character"></div><strong id="kanji-info-heading">Kanji details</strong></div>
-            <button id="kanji-info-close" type="button" aria-label="Close kanji details">×</button>
+            <button id="kanji-info-close" type="button" title="Close kanji details" aria-label="Close kanji details">×</button>
         </div>
         <dl class="kanji-info-list">
             <div><dt>On'yomi</dt><dd id="kanji-info-on"></dd></div>
@@ -433,11 +438,11 @@
     let kanjiInfoRequest = 0, activeKanjiTrigger = null, kanjiInfoPinned = false, kanjiInfoHideTimer = null;
 
     const STAGES = [
-        { name: "PREPPING", color: "var(--stage-prepping)", min: 0, max: 2 },
-        { name: "SIMMERING", color: "var(--stage-simmering)", min: 3, max: 4 },
-        { name: "BOILING", color: "var(--stage-boiling)", min: 5, max: 6 },
-        { name: "INFUSING", color: "var(--stage-infusing)", min: 7, max: 8 },
-        { name: "PERFECT DASHI", color: "var(--stage-perfect)", min: 9, max: 99 }
+        { name: "RAW_DATA", description: "Stage 1: Newly captured items undergoing initial review", color: "var(--stage-prepping)", min: 0, max: 2 },
+        { name: "DECODING", description: "Stage 2: Active memory formation & pattern recognition", color: "var(--stage-simmering)", min: 3, max: 4 },
+        { name: "CACHED", description: "Stage 3: Fast-recall short-term memory buffer", color: "var(--stage-boiling)", min: 5, max: 6 },
+        { name: "COMPILED", description: "Stage 4: Deeply integrated vocabulary", color: "var(--stage-infusing)", min: 7, max: 8 },
+        { name: "FIRMWARE", description: "Stage 5: Permanently mastered / Read-Only Memory", color: "var(--stage-perfect)", min: 9, max: 99 }
     ];
 
     function getStageIdx(level) { return STAGES.findIndex(s => level >= s.min && level <= s.max); }
@@ -659,12 +664,12 @@
     function updateDashboard() {
         const now = Date.now();
         const dueCount = masterList.filter(i => i.nextReview <= now).length;
-        document.getElementById('start-btn').innerText = `Start Cooking (${dueCount})`;
+        document.getElementById('start-btn').innerText = `INITIALIZE_SESSION (${dueCount})`;
         let html = '';
         STAGES.forEach((stage, idx) => {
             const wordsInStage = masterList.filter(i => getStageIdx(i.level) === idx);
             const kanjiList = wordsInStage.map(w => w.kanji).join(', ') || 'No items yet';
-            html += `<div class="stat-group" id="group-${idx}"><div class="stat-row" style="--stage-color:${stage.color}" onclick="toggleGroup(${idx})"><span>${stage.name} (${wordsInStage.length})</span><button class="btn-mini-play" onclick="startSession('stage', ${idx}, event)">COOK</button></div><div class="level-items">${kanjiList}</div></div>`;
+            html += `<div class="stat-group" id="group-${idx}" title="${stage.description}"><div class="stat-row" style="--stage-color:${stage.color}" title="${stage.description}" onclick="toggleGroup(${idx})"><span title="${wordsInStage.length} words in ${stage.name}. ${stage.description}">${stage.name} (${wordsInStage.length})</span><button class="btn-mini-play" title="Practice ${stage.name} items without SRS level penalties" aria-label="Practice ${stage.name} items without SRS level penalties" onclick="startSession('stage', ${idx}, event)">RECALL</button></div><div class="level-items">${kanjiList}</div></div>`;
         });
         document.getElementById('stats-display').innerHTML = html;
     }
@@ -741,6 +746,7 @@
         document.getElementById('reading-text').style.color = s.color;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
+        document.getElementById('level-indicator').title = `SRS level ${currentItem.level}. ${s.name}: ${s.description}`;
         document.getElementById('sent-text').innerText = currentItem.sent || "No example provided.";
         document.getElementById('level-indicator').innerText = `LVL ${currentItem.level}`;
         document.getElementById('info-tray').style.display = "none";
@@ -979,7 +985,9 @@
             });
         }
 
-        document.getElementById('progress-bar').style.width = (completedCount / initialQueueLength * 100) + "%";
+        const progress = Math.round(completedCount / initialQueueLength * 100);
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+        document.getElementById('progress-container').setAttribute('aria-valuenow', progress);
         isFlipped = false; 
         document.getElementById('card').classList.remove('is-flipped');
         setTimeout(() => {
@@ -1124,7 +1132,7 @@
             return;
         }
 
-        btn.innerText = "Simmering...";
+        btn.innerText = "COMMITTING_DATA...";
         btn.disabled = true;
 
         const newItem = {
@@ -1154,7 +1162,7 @@
             console.error('Supabase word insert failed', error);
             showToast(`Could not add word: ${error.message || 'Please try again.'}`, 'var(--error)');
         } finally {
-            btn.innerText = 'Add to Pot';
+            btn.innerText = 'CAPTURE_DATA';
             btn.disabled = false;
         }
     }
