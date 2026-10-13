@@ -60,6 +60,9 @@
         .flashcard.is-flipped { transform: rotateY(180deg); }
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 30px 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); }
         .card-front { background: var(--dashi-gold); color: #1a1a1a; justify-content: center; font-size: 5rem; font-weight: 800; font-family: serif; word-break: break-word; overflow-wrap: break-word; line-height: 1.1; }
+        #front-prompt { display: block; width: 100%; text-align: center; }
+        .kanji-trigger { border-bottom: 1px dotted currentColor; cursor: help; }
+        .kanji-trigger:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
         .card-back { background: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); overflow-y: auto; scrollbar-width: none; }
         #level-indicator { position: absolute; top: 15px; right: 20px; font-size: 0.7rem; font-weight: 800; }
         .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; }
@@ -67,6 +70,22 @@
         .front-audio-button { position: absolute; z-index: 2; bottom: 16px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
         .flashcard.is-flipped .front-audio-button { display: none; }
         .meaning { font-size: 1.5rem; color: var(--text); margin-bottom: 15px; }
+        #kanji-info {
+            position: fixed; z-index: 5000; width: min(320px, calc(100vw - 24px)); max-height: min(70vh, 420px);
+            overflow-y: auto; padding: 16px; box-sizing: border-box; border: 1px solid rgba(128,128,128,0.35);
+            border-radius: 14px; background: var(--card-bg); color: var(--text); text-align: left;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.35); cursor: default; user-select: text;
+        }
+        #kanji-info[hidden] { display: none; }
+        .kanji-info-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        #kanji-info-character { color: var(--dashi-gold); font-size: 1.8rem; font-weight: 800; line-height: 1; }
+        #kanji-info-close { border: 0; background: transparent; color: var(--text); font-size: 1.4rem; cursor: pointer; }
+        .kanji-info-list { display: grid; gap: 10px; margin: 0; }
+        .kanji-info-list dt { color: #888; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+        .kanji-info-list dd { margin: 3px 0 0; line-height: 1.4; overflow-wrap: anywhere; }
+        #kanji-info-status { min-height: 1em; margin-top: 10px; color: #888; font-size: 0.75rem; }
+        .kanji-info-sources { margin-top: 12px; color: #888; font-size: 0.65rem; line-height: 1.5; }
+        .kanji-info-sources a { color: var(--dashi-gold); }
         #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.2); padding-top: 15px; display: none; margin-bottom: 20px; }
         #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .key-hint { border: 1px solid rgba(128,128,128,0.5); padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; }
@@ -153,7 +172,7 @@
 
     <div id="progress-container"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front">...</div>
+        <div class="card-face card-front" id="display-front"><span id="front-prompt">...</span></div>
         <button id="front-audio-button" class="btn-audio front-audio-button" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button>
         <div id="session-summary" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;">SESSION RECIPE</h2>
@@ -182,6 +201,22 @@
         </div>
     </div>
 
+    <aside id="kanji-info" hidden role="dialog" aria-labelledby="kanji-info-heading">
+        <div class="kanji-info-header">
+            <div><div id="kanji-info-character"></div><strong id="kanji-info-heading">Kanji details</strong></div>
+            <button id="kanji-info-close" type="button" aria-label="Close kanji details">×</button>
+        </div>
+        <dl class="kanji-info-list">
+            <div><dt>On'yomi</dt><dd id="kanji-info-on"></dd></div>
+            <div><dt>Kun'yomi</dt><dd id="kanji-info-kun"></dd></div>
+            <div><dt>Definition</dt><dd id="kanji-info-meaning"></dd></div>
+            <div><dt>Primary radical</dt><dd id="kanji-info-radical"></dd></div>
+            <div><dt>Stroke count</dt><dd id="kanji-info-strokes"></dd></div>
+        </dl>
+        <div id="kanji-info-status" aria-live="polite"></div>
+        <div class="kanji-info-sources">Readings and definitions: <a href="https://kanjiapi.dev/" target="_blank" rel="noopener noreferrer">KanjiAPI</a>. Radical data: <a href="https://kanjivg.tagaini.net/" target="_blank" rel="noopener noreferrer">KanjiVG</a>, CC BY-SA 3.0.</div>
+    </aside>
+
     <div id="keyboard-legend">
         <span class="key-hint">V</span> Audio &nbsp; <span class="key-hint">Space</span> Flip &nbsp; <span class="key-hint">1/2</span> Result &nbsp; <span class="key-hint">F</span> Info &nbsp; <span class="key-hint">Esc</span> Exit
     </div>
@@ -193,6 +228,8 @@
 
     let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false, isPracticeMode = false;
     let completedCount = 0, initialQueueLength = 0, audioMode = false, sessionWrongCount = 0;
+    const kanjiDetailsCache = new Map();
+    let kanjiInfoRequest = 0, activeKanjiTrigger = null, kanjiInfoPinned = false, kanjiInfoHideTimer = null;
 
     const STAGES = [
         { name: "PREPPING", color: "#8c9e82", min: 0, max: 2 },
@@ -215,12 +252,11 @@
         audioMode = e.target.checked;
         /* Update card face immediately if toggled during an active session */
         if (currentItem && !isFlipped && document.getElementById('card').style.display === 'block') {
-            const display = document.getElementById('display-front');
             if (audioMode) {
-                display.innerText = "👂";
+                renderKanjiPrompt("👂");
                 playAudio();
             } else {
-                display.innerText = currentItem.kanji;
+                renderKanjiPrompt(currentItem.kanji);
             }
         }
     });
@@ -287,6 +323,7 @@
 
     /* Select and display the next word from the review queue */
     function nextItem(first = false) {
+        hideKanjiInfo();
         if (reviewQueue.length === 0) {
             /* Session complete: Reset UI and return to dashboard after delay */
             document.getElementById('card').classList.remove('is-flipped');
@@ -312,10 +349,10 @@
         document.getElementById('display-front').style.fontSize = kanjiLength > 8 ? "2.5rem" : kanjiLength > 4 ? "3.5rem" : "5rem";
         
         if (audioMode) {
-            document.getElementById('display-front').innerText = "👂";
+            renderKanjiPrompt("👂");
             playAudio();
         } else {
-            document.getElementById('display-front').innerText = currentItem.kanji;
+            renderKanjiPrompt(currentItem.kanji);
         }
         
         if (first) updateBackUI();
@@ -349,6 +386,166 @@
             console.error("Sync failed", e);
         }
     }
+
+    function renderKanjiPrompt(text) {
+        const display = document.getElementById('front-prompt');
+        display.replaceChildren();
+        for (const character of text) {
+            if (/\p{Script=Han}/u.test(character)) {
+                const trigger = document.createElement('span');
+                trigger.className = 'kanji-trigger';
+                trigger.dataset.kanji = character;
+                trigger.setAttribute('role', 'button');
+                trigger.setAttribute('tabindex', '0');
+                trigger.setAttribute('aria-label', `Details for ${character}`);
+                trigger.textContent = character;
+                display.appendChild(trigger);
+            } else {
+                display.appendChild(document.createTextNode(character));
+            }
+        }
+    }
+
+    function getKanjiTrigger(target) {
+        return target instanceof Element ? target.closest('.kanji-trigger') : null;
+    }
+
+    function getKanjiDetails(character) {
+        if (kanjiDetailsCache.has(character)) return kanjiDetailsCache.get(character);
+        const codePoint = character.codePointAt(0).toString(16).padStart(5, '0');
+        const detailsPromise = Promise.allSettled([
+            fetch(`https://kanjiapi.dev/v1/kanji/${encodeURIComponent(character)}`).then(response => {
+                if (!response.ok) throw new Error('Kanji lookup failed');
+                return response.json();
+            }),
+            fetch(`https://raw.githubusercontent.com/KanjiVG/kanjivg/master/kanji/${codePoint}.svg`).then(response => {
+                if (!response.ok) throw new Error('Radical lookup failed');
+                return response.text();
+            })
+        ]).then(([dictionaryResult, svgResult]) => {
+            let radicals = [];
+            if (svgResult.status === 'fulfilled') {
+                const svg = new DOMParser().parseFromString(svgResult.value, 'image/svg+xml');
+                if (!svg.querySelector('parsererror')) {
+                    const radicalGroups = Array.from(svg.getElementsByTagName('g')).filter(group =>
+                        Array.from(group.attributes).some(attribute => attribute.localName === 'radical' && attribute.value === 'general')
+                    );
+                    radicals = [...new Set(radicalGroups.map(group =>
+                        Array.from(group.attributes).find(attribute => attribute.localName === 'element')?.value
+                    ).filter(Boolean))];
+                }
+            }
+            if (dictionaryResult.status === 'rejected' && svgResult.status === 'rejected') throw new Error('Kanji details unavailable');
+            return {
+                dictionary: dictionaryResult.status === 'fulfilled' ? dictionaryResult.value : null,
+                radicals,
+                dictionaryUnavailable: dictionaryResult.status === 'rejected',
+                radicalsUnavailable: svgResult.status === 'rejected' || radicals.length === 0
+            };
+        }).catch(error => {
+            kanjiDetailsCache.delete(character);
+            throw error;
+        });
+        kanjiDetailsCache.set(character, detailsPromise);
+        return detailsPromise;
+    }
+
+    function positionKanjiInfo(trigger) {
+        if (!trigger || document.getElementById('kanji-info').hidden) return;
+        const panel = document.getElementById('kanji-info');
+        const bounds = trigger.getBoundingClientRect();
+        const margin = 12;
+        const left = Math.max(margin, Math.min(bounds.left + bounds.width / 2 - panel.offsetWidth / 2, window.innerWidth - panel.offsetWidth - margin));
+        let top = bounds.bottom + 8;
+        if (top + panel.offsetHeight > window.innerHeight - margin) top = bounds.top - panel.offsetHeight - 8;
+        panel.style.left = `${left}px`;
+        panel.style.top = `${Math.max(margin, Math.min(top, window.innerHeight - panel.offsetHeight - margin))}px`;
+    }
+
+    async function showKanjiInfo(character, trigger, pinned) {
+        clearTimeout(kanjiInfoHideTimer);
+        activeKanjiTrigger = trigger;
+        kanjiInfoPinned = pinned;
+        const request = ++kanjiInfoRequest;
+        const panel = document.getElementById('kanji-info');
+        panel.hidden = false;
+        document.getElementById('kanji-info-character').textContent = character;
+        document.getElementById('kanji-info-heading').textContent = 'Kanji details';
+        document.getElementById('kanji-info-on').textContent = 'Loading…';
+        document.getElementById('kanji-info-kun').textContent = 'Loading…';
+        document.getElementById('kanji-info-meaning').textContent = 'Loading…';
+        document.getElementById('kanji-info-radical').textContent = 'Loading…';
+        document.getElementById('kanji-info-strokes').textContent = 'Loading…';
+        document.getElementById('kanji-info-status').textContent = '';
+        positionKanjiInfo(trigger);
+        try {
+            const details = await getKanjiDetails(character);
+            if (request !== kanjiInfoRequest) return;
+            const dictionary = details.dictionary;
+            const displayList = values => values?.length ? values.join(', ') : 'Not available';
+            document.getElementById('kanji-info-on').textContent = displayList(dictionary?.on_readings);
+            document.getElementById('kanji-info-kun').textContent = displayList(dictionary?.kun_readings);
+            document.getElementById('kanji-info-meaning').textContent = displayList(dictionary?.meanings);
+            document.getElementById('kanji-info-radical').textContent = displayList(details.radicals);
+            document.getElementById('kanji-info-strokes').textContent = dictionary?.stroke_count ?? 'Not available';
+            const unavailable = [];
+            if (details.dictionaryUnavailable) unavailable.push('Readings and definitions unavailable.');
+            if (details.radicalsUnavailable) unavailable.push('Radical data unavailable.');
+            document.getElementById('kanji-info-status').textContent = unavailable.join(' ');
+            positionKanjiInfo(trigger);
+        } catch {
+            if (request === kanjiInfoRequest) document.getElementById('kanji-info-status').textContent = 'Kanji details could not be loaded.';
+        }
+    }
+
+    function hideKanjiInfo() {
+        clearTimeout(kanjiInfoHideTimer);
+        kanjiInfoRequest++;
+        activeKanjiTrigger = null;
+        kanjiInfoPinned = false;
+        document.getElementById('kanji-info').hidden = true;
+    }
+
+    const displayFront = document.getElementById('display-front');
+    displayFront.addEventListener('pointerover', event => {
+        if (event.pointerType !== 'mouse') return;
+        const trigger = getKanjiTrigger(event.target);
+        if (trigger && trigger !== activeKanjiTrigger) showKanjiInfo(trigger.dataset.kanji, trigger, false);
+    });
+    displayFront.addEventListener('pointerout', event => {
+        if (event.pointerType !== 'mouse' || !getKanjiTrigger(event.target)) return;
+        if (event.relatedTarget && getKanjiTrigger(event.relatedTarget)) return;
+        if (!kanjiInfoPinned) kanjiInfoHideTimer = setTimeout(() => {
+            if (!document.getElementById('kanji-info').matches(':hover')) hideKanjiInfo();
+        }, 250);
+    });
+    displayFront.addEventListener('click', event => {
+        const trigger = getKanjiTrigger(event.target);
+        if (!trigger) return;
+        event.stopPropagation();
+        if (trigger === activeKanjiTrigger && kanjiInfoPinned) hideKanjiInfo();
+        else showKanjiInfo(trigger.dataset.kanji, trigger, true);
+    });
+    displayFront.addEventListener('keydown', event => {
+        const trigger = getKanjiTrigger(event.target);
+        if (!trigger || (event.key !== 'Enter' && event.key !== ' ')) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (trigger === activeKanjiTrigger && kanjiInfoPinned) hideKanjiInfo();
+        else showKanjiInfo(trigger.dataset.kanji, trigger, true);
+    });
+    const kanjiInfoPanel = document.getElementById('kanji-info');
+    kanjiInfoPanel.addEventListener('pointerenter', () => clearTimeout(kanjiInfoHideTimer));
+    kanjiInfoPanel.addEventListener('pointerleave', () => {
+        if (!kanjiInfoPinned) kanjiInfoHideTimer = setTimeout(hideKanjiInfo, 250);
+    });
+    kanjiInfoPanel.addEventListener('click', event => event.stopPropagation());
+    document.getElementById('kanji-info-close').addEventListener('click', hideKanjiInfo);
+    document.addEventListener('click', event => {
+        if (!kanjiInfoPanel.hidden && !kanjiInfoPanel.contains(event.target) && !getKanjiTrigger(event.target)) hideKanjiInfo();
+    });
+    window.addEventListener('resize', () => positionKanjiInfo(activeKanjiTrigger));
+    window.addEventListener('scroll', () => positionKanjiInfo(activeKanjiTrigger), true);
 
     /* Trigger browser text-to-speech for the current reading */
     function playAudio(event) {
@@ -437,6 +634,7 @@
     /* Global keyboard shortcuts for session navigation */
     window.addEventListener('keydown', e => {
         if (document.getElementById('card').style.display !== 'block') return;
+        if (e.key === 'Escape' && !document.getElementById('kanji-info').hidden) { hideKanjiInfo(); return; }
         if (e.key === 'Escape') location.reload();
         if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
         if (isFlipped) {
