@@ -71,7 +71,7 @@
             overflow-y: auto;
             background: var(--dark-kombu);
             color: var(--text);
-            font-family: 'Inter', 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
             user-select: none;
             transition: background 0.3s ease, color 0.3s ease;
         }
@@ -206,13 +206,13 @@
             overflow: hidden; border-bottom: 5px solid var(--stage-prepping); background: var(--card-bg);
             transform: rotateY(180deg); -webkit-transform: rotateY(180deg);
         }
-        .card-back-content { width: 100%; min-height: 0; flex: 1 1 auto; overflow-y: auto; scrollbar-width: none; }
+        .card-back-content { width: 100%; min-height: 0; flex: 1 1 auto; overflow-y: auto; padding-top: 32px; scrollbar-width: none; }
         .card-back-actions { width: 100%; flex: 0 0 auto; padding-top: 12px; background: var(--card-bg); }
         #level-indicator {
             position: absolute; top: 15px; right: 20px; color: var(--accent);
             font: 700 0.7rem 'JetBrains Mono', 'Fira Code', monospace;
         }
-        .reading { margin-bottom: 5px; font-size: 2.2rem; font-weight: 800; }
+        .reading { margin-bottom: 5px; font-family: 'Noto Sans JP', sans-serif; font-size: 2.2rem; font-weight: 800; }
         .btn-audio {
             margin: 0 0 14px; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 8px;
             background: transparent; color: var(--accent); cursor: pointer;
@@ -232,7 +232,7 @@
         }
         #kanji-info[hidden] { display: none; }
         .kanji-info-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        #kanji-info-character { color: var(--dashi-gold); font-size: 1.8rem; font-weight: 800; line-height: 1; }
+        #kanji-info-character { color: var(--dashi-gold); font-family: 'Noto Sans JP', sans-serif; font-size: 1.8rem; font-weight: 800; line-height: 1; }
         #kanji-info-close { border: 0; background: transparent; color: var(--text); cursor: pointer; font-size: 1.4rem; }
         .kanji-info-list { display: grid; gap: 10px; margin: 0; }
         .kanji-info-list dt { color: var(--muted); font: 700 0.65rem 'JetBrains Mono', 'Fira Code', monospace; text-transform: uppercase; }
