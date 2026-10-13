@@ -102,6 +102,11 @@
         .form-group { text-align: left; margin-bottom: 15px; }
         .form-group label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--dashi-gold); display: block; margin-bottom: 5px; }
         .form-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 1rem; box-sizing: border-box; outline: none; }
+        .kanji-input-row { display: flex; gap: 8px; }
+        .kanji-input-row input { flex: 1; min-width: 0; }
+        .btn-lookup { flex: 0 0 auto; padding: 0 12px; border: 1px solid var(--dashi-gold); border-radius: 10px; background: transparent; color: var(--dashi-gold); font: inherit; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+        .btn-lookup:disabled { cursor: wait; opacity: 0.65; }
+        #lookup-status { min-height: 1em; margin-top: 5px; color: #888; font-size: 0.7rem; }
         #sync-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark-kombu); z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255, 204, 102, 0.1); border-top: 4px solid var(--dashi-gold); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -159,7 +164,14 @@
             <h2 class="dash-title">Add to Pot</h2>
             <button class="btn-add-toggle" onclick="toggleAddForm()" style="background:#444; color:white;">×</button>
         </div>
-        <div class="form-group"><label>Kanji</label><input type="text" id="new-kanji"></div>
+        <div class="form-group">
+            <label for="new-kanji">Kanji</label>
+            <div class="kanji-input-row">
+                <input type="text" id="new-kanji">
+                <button type="button" class="btn-lookup" id="lookup-btn" onclick="lookupNewWord()">Auto-fill</button>
+            </div>
+            <div id="lookup-status" aria-live="polite"></div>
+        </div>
         <div class="form-group"><label>Reading</label><input type="text" id="new-reading"></div>
         <div class="form-group"><label>Meaning</label><input type="text" id="new-meaning"></div>
         <div class="form-group"><label>Type</label><input type="text" id="new-type"></div>
@@ -635,6 +647,84 @@
 
     /* Toggle visibility of the example sentence tray */
     function toggleDetails(e) { if(e) e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
+
+    async function lookupNewWord() {
+        const query = document.getElementById('new-kanji').value.trim();
+        const button = document.getElementById('lookup-btn');
+        const status = document.getElementById('lookup-status');
+        if (!query) {
+            status.textContent = 'Enter a Japanese word or kanji to look it up.';
+            document.getElementById('new-kanji').focus();
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = 'Fetching...';
+        status.textContent = '';
+        try {
+            const response = await fetch('https://jotoba.de/api/search/words', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, language: 'English' })
+            });
+            if (!response.ok) throw new Error('Dictionary lookup failed');
+            const result = await response.json();
+            const words = Array.isArray(result.words) ? result.words : [];
+            const word = words.find(entry => entry.reading?.kanji === query || entry.reading?.kana === query) || words[0];
+            const kanji = Array.from(query).length === 1 && /\p{Script=Han}/u.test(query)
+                ? result.kanji?.find(entry => entry.literal === query)
+                : null;
+
+            if (!word && !kanji) {
+                status.textContent = 'No match found. You can enter the details manually.';
+                return;
+            }
+
+            const senses = word?.senses || [];
+            const meanings = [...new Set(senses.flatMap(sense => sense.glosses || []))].slice(0, 5);
+            const formatPartOfSpeech = part => {
+                if (typeof part === 'string') return part;
+                if (!part || typeof part !== 'object') return '';
+                return Object.entries(part).flatMap(([category, details]) => {
+                    if (details && typeof details === 'object') {
+                        return Object.entries(details).map(([kind, ending]) =>
+                            `${kind} ${category.toLowerCase()}${typeof ending === 'string' ? ` (${ending.toLowerCase()} ending)` : ''}`
+                        );
+                    }
+                    return category;
+                }).join(', ');
+            };
+            const types = [...new Set(senses.flatMap(sense => (sense.pos || []).map(formatPartOfSpeech)).filter(Boolean))].slice(0, 4);
+            const reading = word?.reading?.kana || kanji?.kunyomi?.[0]?.replace(/[.\-]/g, '') || kanji?.onyomi?.[0] || '';
+            const meaning = meanings.join('; ') || kanji?.meanings?.slice(0, 5).join('; ') || '';
+            const type = types.join(', ') || (kanji ? 'Kanji' : '');
+            const filled = [];
+
+            if (reading && !document.getElementById('new-reading').value.trim()) {
+                document.getElementById('new-reading').value = reading;
+                filled.push('reading');
+            }
+            if (meaning && !document.getElementById('new-meaning').value.trim()) {
+                document.getElementById('new-meaning').value = meaning;
+                filled.push('meaning');
+            }
+            if (type && !document.getElementById('new-type').value.trim()) {
+                document.getElementById('new-type').value = type;
+                filled.push('type');
+            }
+
+            if (!filled.length) status.textContent = 'Fields already contain values; nothing was changed.';
+            else if (!reading || !meaning || !type) status.textContent = `Filled ${filled.join(', ')}. Complete any remaining fields manually.`;
+            else status.textContent = `Auto-filled ${filled.join(', ')}.`;
+        } catch (error) {
+            console.error('Dictionary lookup failed', error);
+            status.textContent = 'Lookup unavailable. You can enter the details manually.';
+        } finally {
+            button.disabled = false;
+            button.textContent = 'Auto-fill';
+        }
+    }
+
     /* Global keyboard shortcuts for session navigation */
     window.addEventListener('keydown', e => {
         if (document.getElementById('card').style.display !== 'block') return;
