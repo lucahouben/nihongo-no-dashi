@@ -746,6 +746,32 @@
             const meaning = meanings.join('; ') || kanji?.meanings?.slice(0, 5).join('; ') || '';
             const type = types.join(', ') || (kanji ? 'Kanji' : '');
             const filled = [];
+            const exampleInput = document.getElementById('new-example');
+            let hasExample = Boolean(exampleInput.value.trim());
+
+            if (!hasExample) {
+                try {
+                    const exampleResponse = await fetch('https://jotoba.de/api/search/sentences', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query, language: 'English' })
+                    });
+                    if (!exampleResponse.ok) throw new Error('Example lookup failed');
+                    const exampleResult = await exampleResponse.json();
+                    const sentence = (Array.isArray(exampleResult.sentences) ? exampleResult.sentences : [])
+                        .find(entry => typeof entry.content === 'string' && entry.content.trim());
+                    if (sentence) {
+                        const translation = sentence.translation?.trim();
+                        exampleInput.value = translation
+                            ? `${sentence.content.trim()} (${translation})`
+                            : sentence.content.trim();
+                        filled.push('example');
+                        hasExample = true;
+                    }
+                } catch (error) {
+                    console.warn('Example sentence lookup failed', error);
+                }
+            }
 
             if (reading && !document.getElementById('new-reading').value.trim()) {
                 document.getElementById('new-reading').value = reading;
@@ -760,8 +786,9 @@
                 filled.push('type');
             }
 
-            if (!filled.length) status.textContent = 'Fields already contain values; nothing was changed.';
-            else if (!reading || !meaning || !type) status.textContent = `Filled ${filled.join(', ')}. Complete any remaining fields manually.`;
+            if (!filled.length && !hasExample) status.textContent = 'No example sentence found. Add one manually.';
+            else if (!filled.length) status.textContent = 'Fields already contain values; nothing was changed.';
+            else if (!reading || !meaning || !type || !hasExample) status.textContent = `Filled ${filled.join(', ')}. Complete any remaining fields manually${hasExample ? '.' : ', including an example sentence.'}`;
             else status.textContent = `Auto-filled ${filled.join(', ')}.`;
         } catch (error) {
             console.error('Dictionary lookup failed', error);
