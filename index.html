@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>nihongo no dashi</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
     <style>
         :root {
@@ -22,12 +22,12 @@
             --toggle-bg: #ddd;
         }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
             background: var(--dark-kombu);
             color: var(--text);
             margin: 0; display: flex; justify-content: center; align-items: center;
             min-height: 100vh; padding: 40px 0; box-sizing: border-box; user-select: none;
-            overflow: hidden; transition: background 0.3s;
+            overflow-x: hidden; overflow-y: auto; transition: background 0.3s;
         }
         #app { width: 90%; max-width: 400px; text-align: center; position: relative; }
         .theme-switch-wrapper { position: absolute; top: -45px; right: 0; display: flex; align-items: center; z-index: 100; }
@@ -63,6 +63,9 @@
         .card-back { background: var(--card-bg); transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); overflow-y: auto; scrollbar-width: none; }
         #level-indicator { position: absolute; top: 15px; right: 20px; font-size: 0.7rem; font-weight: 800; }
         .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; }
+        .btn-audio { background: transparent; color: var(--dashi-gold); border: 1px solid currentColor; border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 0.85rem; cursor: pointer; margin: 0 0 14px; }
+        .front-audio-button { position: absolute; z-index: 2; bottom: 16px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+        .flashcard.is-flipped .front-audio-button { display: none; }
         .meaning { font-size: 1.5rem; color: var(--text); margin-bottom: 15px; }
         #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.2); padding-top: 15px; display: none; margin-bottom: 20px; }
         #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
@@ -81,6 +84,19 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .sync-text { font-size: 0.7rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        @media (max-width: 480px) {
+            body { align-items: flex-start; min-height: 100svh; padding: 64px 0 24px; }
+            #app { width: calc(100% - 32px); }
+            #dashboard { padding: 20px 16px; border-radius: 18px; }
+            .stat-row { padding: 13px 14px; }
+            .flashcard { height: min(68svh, 480px); min-height: 380px; }
+            .card-face { padding: 24px 18px; border-radius: 18px; }
+            .card-front { font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif; }
+            .reading { font-size: 1.9rem; }
+            .meaning { font-size: 1.25rem; }
+            #add-form-overlay { overflow-y: auto; }
+        }
 
         #toast-container {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -138,6 +154,7 @@
     <div id="progress-container"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
         <div class="card-face card-front" id="display-front">...</div>
+        <button id="front-audio-button" class="btn-audio front-audio-button" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button>
         <div id="session-summary" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;">SESSION RECIPE</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
@@ -150,7 +167,8 @@
         <div class="card-face card-back" id="card-back-ui">
             <div id="type-text" style="font-size:0.6rem; color:var(--dashi-gold); border:1px solid var(--dashi-gold); padding:2px 10px; border-radius:100px; text-transform:uppercase; font-weight:800; margin-bottom:12px;"></div>
             <div id="level-indicator"></div>
-            <div id="reading-text" class="reading"></div>
+            <div id="reading-text" class="reading" lang="ja"></div>
+            <button class="btn-audio" onclick="playAudio(event)" aria-label="Play Japanese pronunciation">Play pronunciation</button>
             <div id="meaning-text" class="meaning"></div>
             <div id="info-tray">
                 <div style="font-size: 0.55rem; color: #888; text-transform: uppercase; margin-bottom: 4px; font-weight: 800;">Example</div>
@@ -274,6 +292,7 @@
             document.getElementById('card').classList.remove('is-flipped');
             isFlipped = false;
             document.getElementById('display-front').style.display = "none";
+            document.getElementById('front-audio-button').style.display = "none";
             document.getElementById('session-summary').style.display = "flex";
             
             document.getElementById('session-counter').style.display = 'none';
@@ -283,6 +302,7 @@
 
             return;
         }
+        document.getElementById('front-audio-button').style.display = "block";
         document.getElementById('session-counter').innerText = `${reviewQueue.length} LEFT`;
         
         currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
@@ -331,9 +351,22 @@
     }
 
     /* Trigger browser text-to-speech for the current reading */
-    function playAudio() {
+    function playAudio(event) {
+        if (event) event.stopPropagation();
+        if (!currentItem || !currentItem.reading) return;
+        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+            showToast('Audio is not supported in this browser.');
+            return;
+        }
+        window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(currentItem.reading);
-        u.lang = 'ja-JP'; window.speechSynthesis.speak(u);
+        u.lang = 'ja-JP';
+        const japaneseVoice = window.speechSynthesis.getVoices().find(voice => voice.lang.toLowerCase().startsWith('ja'));
+        if (japaneseVoice) u.voice = japaneseVoice;
+        u.onerror = event => {
+            if (event.error !== 'canceled' && event.error !== 'interrupted') showToast('Audio playback failed.');
+        };
+        window.speechSynthesis.speak(u);
     }
 
     /* Show a brief notification for SRS level changes */
