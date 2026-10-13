@@ -185,6 +185,7 @@
             cursor: pointer; transform-style: preserve-3d; -webkit-transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+        .flashcard.is-advancing { transition: none !important; }
         .flashcard.is-flipped { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
         .card-face {
             position: absolute; display: flex; width: 100%; height: 100%; flex-direction: column;
@@ -243,9 +244,11 @@
         #info-tray { display: none; width: 100%; margin-bottom: 20px; padding-top: 15px; border-top: 1px solid var(--border-soft); text-align: left; }
         #info-tray > div:first-child { color: var(--muted) !important; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
         #keyboard-legend {
-            display: none; margin-top: 25px; color: var(--muted); font: 600 0.55rem 'JetBrains Mono', 'Fira Code', monospace;
-            letter-spacing: 0.5px; text-transform: uppercase;
+            display: none; flex-wrap: wrap; justify-content: center; gap: 8px 12px; margin-top: 25px;
+            color: var(--muted); font: 600 0.55rem 'JetBrains Mono', 'Fira Code', monospace;
+            text-transform: uppercase;
         }
+        .shortcut-hint { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
         .key-hint { margin: 0 3px; padding: 2px 5px; border: 1px solid var(--card-border); border-radius: 4px; color: var(--accent); }
         #add-form-overlay {
             position: fixed; top: 100%; left: 0; z-index: 2000; display: flex; width: 100%; height: 100%;
@@ -422,7 +425,11 @@
     </aside>
 
     <div id="keyboard-legend">
-        <span class="key-hint">V</span> Audio &nbsp; <span class="key-hint">Space</span> Flip &nbsp; <span class="key-hint">1/2</span> Result &nbsp; <span class="key-hint">F</span> Info &nbsp; <span class="key-hint">Esc</span> Exit
+        <span class="shortcut-hint"><span class="key-hint">V</span> Audio</span>
+        <span class="shortcut-hint"><span class="key-hint">Space</span> Flip</span>
+        <span class="shortcut-hint"><span class="key-hint">1/2</span> Result</span>
+        <span class="shortcut-hint"><span class="key-hint">F</span> Info</span>
+        <span class="shortcut-hint"><span class="key-hint">Esc</span> Exit</span>
     </div>
 </div>
 
@@ -694,7 +701,7 @@
         document.getElementById('card').style.display = 'block';
         document.getElementById('exit-btn').style.display = 'block';
         document.getElementById('progress-container').style.display = 'block';
-        document.getElementById('keyboard-legend').style.display = 'block';
+        document.getElementById('keyboard-legend').style.display = 'flex';
         document.getElementById('session-counter').style.display = 'block';
         document.getElementById('audio-mode-toggle').style.display = 'flex';
         nextItem(true);
@@ -988,13 +995,13 @@
         const progress = Math.round(completedCount / initialQueueLength * 100);
         document.getElementById('progress-bar').style.width = `${progress}%`;
         document.getElementById('progress-container').setAttribute('aria-valuenow', progress);
-        isFlipped = false; 
-        document.getElementById('card').classList.remove('is-flipped');
-        setTimeout(() => {
-            cardEl.classList.remove('card-correct', 'card-wrong');
-            levelInd.style.color = "inherit";
-            nextItem();
-        }, 600);
+        isFlipped = false;
+        cardEl.classList.add('is-advancing');
+        void cardEl.offsetWidth;
+        cardEl.classList.remove('is-flipped', 'card-correct', 'card-wrong');
+        levelInd.style.color = "inherit";
+        nextItem();
+        requestAnimationFrame(() => cardEl.classList.remove('is-advancing'));
     }
 
     /* Toggle visibility of the example sentence tray */
