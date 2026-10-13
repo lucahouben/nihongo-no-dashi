@@ -367,13 +367,13 @@
             const kanji = (params.get('kanji') || '').trim();
             let reading = (params.get('reading') || '').trim();
             let meaning = (params.get('meaning') || '').trim();
-            const type = (params.get('type') || '').trim() || 'Unknown';
-            const sent = (params.get('example') || params.get('sent') || '').trim();
+            let type = (params.get('type') || '').trim();
+            let sent = (params.get('example') || params.get('sent') || '').trim();
 
             if (!kanji) throw new Error('The kanji parameter cannot be empty.');
 
             let lookupFailure = '';
-            if (!reading || !meaning) {
+            if (!reading || !meaning || !type) {
                 try {
                     const response = await fetch('https://jotoba.de/api/search/words', {
                         method: 'POST',
@@ -387,12 +387,51 @@
                     const kanjiEntry = Array.from(kanji).length === 1 && /\p{Script=Han}/u.test(kanji)
                         ? result.kanji?.find(entry => entry.literal === kanji)
                         : null;
-                    const meanings = [...new Set((word?.senses || []).flatMap(sense => sense.glosses || []))].slice(0, 5);
+                    const senses = word?.senses || [];
+                    const meanings = [...new Set(senses.flatMap(sense => sense.glosses || []))].slice(0, 5);
 
                     reading = reading || word?.reading?.kana || kanjiEntry?.kunyomi?.[0]?.replace(/[.\-]/g, '') || kanjiEntry?.onyomi?.[0] || '';
                     meaning = meaning || meanings.join('; ') || kanjiEntry?.meanings?.slice(0, 5).join('; ') || '';
+                    if (!type) {
+                        const formatPartOfSpeech = part => {
+                            if (typeof part === 'string') return part;
+                            if (!part || typeof part !== 'object') return '';
+                            return Object.entries(part).flatMap(([category, details]) => {
+                                if (details && typeof details === 'object') {
+                                    return Object.entries(details).map(([kind, ending]) =>
+                                        `${kind} ${category.toLowerCase()}${typeof ending === 'string' ? ` (${ending.toLowerCase()} ending)` : ''}`
+                                    );
+                                }
+                                return category;
+                            }).join(', ');
+                        };
+                        const types = [...new Set(senses.flatMap(sense => (sense.pos || []).map(formatPartOfSpeech)).filter(Boolean))].slice(0, 4);
+                        type = types.join(', ') || (kanjiEntry ? 'Kanji' : '');
+                    }
                 } catch (error) {
                     lookupFailure = error.message || 'Dictionary lookup unavailable.';
+                }
+            }
+
+            if (!sent) {
+                try {
+                    const response = await fetch('https://jotoba.de/api/search/sentences', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: kanji, language: 'English' })
+                    });
+                    if (!response.ok) throw new Error('Example sentence lookup failed.');
+                    const result = await response.json();
+                    const sentence = (Array.isArray(result.sentences) ? result.sentences : [])
+                        .find(entry => typeof entry.content === 'string' && entry.content.trim());
+                    if (sentence) {
+                        const translation = sentence.translation?.trim();
+                        sent = translation
+                            ? `${sentence.content.trim()} (${translation})`
+                            : sentence.content.trim();
+                    }
+                } catch (error) {
+                    console.warn('Quick-add example lookup failed', error);
                 }
             }
 
@@ -403,6 +442,7 @@
                 const lookupMessage = lookupFailure ? ` Dictionary lookup failed: ${lookupFailure}` : '';
                 throw new Error(`Missing ${missing.join(' and ')}. Provide ${missing.join(' and ')} in the URL.${lookupMessage}`);
             }
+            type = type || 'Unknown';
 
             const savedItem = await DatabaseService.addWord({
                 kanji,
