@@ -1,22 +1,42 @@
 # nihongo no dashi - Documentation
 
-This document serves as the Technical Specification and Standard Operating Procedure for the Custom Japanese Spaced Repetition System (SRS). Use this guide to ensure that future updates to the Google Sheet or the HTML code do not break the synchronization or the logic of the app.
+This document describes the database schema and operating notes for the Japanese Spaced Repetition System (SRS).
 
 ---
 
-## 1. Database Structure (Google Sheets)
-The application relies on an **8-column** CSV export. The order of these columns is absolute; changing the order will cause the app to display data in the wrong fields or fail to sync progress.
+## 1. Supabase Database
+The app uses the `public.vocabulary` table. Create it in the Supabase SQL Editor:
 
-| Column | Header | Content Description | Formatting Notes |
-| :--- | :--- | :--- | :--- |
-| **A** | **Kanji** | The target word/phrase. | Raw text. |
-| **B** | **Reading** | Hiragana/Katakana. | Raw text. |
-| **C** | **Meaning** | English translation. | Keep as pure Noun meanings where possible. |
-| **D** | **Type** | Grammatical category. | e.g., `Noun`, `Transitive う-Verb`, `い-Adjective`. |
-| **E** | **Conjugation**| Specific forms. | Leave EMPTY for Nouns to hide the section in UI. |
-| **F** | **Sentence** | Context sentence. | Use `**word**` to highlight the target in pink/bold. |
-| **G** | **Level** | SRS Stage (0-9). | Numeric value only. Used for WK logic. |
-| **H** | **NextReview**| Timing Timestamp. | Unix timestamp (milliseconds). Do not format as Date. |
+```sql
+create table public.vocabulary (
+	id uuid primary key default gen_random_uuid(),
+	kanji text not null,
+	reading text not null,
+	meaning text not null,
+	type text not null default 'Unknown',
+	conjugation text not null default '',
+	sent text not null default '',
+	level smallint not null default 0 check (level between 0 and 99),
+	next_review timestamptz not null default now(),
+	created_at timestamptz not null default now()
+);
+
+alter table public.vocabulary enable row level security;
+grant select, insert, update on public.vocabulary to anon;
+
+create policy "Public can read vocabulary"
+	on public.vocabulary for select to anon using (true);
+create policy "Public can add vocabulary"
+	on public.vocabulary for insert to anon with check (true);
+create policy "Public can update vocabulary"
+	on public.vocabulary for update to anon using (true) with check (true);
+```
+
+`next_review` is stored as `timestamptz`; the app converts it to and from Unix milliseconds for review calculations. `id` identifies the row when updating SRS data.
+
+Set `SUPABASE_URL` and `SUPABASE_ANON_KEY` near the top of the script in `index.html`. The anon key is intended for browser use; never put a Supabase `service_role` key in this file.
+
+The policies above allow this unauthenticated static app to read, insert, and update vocabulary rows. Anyone with access to the app can perform those actions. Add Supabase Auth and narrower RLS policies before using this for private or sensitive data.
 
 ---
 
@@ -53,20 +73,18 @@ To maintain a "fast-review" flow, the app supports the following mapped keys:
 
 ---
 
-## 4. Maintenance & Safety Rules for AI
-If you ask an AI (like Gemini) to update your sheet or the code in the future, ensure it follows these rules:
-
-1. **Never omit columns:** Even if a cell is empty (like Conjugation for a Noun), the column must exist so the index `[7]` always points to `NextReview`.
-2. **Handle Special Characters:** Use `**` for bolding in sentences. The code uses a Regex `/\*\*(.*?)\*\*/g` to find these.
-3. **Regex for CSV:** The parser uses `split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)` to ensure that commas inside quotes (if used in meanings) do not break the column alignment.
-4. **CORS & Sync:** The `SAVE_URL` must point to the Google Apps Script Web App set to "Execute as Me" and "Access: Anyone."
+## 4. Maintenance & Safety Rules
+1. Keep the Supabase column names and the `DatabaseService` mappings in `index.html` in sync.
+2. Preserve the `next_review` timestamp conversion when changing review scheduling code.
+3. Keep the `service_role` key server-side only; browser code must use the anon key with appropriate RLS policies.
+4. Sentence examples may use `**word**` to mark the target word.
 
 ---
 
 ## 5. Deployment Instructions
-- **Google Sheet:** Publish to Web -> Format: **CSV**.
-- **Apps Script:** Ensure the `doPost(e)` function correctly targets your Sheet ID and matches the 8-column schema.
-- **HTML:** The script is standalone and can be run from any local file or hosted on GitHub Pages / Vercel.
+- Create the table and RLS policies above in Supabase.
+- Set the project URL and anon key in the global constants in `index.html`.
+- Host the page over HTTPS (for example, GitHub Pages or Vercel) so the Supabase client can connect.
 
 ---
 *Created to ensure consistency between the Cloud Database and the Application Interface.*

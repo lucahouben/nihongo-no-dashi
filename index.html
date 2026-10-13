@@ -238,9 +238,11 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ7pDV2s1fCr9E_RI-47f8XTwMUWUQ9bvNiuPVv3D1uM690uoUWxXfMGbtRLbKNTeZVN8Xf-2jjrPb/pub?output=csv';
-    const SAVE_URL = 'https://script.google.com/macros/s/AKfycbxAK6Ptebg_rXqkq579JC5WG3CivVPubbzqT-ttEPp5dolUbRwRSOLmvVc4QCDlBb8ayw/exec';
+    const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const SUPABASE_TABLE = 'vocabulary';
 
     let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false, isPracticeMode = false;
     let completedCount = 0, initialQueueLength = 0, audioMode = false, sessionWrongCount = 0;
@@ -256,6 +258,71 @@
     ];
 
     function getStageIdx(level) { return STAGES.findIndex(s => level >= s.min && level <= s.max); }
+
+    const DatabaseService = (() => {
+        const columns = 'id, kanji, reading, meaning, type, conjugation, sent, level, next_review, created_at';
+        let client;
+
+        function getClient() {
+            if (!SUPABASE_URL.startsWith('https://') || SUPABASE_URL.includes('YOUR_') || SUPABASE_ANON_KEY.includes('YOUR_')) {
+                throw new Error('Set SUPABASE_URL and SUPABASE_ANON_KEY in index.html.');
+            }
+            if (!window.supabase?.createClient) throw new Error('The Supabase client library could not be loaded.');
+            if (!client) client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            return client;
+        }
+
+        function toAppItem(row) {
+            const reviewTime = Date.parse(row.next_review);
+            return {
+                ...row,
+                level: Number(row.level) || 0,
+                nextReview: Number.isFinite(reviewTime) ? reviewTime : 0
+            };
+        }
+
+        async function getItems() {
+            const { data, error } = await getClient()
+                .from(SUPABASE_TABLE)
+                .select(columns)
+                .order('created_at', { ascending: true });
+            if (error) throw error;
+            return (data || []).map(toAppItem);
+        }
+
+        async function updateSRS(id, level, nextReview) {
+            const { data, error } = await getClient()
+                .from(SUPABASE_TABLE)
+                .update({ level, next_review: new Date(nextReview).toISOString() })
+                .eq('id', id)
+                .select('id')
+                .maybeSingle();
+            if (error) throw error;
+            if (!data) throw new Error('Vocabulary item was not found.');
+            return data;
+        }
+
+        async function addWord(item) {
+            const { data, error } = await getClient()
+                .from(SUPABASE_TABLE)
+                .insert({
+                    kanji: item.kanji,
+                    reading: item.reading,
+                    meaning: item.meaning,
+                    type: item.type,
+                    conjugation: item.conjugation,
+                    sent: item.sent,
+                    level: item.level,
+                    next_review: new Date(item.nextReview).toISOString()
+                })
+                .select(columns)
+                .single();
+            if (error) throw error;
+            return toAppItem(data);
+        }
+
+        return Object.freeze({ getItems, updateSRS, addWord });
+    })();
 
     const themeToggle = document.getElementById('theme-toggle');
     if (localStorage.getItem('theme') === 'light') { document.documentElement.setAttribute('data-theme', 'light'); themeToggle.checked = true; }
@@ -277,24 +344,18 @@
         }
     });
 
-    /* Fetch vocabulary data from Google Sheets and populate the master list */
+    /* Fetch vocabulary data from Supabase and populate the master list */
     async function init() {
         try {
-            const res = await fetch(`${CSV_URL}&t=${Date.now()}`);
-            const text = await res.text();
-            const lines = text.split(/\r?\n/).slice(1);
-            masterList = lines.filter(l => l.trim()).map(line => {
-                const p = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                return {
-                    kanji: p[0]?.replace(/"/g, '').trim(), reading: p[1]?.replace(/"/g, '').trim(),
-                    meaning: p[2]?.replace(/"/g, '').trim(), type: p[3]?.replace(/"/g, '').trim(),
-                    conjugation: p[4]?.replace(/"/g, '').trim() || '',
-                    sent: p[5]?.replace(/"/g, '').trim(), level: parseInt(p[6]) || 0, nextReview: parseInt(p[7]) || 0
-                };
-            });
+            masterList = await DatabaseService.getItems();
             document.getElementById('sync-loader').style.display = 'none';
             updateDashboard();
-        } catch (e) { console.error("Sheet load failed", e); }
+        } catch (error) {
+            console.error('Supabase load failed', error);
+            document.getElementById('sync-loader').style.display = 'none';
+            updateDashboard();
+            showToast(`Database load failed: ${error.message || 'Check Supabase configuration.'}`, '#dc3545');
+        }
     }
 
     /* Refresh the dashboard UI with current SRS stage counts and word lists */
@@ -386,21 +447,6 @@
         document.getElementById('sent-text').innerText = currentItem.sent || "No example provided.";
         document.getElementById('level-indicator').innerText = `LVL ${currentItem.level}`;
         document.getElementById('info-tray').style.display = "none";
-    }
-
-    /* Centralized sync function to communicate with Google Apps Script */
-    async function syncToDatabase(data) {
-        try {
-            // Using text/plain to avoid CORS preflight while sending JSON string
-            await fetch(SAVE_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(data)
-            });
-        } catch (e) {
-            console.error("Sync failed", e);
-        }
     }
 
     function renderKanjiPrompt(text) {
@@ -596,7 +642,7 @@
     /* Flip the card to reveal the answer */
     function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); updateBackUI(); } }
 
-    /* Process user feedback, update SRS level, and sync with Google Sheets */
+    /* Process user feedback, update SRS level, and persist it to Supabase */
     async function submitResult(isCorrect, e) {
         if(e) e.stopPropagation();
         const cardEl = document.getElementById('card');
@@ -618,20 +664,21 @@
             sessionWrongCount++;
         }
 
-        /* Send updated SRS data to Google Apps Script endpoint only if not in practice mode */
+        /* Persist SRS changes only during a review session. */
         if (!isPracticeMode) {
-            // Update local masterList immediately so data persists if session continues
-            const localIdx = masterList.findIndex(i => i.kanji === oldItem.kanji);
-            if (localIdx !== -1) masterList[localIdx].level = nl;
+            const nextReview = Date.now() + ivs[Math.min(nl, 8)];
+            const localItem = masterList.find(item => item.id === oldItem.id);
+            if (localItem) {
+                localItem.level = nl;
+                localItem.nextReview = nextReview;
+            }
 
             const stage = STAGES[getStageIdx(nl)];
             showToast(`SRS ${isCorrect ? '↑' : '↓'} ${stage.name} (LVL ${nl})`, stage.color);
 
-            syncToDatabase({
-                action: 'update',
-                kanji: oldItem.kanji, 
-                level: nl, 
-                nextReview: (Date.now() + ivs[Math.min(nl, 8)])
+            DatabaseService.updateSRS(oldItem.id, nl, nextReview).catch(error => {
+                console.error('Supabase SRS update failed', error);
+                showToast(`SRS save failed: ${error.message || 'Please try again.'}`, '#dc3545');
             });
         }
 
@@ -761,28 +808,31 @@
             reading: reading,
             meaning: meaning,
             type: type || 'Unknown',
-            conjugation: '', // Matches Column E (index 4) in the spreadsheet schema
+            conjugation: '',
             sent: example || '',
             level: 0,
             nextReview: Date.now()
         };
 
-        // Sync to Google Sheets
-        await syncToDatabase({ action: 'add', ...newItem });
-        
-        masterList.push(newItem);
-        updateDashboard();
+        try {
+            const savedItem = await DatabaseService.addWord(newItem);
+            masterList.push(savedItem);
+            updateDashboard();
 
-        // Clear form
-        document.getElementById('new-kanji').value = '';
-        document.getElementById('new-reading').value = '';
-        document.getElementById('new-meaning').value = '';
-        document.getElementById('new-type').value = '';
-        document.getElementById('new-example').value = '';
-        
-        btn.innerText = "Add to Pot";
-        btn.disabled = false;
-        toggleAddForm();
+            document.getElementById('new-kanji').value = '';
+            document.getElementById('new-reading').value = '';
+            document.getElementById('new-meaning').value = '';
+            document.getElementById('new-type').value = '';
+            document.getElementById('new-example').value = '';
+            toggleAddForm();
+            showToast('Word added to the database.', '#28a745');
+        } catch (error) {
+            console.error('Supabase word insert failed', error);
+            showToast(`Could not add word: ${error.message || 'Please try again.'}`, '#dc3545');
+        } finally {
+            btn.innerText = 'Add to Pot';
+            btn.disabled = false;
+        }
     }
     init();
 </script>
