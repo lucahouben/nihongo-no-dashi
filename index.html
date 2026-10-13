@@ -121,8 +121,8 @@
         }
         .btn-add-toggle {
             display: flex; width: 34px; height: 34px; align-items: center; justify-content: center;
-            border: 1px solid var(--card-border); border-radius: 9px; background: var(--dashi-gold);
-            color: var(--button-text); cursor: pointer; font-size: 1.2rem; font-weight: 800;
+            border: 1px solid var(--dashi-gold); border-radius: 9px; background: transparent;
+            color: var(--dashi-gold); cursor: pointer; font-size: 1.2rem; font-weight: 800;
         }
         .btn-add-toggle:hover, .btn-main:hover, .btn-secondary:hover, .btn-lookup:hover, .btn-mini-play:hover, .btn-audio:hover,
         .btn-correct:hover, .btn-wrong:hover {
@@ -155,19 +155,21 @@
         .btn-mini-play::before { content: "> "; }
         .btn-main {
             width: 100%; padding: 16px; border: 1px solid var(--action-bg); border-radius: 9px;
-            background: var(--action-bg); color: var(--button-text); cursor: pointer;
+            background: transparent; color: var(--dashi-gold); cursor: pointer;
             font: 800 0.82rem 'JetBrains Mono', 'Fira Code', monospace;
             letter-spacing: 0.4px; text-transform: uppercase;
         }
         .btn-main::before { content: "> "; }
-        [data-theme="light"] .btn-main { color: #1a1b26; }
         .btn-secondary {
             width: 100%; margin-top: 10px; padding: 12px; border: 1px solid var(--card-border);
             border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer;
             font: 600 0.75rem 'JetBrains Mono', 'Fira Code', monospace;
         }
         .btn-secondary:hover, .btn-secondary:focus-visible { color: var(--text); }
-        .btn-main:hover, .btn-main:focus-visible { color: var(--button-text); }
+        .btn-add-toggle:hover, .btn-main:hover, .btn-main:focus-visible {
+            background: color-mix(in srgb, var(--dashi-gold) 10%, var(--card-bg));
+            color: var(--dashi-gold);
+        }
         .btn-lookup:hover, .btn-lookup:focus-visible { background: var(--card-bg); color: var(--dashi-gold); }
         #progress-container {
             display: none; width: 100%; height: 5px; margin-bottom: 20px; overflow: hidden;
@@ -296,7 +298,20 @@
             body { align-items: flex-start; min-height: 100svh; padding: 64px 0 24px; }
             #app { width: calc(100% - 32px); }
             #dashboard { padding: 20px 16px; }
-            .stat-row { padding: 13px 12px; }
+            .dash-header { gap: 12px; }
+            .dash-title {
+                min-width: 0; font-size: clamp(0.72rem, 4vw, 0.9rem);
+                letter-spacing: clamp(0.5px, 0.4vw, 1.5px);
+            }
+            .btn-add-toggle { flex: 0 0 34px; }
+            .stat-row { gap: 8px; padding: 13px 12px; }
+            .stat-row > span { min-width: 0; overflow-wrap: anywhere; }
+            .btn-mini-play { flex: 0 0 auto; margin-left: 0; }
+            .btn-main { min-height: 48px; padding: 12px; }
+            #session-counter {
+                top: -18px !important; left: 0 !important; width: 100%;
+                transform: none !important; text-align: center;
+            }
             .flashcard { height: min(68svh, 480px); min-height: 380px; }
             .card-face { padding: 24px 18px; border-radius: 10px; }
             .reading { font-size: 1.9rem; }
