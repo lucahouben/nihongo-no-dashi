@@ -414,6 +414,13 @@
             }
 
             if (!sent) {
+                const existingExample = masterList.find(item =>
+                    item.kanji === kanji && typeof item.sent === 'string' && item.sent.trim()
+                );
+                if (existingExample) sent = existingExample.sent.trim();
+            }
+
+            if (!sent) {
                 try {
                     const response = await fetch('https://jotoba.de/api/search/sentences', {
                         method: 'POST',
