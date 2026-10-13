@@ -356,6 +356,73 @@
             updateDashboard();
             showToast(`Database load failed: ${error.message || 'Check Supabase configuration.'}`, '#dc3545');
         }
+        await processQuickAddUrl();
+    }
+
+    async function processQuickAddUrl() {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.has('kanji')) return;
+
+        try {
+            const kanji = (params.get('kanji') || '').trim();
+            let reading = (params.get('reading') || '').trim();
+            let meaning = (params.get('meaning') || '').trim();
+            const type = (params.get('type') || '').trim() || 'Unknown';
+            const sent = (params.get('example') || params.get('sent') || '').trim();
+
+            if (!kanji) throw new Error('The kanji parameter cannot be empty.');
+
+            let lookupFailure = '';
+            if (!reading || !meaning) {
+                try {
+                    const response = await fetch('https://jotoba.de/api/search/words', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: kanji, language: 'English' })
+                    });
+                    if (!response.ok) throw new Error('Dictionary lookup failed.');
+                    const result = await response.json();
+                    const words = Array.isArray(result.words) ? result.words : [];
+                    const word = words.find(entry => entry.reading?.kanji === kanji || entry.reading?.kana === kanji) || words[0];
+                    const kanjiEntry = Array.from(kanji).length === 1 && /\p{Script=Han}/u.test(kanji)
+                        ? result.kanji?.find(entry => entry.literal === kanji)
+                        : null;
+                    const meanings = [...new Set((word?.senses || []).flatMap(sense => sense.glosses || []))].slice(0, 5);
+
+                    reading = reading || word?.reading?.kana || kanjiEntry?.kunyomi?.[0]?.replace(/[.\-]/g, '') || kanjiEntry?.onyomi?.[0] || '';
+                    meaning = meaning || meanings.join('; ') || kanjiEntry?.meanings?.slice(0, 5).join('; ') || '';
+                } catch (error) {
+                    lookupFailure = error.message || 'Dictionary lookup unavailable.';
+                }
+            }
+
+            const missing = [];
+            if (!reading) missing.push('reading');
+            if (!meaning) missing.push('meaning');
+            if (missing.length) {
+                const lookupMessage = lookupFailure ? ` Dictionary lookup failed: ${lookupFailure}` : '';
+                throw new Error(`Missing ${missing.join(' and ')}. Provide ${missing.join(' and ')} in the URL.${lookupMessage}`);
+            }
+
+            const savedItem = await DatabaseService.addWord({
+                kanji,
+                reading,
+                meaning,
+                type,
+                conjugation: '',
+                sent,
+                level: 0,
+                nextReview: Date.now()
+            });
+            masterList.push(savedItem);
+            updateDashboard();
+            showToast(`Quick Added: ${kanji}`, '#28a745');
+        } catch (error) {
+            console.error('Quick add failed', error);
+            showToast(`Quick add failed: ${error.message || 'Please check the URL parameters and try again.'}`, '#dc3545');
+        } finally {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     }
 
     /* Refresh the dashboard UI with current SRS stage counts and word lists */
