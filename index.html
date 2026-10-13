@@ -4,140 +4,291 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>nihongo no dashi</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
     <style>
         :root {
-            --stage-prepping: #8c9e82; --stage-simmering: #e9b86d;
-            --stage-boiling: #a66b3e; --stage-infusing: #844c2a; 
-            --stage-perfect: #d32f2f; --dashi-gold: #ffcc66;
-            --dark-kombu: #121412; --text: #f4f4f4; --card-bg: #222522;
-            --toggle-bg: #333;
+            color-scheme: dark;
+            --dark-kombu: #1a1b26;
+            --card-bg: #1f2335;
+            --card-border: #292e42;
+            --text: #c0caf5;
+            --muted: #565f89;
+            --dashi-gold: #e0af68;
+            --accent: #7dcfff;
+            --success: #9ece6a;
+            --error: #f7768e;
+            --feedback-text: #1a1b26;
+            --toggle-bg: #292e42;
+            --button-text: #1a1b26;
+            --card-front-bg: #e0af68;
+            --card-front-text: #1a1b26;
+            --stage-prepping: #769067;
+            --stage-simmering: #e0af68;
+            --stage-boiling: #ff9e64;
+            --stage-infusing: #bb9af7;
+            --stage-perfect: #f7768e;
+            --border-soft: rgba(192, 202, 245, 0.12);
+            --panel-shadow: 0 18px 55px rgba(8, 10, 20, 0.32);
         }
-        .card-correct .card-face { border: 4px solid #28a745 !important; }
-        .card-wrong .card-face { border: 4px solid #dc3545 !important; }
         [data-theme="light"] {
-            --dark-kombu: #e8e8e4; --text: #1a1a1a;
-            --card-bg: #ffffff; --dashi-gold: #d4a017;
-            --toggle-bg: #ddd;
+            color-scheme: light;
+            --dark-kombu: #e1e2e7;
+            --card-bg: #d5d6db;
+            --card-border: #c0c2c9;
+            --text: #3760bf;
+            --muted: #6172b0;
+            --dashi-gold: #8c6c00;
+            --accent: #5a4a9c;
+            --success: #485e30;
+            --error: #f7768e;
+            --feedback-text: #1a1b26;
+            --toggle-bg: #c0c2c9;
+            --button-text: #f7f7fb;
+            --card-front-bg: #d5d6db;
+            --card-front-text: #3760bf;
+            --stage-prepping: #485e30;
+            --stage-simmering: #8c6c00;
+            --stage-boiling: #b15c00;
+            --stage-infusing: #5a4a9c;
+            --stage-perfect: #f7768e;
+            --border-soft: rgba(55, 96, 191, 0.16);
+            --panel-shadow: 0 18px 45px rgba(55, 68, 115, 0.14);
         }
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Inter', 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 48px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            overflow-y: auto;
             background: var(--dark-kombu);
             color: var(--text);
-            margin: 0; display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; padding: 40px 0; box-sizing: border-box; user-select: none;
-            overflow-x: hidden; overflow-y: auto; transition: background 0.3s;
+            font-family: 'Inter', 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+            user-select: none;
+            transition: background 0.3s ease, color 0.3s ease;
         }
-        #app { width: 90%; max-width: 400px; text-align: center; position: relative; }
-        .theme-switch-wrapper { position: absolute; top: -45px; right: 0; display: flex; align-items: center; z-index: 100; }
-        .theme-switch { display: inline-block; height: 18px; position: relative; width: 36px; }
-        .theme-switch input { display:none; }
-        .slider { background-color: var(--toggle-bg); bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 34px; }
-        .slider:before { background-color: var(--dashi-gold); bottom: 3px; content: ""; height: 12px; left: 3px; position: absolute; transition: .4s; width: 12px; border-radius: 50%; }
-        input:checked + .slider:before { transform: translateX(18px); }
+        button, input { font: inherit; }
+        button { transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease; }
+        button:focus-visible, input:focus-visible, .theme-switch:focus-within .slider {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+        #app { position: relative; width: 90%; max-width: 440px; text-align: center; }
+        .theme-switch-wrapper {
+            position: absolute; top: -42px; right: 0; z-index: 100;
+            display: flex; align-items: center;
+        }
+        .theme-switch { position: relative; display: inline-block; width: 42px; height: 22px; }
+        .theme-switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .slider {
+            position: absolute; inset: 0; cursor: pointer;
+            border: 1px solid var(--card-border); border-radius: 22px;
+            background: var(--toggle-bg); transition: 0.3s ease;
+        }
+        .slider:before {
+            position: absolute; bottom: 3px; left: 3px; width: 14px; height: 14px;
+            content: ""; border-radius: 50%; background: var(--accent); transition: 0.3s ease;
+        }
+        .theme-switch input:checked + .slider:before { transform: translateX(20px); background: var(--dashi-gold); }
         #exit-btn {
-            position: absolute; top: -45px; left: 0; display: none;
-            background: rgba(128, 128, 128, 0.1); border: 1px solid rgba(128,128,128,0.4);
-            color: #888; font-size: 0.65rem; font-weight: 800; padding: 6px 14px;
-            border-radius: 8px; cursor: pointer; text-transform: uppercase; z-index: 100;
+            position: absolute; top: -44px; left: 0; z-index: 100; display: none;
+            padding: 7px 12px; border: 1px solid var(--card-border); border-radius: 8px;
+            background: var(--card-bg); color: var(--muted); cursor: pointer;
+            font: 700 0.65rem 'JetBrains Mono', 'Fira Code', monospace; text-transform: uppercase;
         }
-        #dashboard { background: var(--card-bg); padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: block; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .dash-title { font-size: 0.9rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; margin: 0; }
-        .btn-add-toggle { background: var(--dashi-gold); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: #1a1a1a; }
-        .stats-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        .stat-group { border-radius: 15px; overflow: hidden; background: rgba(255,255,255,0.05); transition: all 0.3s ease; }
-        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; font-weight: 800; color: white; cursor: pointer; }
-        .level-items { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s; font-size: 0.8rem; color: #bbb; text-align: left; line-height: 1.6; }
-        .stat-group.active .level-items { max-height: 100px; padding: 10px 20px 20px; overflow-y: auto; }
-        .btn-mini-play { background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 8px; border-radius: 6px; font-size: 0.6rem; cursor: pointer; margin-left: 10px; }
-        .btn-main { background: var(--dashi-gold); color: #1a1a1a; padding: 18px; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
-        .btn-secondary { background: transparent; color: #888; border: 1px solid rgba(128,128,128,0.4); padding: 12px; border-radius: 15px; width: 100%; margin-top: 10px; cursor: pointer; }
-        #progress-container { width: 100%; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; margin-bottom: 20px; display: none; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: var(--dashi-gold); transition: width 0.5s; }
-        .flashcard { width: 100%; height: 480px; max-height: 70vh; position: relative; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; display: none; }
+        #dashboard {
+            display: block; padding: 25px; border: 1px solid var(--card-border);
+            border-radius: 12px; background: var(--card-bg); box-shadow: var(--panel-shadow);
+            text-align: left; transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .dash-title {
+            margin: 0; color: var(--dashi-gold); font: 800 0.9rem 'JetBrains Mono', 'Fira Code', monospace;
+            letter-spacing: 1.5px; text-transform: uppercase;
+        }
+        .btn-add-toggle {
+            display: flex; width: 34px; height: 34px; align-items: center; justify-content: center;
+            border: 1px solid var(--card-border); border-radius: 9px; background: var(--dashi-gold);
+            color: var(--button-text); cursor: pointer; font-size: 1.2rem; font-weight: 800;
+        }
+        .btn-add-toggle:hover, .btn-main:hover, .btn-secondary:hover, .btn-lookup:hover, .btn-mini-play:hover, .btn-audio:hover {
+            box-shadow: 0 0 15px rgba(125, 207, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        .stats-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .stat-group {
+            overflow: hidden; border: 1px solid var(--border-soft); border-radius: 9px;
+            background: var(--dark-kombu); transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .stat-group:hover { border-color: var(--accent); box-shadow: 0 0 15px rgba(125, 207, 255, 0.1); }
+        .stat-row {
+            display: flex; align-items: center; justify-content: space-between; padding: 13px 16px;
+            background: color-mix(in srgb, var(--stage-color) 14%, var(--card-bg));
+            color: var(--stage-color); cursor: pointer; font: 700 0.78rem 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        .stat-row > span { letter-spacing: 0.2px; }
+        .level-items {
+            max-height: 0; overflow: hidden; padding: 0 16px; color: var(--muted);
+            font: 0.75rem/1.6 'JetBrains Mono', 'Fira Code', monospace; text-align: left;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+        .stat-group.active .level-items { max-height: 100px; overflow-y: auto; padding: 10px 16px 16px; }
+        .btn-mini-play {
+            margin-left: 10px; padding: 5px 8px; border: 1px solid currentColor; border-radius: 6px;
+            background: var(--card-bg); color: var(--stage-color); cursor: pointer;
+            font: 700 0.62rem 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        .btn-mini-play::before { content: "> "; }
+        .btn-main {
+            width: 100%; padding: 16px; border: 1px solid var(--dashi-gold); border-radius: 9px;
+            background: var(--dashi-gold); color: var(--button-text); cursor: pointer;
+            font: 800 0.82rem 'JetBrains Mono', 'Fira Code', monospace;
+            letter-spacing: 0.4px; text-transform: uppercase;
+        }
+        .btn-main::before { content: "> "; }
+        .btn-secondary {
+            width: 100%; margin-top: 10px; padding: 12px; border: 1px solid var(--card-border);
+            border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer;
+            font: 600 0.75rem 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        #progress-container {
+            display: none; width: 100%; height: 5px; margin-bottom: 20px; overflow: hidden;
+            border: 1px solid var(--card-border); border-radius: 6px; background: var(--card-bg);
+        }
+        #progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.5s; }
+        .flashcard {
+            position: relative; display: none; width: 100%; height: 480px; max-height: 70vh;
+            cursor: pointer; transform-style: preserve-3d; -webkit-transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
         .flashcard.is-flipped { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
-        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 25px; display: flex; flex-direction: column; align-items: center; padding: 30px 25px; box-sizing: border-box; box-shadow: 0 15px 45px rgba(0,0,0,0.3); }
+        .card-face {
+            position: absolute; display: flex; width: 100%; height: 100%; flex-direction: column;
+            align-items: center; padding: 30px 25px; border: 1px solid var(--card-border);
+            border-radius: 12px; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+            box-shadow: var(--panel-shadow); box-sizing: border-box;
+        }
         .flashcard:not(.is-flipped) .card-back { visibility: hidden; }
         .flashcard.is-flipped .card-front { visibility: hidden; }
-        .card-front { background: var(--dashi-gold); color: #1a1a1a; justify-content: center; font-size: 5rem; font-weight: 800; font-family: serif; word-break: break-word; overflow-wrap: break-word; line-height: 1.1; }
+        .card-front {
+            justify-content: center; overflow-wrap: break-word; background: var(--card-front-bg);
+            color: var(--card-front-text); font-family: 'Noto Sans JP', sans-serif; font-size: 5rem;
+            font-weight: 800; line-height: 1.1; word-break: break-word;
+        }
         #front-prompt { display: block; width: 100%; text-align: center; }
         .kanji-trigger { border-bottom: 1px dotted currentColor; cursor: help; }
         .kanji-trigger:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
-        .card-back { background: var(--card-bg); transform: rotateY(180deg); -webkit-transform: rotateY(180deg); border-bottom: 10px solid var(--stage-prepping); overflow: hidden; }
-        .card-back-content { flex: 1 1 auto; width: 100%; min-height: 0; overflow-y: auto; scrollbar-width: none; }
-        .card-back-actions { flex: 0 0 auto; width: 100%; padding-top: 12px; background: var(--card-bg); }
-        #level-indicator { position: absolute; top: 15px; right: 20px; font-size: 0.7rem; font-weight: 800; }
-        .reading { font-size: 2.2rem; font-weight: 800; margin-bottom: 5px; }
-        .btn-audio { background: transparent; color: var(--dashi-gold); border: 1px solid currentColor; border-radius: 8px; padding: 8px 12px; font: inherit; font-size: 0.85rem; cursor: pointer; margin: 0 0 14px; }
-        .front-audio-button { position: absolute; z-index: 2; bottom: 16px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+        .card-back {
+            overflow: hidden; border-bottom: 5px solid var(--stage-prepping); background: var(--card-bg);
+            transform: rotateY(180deg); -webkit-transform: rotateY(180deg);
+        }
+        .card-back-content { width: 100%; min-height: 0; flex: 1 1 auto; overflow-y: auto; scrollbar-width: none; }
+        .card-back-actions { width: 100%; flex: 0 0 auto; padding-top: 12px; background: var(--card-bg); }
+        #level-indicator {
+            position: absolute; top: 15px; right: 20px; color: var(--accent);
+            font: 700 0.7rem 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        .reading { margin-bottom: 5px; font-size: 2.2rem; font-weight: 800; }
+        .btn-audio {
+            margin: 0 0 14px; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 8px;
+            background: transparent; color: var(--accent); cursor: pointer;
+            font: 600 0.75rem 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        .btn-audio::before { content: "[ "; }
+        .btn-audio::after { content: " ]"; }
+        .front-audio-button { position: absolute; z-index: 2; bottom: 16px; left: 50%; white-space: nowrap; transform: translateX(-50%); }
         .flashcard.is-flipped .front-audio-button { display: none; }
-        .meaning { font-size: 1.5rem; color: var(--text); margin-bottom: 15px; }
+        .meaning { margin-bottom: 15px; color: var(--text); font-size: 1.5rem; }
         #kanji-info {
             position: fixed; z-index: 5000; width: min(320px, calc(100vw - 24px)); max-height: min(70vh, 420px);
-            overflow-y: auto; padding: 16px; box-sizing: border-box; border: 1px solid rgba(128,128,128,0.35);
-            border-radius: 14px; background: var(--card-bg); color: var(--text); text-align: left;
-            box-shadow: 0 12px 36px rgba(0,0,0,0.35); cursor: default; user-select: text;
+            overflow-y: auto; padding: 16px; border: 1px solid var(--card-border); border-radius: 10px;
+            background: var(--card-bg); color: var(--text); text-align: left;
+            box-shadow: var(--panel-shadow), 0 0 18px rgba(125, 207, 255, 0.08);
+            cursor: default; user-select: text;
         }
         #kanji-info[hidden] { display: none; }
         .kanji-info-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         #kanji-info-character { color: var(--dashi-gold); font-size: 1.8rem; font-weight: 800; line-height: 1; }
-        #kanji-info-close { border: 0; background: transparent; color: var(--text); font-size: 1.4rem; cursor: pointer; }
+        #kanji-info-close { border: 0; background: transparent; color: var(--text); cursor: pointer; font-size: 1.4rem; }
         .kanji-info-list { display: grid; gap: 10px; margin: 0; }
-        .kanji-info-list dt { color: #888; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+        .kanji-info-list dt { color: var(--muted); font: 700 0.65rem 'JetBrains Mono', 'Fira Code', monospace; text-transform: uppercase; }
         .kanji-info-list dd { margin: 3px 0 0; line-height: 1.4; overflow-wrap: anywhere; }
-        #kanji-info-status { min-height: 1em; margin-top: 10px; color: #888; font-size: 0.75rem; }
-        .kanji-info-sources { margin-top: 12px; color: #888; font-size: 0.65rem; line-height: 1.5; }
-        .kanji-info-sources a { color: var(--dashi-gold); }
-        #info-tray { width: 100%; text-align: left; border-top: 1px solid rgba(128,128,128,0.2); padding-top: 15px; display: none; margin-bottom: 20px; }
-        #keyboard-legend { margin-top: 25px; display: none; color: #888; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-        .key-hint { border: 1px solid rgba(128,128,128,0.5); padding: 1px 4px; border-radius: 3px; color: var(--dashi-gold); margin: 0 3px; }
+        #kanji-info-status { min-height: 1em; margin-top: 10px; color: var(--muted); font-size: 0.75rem; }
+        .kanji-info-sources { margin-top: 12px; color: var(--muted); font-size: 0.65rem; line-height: 1.5; }
+        .kanji-info-sources a { color: var(--accent); }
+        #info-tray { display: none; width: 100%; margin-bottom: 20px; padding-top: 15px; border-top: 1px solid var(--border-soft); text-align: left; }
+        #info-tray > div:first-child { color: var(--muted) !important; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        #keyboard-legend {
+            display: none; margin-top: 25px; color: var(--muted); font: 600 0.55rem 'JetBrains Mono', 'Fira Code', monospace;
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        .key-hint { margin: 0 3px; padding: 2px 5px; border: 1px solid var(--card-border); border-radius: 4px; color: var(--accent); }
         #add-form-overlay {
-            position: fixed; top: 100%; left: 0; width: 100%; height: 100%;
-            background: var(--dark-kombu); z-index: 2000; transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 40px 25px; box-sizing: border-box; display: flex; flex-direction: column;
+            position: fixed; top: 100%; left: 0; z-index: 2000; display: flex; width: 100%; height: 100%;
+            flex-direction: column; padding: 40px 25px; background: var(--dark-kombu);
+            transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #add-form-overlay.active { top: 0; }
-        .form-group { text-align: left; margin-bottom: 15px; }
-        .form-group label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--dashi-gold); display: block; margin-bottom: 5px; }
-        .form-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(128,128,128,0.2); background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 1rem; box-sizing: border-box; outline: none; }
+        #add-form-overlay .btn-add-toggle { background: var(--card-bg) !important; color: var(--text) !important; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 5px; color: var(--dashi-gold); font: 700 0.65rem 'JetBrains Mono', 'Fira Code', monospace; text-transform: uppercase; }
+        .form-group input {
+            width: 100%; padding: 12px; border: 1px solid var(--card-border); border-radius: 8px;
+            outline: none; background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 1rem;
+        }
+        .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(125, 207, 255, 0.12); }
         .kanji-input-row { display: flex; gap: 8px; }
-        .kanji-input-row input { flex: 1; min-width: 0; }
-        .btn-lookup { flex: 0 0 auto; padding: 0 12px; border: 1px solid var(--dashi-gold); border-radius: 10px; background: transparent; color: var(--dashi-gold); font: inherit; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+        .kanji-input-row input { min-width: 0; flex: 1; }
+        .btn-lookup {
+            flex: 0 0 auto; padding: 0 12px; border: 1px solid var(--dashi-gold); border-radius: 8px;
+            background: transparent; color: var(--dashi-gold); cursor: pointer;
+            font: 700 0.72rem 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        .btn-lookup::before { content: "> "; }
         .btn-lookup:disabled { cursor: wait; opacity: 0.65; }
-        #lookup-status { min-height: 1em; margin-top: 5px; color: #888; font-size: 0.7rem; }
-        #sync-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark-kombu); z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255, 204, 102, 0.1); border-top: 4px solid var(--dashi-gold); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .sync-text { font-size: 0.7rem; font-weight: 800; color: var(--dashi-gold); letter-spacing: 2px; text-transform: uppercase; animation: pulse 1.5s ease-in-out infinite; }
+        #lookup-status { min-height: 1em; margin-top: 5px; color: var(--muted); font-size: 0.7rem; }
+        #sync-loader { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--dark-kombu); }
+        .spinner { width: 40px; height: 40px; margin-bottom: 20px; border: 3px solid var(--card-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .sync-text { color: var(--accent); font: 700 0.7rem 'JetBrains Mono', 'Fira Code', monospace; letter-spacing: 1px; text-transform: uppercase; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
+        .btn-correct { border: 1px solid var(--success) !important; border-radius: 8px !important; background: var(--success) !important; color: var(--button-text) !important; font: 700 0.8rem 'JetBrains Mono', 'Fira Code', monospace !important; }
+        .btn-wrong { border: 1px solid var(--error) !important; border-radius: 8px !important; background: var(--error) !important; color: var(--feedback-text) !important; font: 700 0.8rem 'JetBrains Mono', 'Fira Code', monospace !important; }
+        .btn-correct::before { content: "> "; }
+        .btn-wrong::before { content: "> "; }
+        .card-back-actions > button:last-child { color: var(--muted) !important; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        #summary-correct { color: var(--success) !important; }
+        #summary-wrong { color: var(--error) !important; }
+        #session-counter, #audio-mode-toggle { color: var(--muted) !important; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+        .card-correct .card-face { border: 4px solid var(--success) !important; }
+        .card-wrong .card-face { border: 4px solid var(--error) !important; }
+        #toast-container { position: fixed; top: 20px; left: 50%; z-index: 4000; display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); pointer-events: none; }
+        .toast {
+            margin-bottom: 10px; padding: 10px 20px; border: 1px solid var(--card-border); border-left: 4px solid var(--dashi-gold);
+            border-radius: 8px; background: var(--card-bg); color: var(--text); box-shadow: var(--panel-shadow);
+            font: 700 0.7rem 'JetBrains Mono', 'Fira Code', monospace; letter-spacing: 0.5px; text-transform: uppercase;
+            white-space: nowrap; animation: toast-in 0.3s ease, toast-out 0.3s ease 1.5s forwards;
+        }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes toast-out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
         @media (max-width: 480px) {
             body { align-items: flex-start; min-height: 100svh; padding: 64px 0 24px; }
             #app { width: calc(100% - 32px); }
-            #dashboard { padding: 20px 16px; border-radius: 18px; }
-            .stat-row { padding: 13px 14px; }
+            #dashboard { padding: 20px 16px; }
+            .stat-row { padding: 13px 12px; }
             .flashcard { height: min(68svh, 480px); min-height: 380px; }
-            .card-face { padding: 24px 18px; border-radius: 18px; }
-            .card-front { font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif; }
+            .card-face { padding: 24px 18px; border-radius: 10px; }
             .reading { font-size: 1.9rem; }
             .meaning { font-size: 1.25rem; }
             #add-form-overlay { overflow-y: auto; }
         }
-
-        #toast-container {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 4000; display: flex; flex-direction: column; align-items: center; pointer-events: none;
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
-        .toast {
-            background: var(--card-bg); color: var(--text); padding: 10px 20px; border-radius: 12px;
-            margin-bottom: 10px; font-size: 0.7rem; font-weight: 800; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border-left: 4px solid var(--dashi-gold); animation: toast-in 0.3s ease, toast-out 0.3s ease 1.5s forwards;
-            white-space: nowrap; text-transform: uppercase; letter-spacing: 1px;
-        }
-        @keyframes toast-in { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes toast-out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
     </style>
 </head>
 <body>
@@ -192,9 +343,9 @@
         <div id="session-summary" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;">SESSION RECIPE</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:8px;"><span>Items Prepped</span><span id="summary-total">0</span></div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:8px; color:#28a745;"><span>Perfectly Seasoned</span><span id="summary-correct">0</span></div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(128,128,128,0.2); padding-bottom:8px; color:#dc3545;"><span>Needs More Salt</span><span id="summary-wrong">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span>Items Prepped</span><span id="summary-total">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span>Perfectly Seasoned</span><span id="summary-correct">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--error);"><span>Needs More Salt</span><span id="summary-wrong">0</span></div>
             </div>
             <button class="btn-secondary" onclick="location.reload()" style="margin-top:30px;">Back to Kitchen</button>
         </div>
@@ -205,14 +356,14 @@
                 <div id="reading-text" class="reading" lang="ja"></div>
                 <div id="meaning-text" class="meaning"></div>
                 <div id="info-tray">
-                    <div style="font-size: 0.55rem; color: #888; text-transform: uppercase; margin-bottom: 4px; font-weight: 800;">Example</div>
+                    <div style="font-size: 0.55rem; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; font-weight: 800;">Example</div>
                     <div id="sent-text" style="font-size: 0.85rem; color: var(--text); line-height: 1.4;"></div>
                 </div>
             </div>
             <div class="card-back-actions">
-                <button class="btn-correct" onclick="submitResult(true, event)" style="background:#28a745; color:white; margin-bottom:8px; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Correct (1)</button>
-                <button class="btn-wrong" onclick="submitResult(false, event)" style="background:#dc3545; color:white; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
-                <button style="background:none; border:none; color:#888; font-size:0.55rem; width:100%; margin-top:10px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
+                <button class="btn-correct" onclick="submitResult(true, event)" style="background:var(--success); color:var(--button-text); margin-bottom:8px; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Correct (1)</button>
+                <button class="btn-wrong" onclick="submitResult(false, event)" style="background:var(--error); color:var(--button-text); border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
+                <button style="background:none; border:none; color:var(--muted); font-size:0.55rem; width:100%; margin-top:10px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
             </div>
         </div>
     </div>
@@ -250,11 +401,11 @@
     let kanjiInfoRequest = 0, activeKanjiTrigger = null, kanjiInfoPinned = false, kanjiInfoHideTimer = null;
 
     const STAGES = [
-        { name: "PREPPING", color: "#8c9e82", min: 0, max: 2 },
-        { name: "SIMMERING", color: "#e9b86d", min: 3, max: 4 },
-        { name: "BOILING", color: "#a66b3e", min: 5, max: 6 },
-        { name: "INFUSING", color: "#844c2a", min: 7, max: 8 },
-        { name: "PERFECT DASHI", color: "#d32f2f", min: 9, max: 99 }
+        { name: "PREPPING", color: "var(--stage-prepping)", min: 0, max: 2 },
+        { name: "SIMMERING", color: "var(--stage-simmering)", min: 3, max: 4 },
+        { name: "BOILING", color: "var(--stage-boiling)", min: 5, max: 6 },
+        { name: "INFUSING", color: "var(--stage-infusing)", min: 7, max: 8 },
+        { name: "PERFECT DASHI", color: "var(--stage-perfect)", min: 9, max: 99 }
     ];
 
     function getStageIdx(level) { return STAGES.findIndex(s => level >= s.min && level <= s.max); }
@@ -354,7 +505,7 @@
             console.error('Supabase load failed', error);
             document.getElementById('sync-loader').style.display = 'none';
             updateDashboard();
-            showToast(`Database load failed: ${error.message || 'Check Supabase configuration.'}`, '#dc3545');
+            showToast(`Database load failed: ${error.message || 'Check Supabase configuration.'}`, 'var(--error)');
         }
         await processQuickAddUrl();
     }
@@ -463,10 +614,10 @@
             });
             masterList.push(savedItem);
             updateDashboard();
-            showToast(`Quick Added: ${kanji}`, '#28a745');
+            showToast(`Quick Added: ${kanji}`, 'var(--success)');
         } catch (error) {
             console.error('Quick add failed', error);
-            showToast(`Quick add failed: ${error.message || 'Please check the URL parameters and try again.'}`, '#dc3545');
+            showToast(`Quick add failed: ${error.message || 'Please check the URL parameters and try again.'}`, 'var(--error)');
         } finally {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -481,7 +632,7 @@
         STAGES.forEach((stage, idx) => {
             const wordsInStage = masterList.filter(i => getStageIdx(i.level) === idx);
             const kanjiList = wordsInStage.map(w => w.kanji).join(', ') || 'No items yet';
-            html += `<div class="stat-group" id="group-${idx}"><div class="stat-row" style="background:${stage.color}" onclick="toggleGroup(${idx})"><span>${stage.name} (${wordsInStage.length})</span><button class="btn-mini-play" onclick="startSession('stage', ${idx}, event)">COOK</button></div><div class="level-items">${kanjiList}</div></div>`;
+            html += `<div class="stat-group" id="group-${idx}"><div class="stat-row" style="--stage-color:${stage.color}" onclick="toggleGroup(${idx})"><span>${stage.name} (${wordsInStage.length})</span><button class="btn-mini-play" onclick="startSession('stage', ${idx}, event)">COOK</button></div><div class="level-items">${kanjiList}</div></div>`;
         });
         document.getElementById('stats-display').innerHTML = html;
     }
@@ -768,13 +919,13 @@
         if (isCorrect) {
             cardEl.classList.add('card-correct');
             levelInd.innerText = `LVL ${oldItem.level} → ${nl}`;
-            levelInd.style.color = "#28a745";
+            levelInd.style.color = "var(--success)";
             reviewQueue = reviewQueue.filter(i => i !== oldItem);
             completedCount++;
         } else {
             cardEl.classList.add('card-wrong');
             levelInd.innerText = `LVL ${oldItem.level} → ${nl}`;
-            levelInd.style.color = "#dc3545";
+            levelInd.style.color = "var(--error)";
             sessionWrongCount++;
         }
 
@@ -792,7 +943,7 @@
 
             DatabaseService.updateSRS(oldItem.id, nl, nextReview).catch(error => {
                 console.error('Supabase SRS update failed', error);
-                showToast(`SRS save failed: ${error.message || 'Please try again.'}`, '#dc3545');
+                showToast(`SRS save failed: ${error.message || 'Please try again.'}`, 'var(--error)');
             });
         }
 
@@ -966,10 +1117,10 @@
             document.getElementById('new-type').value = '';
             document.getElementById('new-example').value = '';
             toggleAddForm();
-            showToast('Word added to the database.', '#28a745');
+            showToast('Word added to the database.', 'var(--success)');
         } catch (error) {
             console.error('Supabase word insert failed', error);
-            showToast(`Could not add word: ${error.message || 'Please try again.'}`, '#dc3545');
+            showToast(`Could not add word: ${error.message || 'Please try again.'}`, 'var(--error)');
         } finally {
             btn.innerText = 'Add to Pot';
             btn.disabled = false;
