@@ -200,6 +200,11 @@
             color: var(--card-front-text); font-family: 'Noto Sans JP', sans-serif; font-size: 5rem;
             font-weight: 800; line-height: 1.1; word-break: break-word;
         }
+        #direction-indicator {
+            position: absolute; top: 18px; left: 16px; right: 16px;
+            color: var(--muted); font: 700 0.65rem 'JetBrains Mono', 'Fira Code', monospace;
+            letter-spacing: 1px; text-align: center; text-transform: uppercase;
+        }
         #front-prompt { display: block; width: 100%; text-align: center; }
         .kanji-trigger { border-bottom: 1px dotted currentColor; cursor: help; }
         .kanji-trigger:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
@@ -241,7 +246,7 @@
         #kanji-info-status { min-height: 1em; margin-top: 10px; color: var(--muted); font-size: 0.75rem; }
         .kanji-info-sources { margin-top: 12px; color: var(--muted); font-size: 0.65rem; line-height: 1.5; }
         .kanji-info-sources a { color: var(--accent); }
-        #info-tray { display: none; width: 100%; margin-bottom: 20px; padding-top: 15px; border-top: 1px solid var(--border-soft); text-align: left; }
+        #info-tray { display: block; width: 100%; margin-bottom: 20px; padding-top: 15px; border-top: 1px solid var(--border-soft); text-align: left; }
         #info-tray > div:first-child { color: var(--muted) !important; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
         #keyboard-legend {
             display: none; flex-wrap: wrap; justify-content: center; gap: 8px 12px; margin-top: 25px;
@@ -379,30 +384,35 @@
 
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation of this word" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
+        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation of this word" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
         <div id="session-summary" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">SESSION_DIAGNOSTICS</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span title="Total number of cards in this session">DATA_PROCESSED</span><span id="summary-total" title="Total number of cards in this session">0</span></div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span title="Cards marked correct during this session">SUCCESS_RATE</span><span id="summary-correct" title="Cards marked correct during this session">0</span></div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--error);"><span title="Cards marked incorrect during this session">RETENTION_ERRORS</span><span id="summary-wrong" title="Cards marked incorrect during this session">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span title="Vocabulary items in this session">ITEMS_IN_SESSION</span><span id="summary-total" title="Vocabulary items in this session">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span title="Items recalled correctly in both directions">BIDIRECTIONAL_RECALL</span><span id="summary-correct" title="Items recalled correctly in both directions">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--error);"><span title="Incorrect direction answers during this session">RECALL_ERRORS</span><span id="summary-wrong" title="Incorrect direction answers during this session">0</span></div>
             </div>
             <button class="btn-secondary" title="Return to dashboard" onclick="location.reload()" style="margin-top:30px;">&gt; RETURN_TO_DASHBOARD</button>
         </div>
         <div class="card-face card-back" id="card-back-ui">
             <div id="level-indicator" title="Current SRS level and memory stage"></div>
             <div class="card-back-content">
+                <div id="kanji-text" lang="ja" style="font-family:'Noto Sans JP',sans-serif; font-size:2.6rem; font-weight:800; margin-bottom:10px;"></div>
                 <div id="type-text" title="Vocabulary classification, such as noun or verb" style="font-size:0.6rem; color:var(--dashi-gold); border:1px solid var(--dashi-gold); padding:2px 10px; border-radius:100px; text-transform:uppercase; font-weight:800; margin-bottom:12px;"></div>
                 <div id="reading-text" class="reading" lang="ja"></div>
                 <div id="meaning-text" class="meaning"></div>
                 <div id="info-tray">
+                    <div id="conjugation-section" style="display:none; margin-bottom:12px;">
+                        <div style="font-size:0.55rem; color:var(--muted); text-transform:uppercase; margin-bottom:4px; font-weight:800;">Conjugation</div>
+                        <div id="conjugation-text" style="font-size:0.85rem; color:var(--text); line-height:1.4;"></div>
+                    </div>
                     <div style="font-size: 0.55rem; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; font-weight: 800;">Example</div>
                     <div id="sent-text" style="font-size: 0.85rem; color: var(--text); line-height: 1.4;"></div>
                 </div>
             </div>
             <div class="card-back-actions">
-                <button class="btn-correct" title="Mark correct and advance this card's SRS review interval" onclick="submitResult(true, event)" style="background:var(--success); color:var(--button-text); margin-bottom:8px; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Correct (1)</button>
-                <button class="btn-wrong" title="Mark incorrect and move this card back one SRS level" onclick="submitResult(false, event)" style="background:var(--error); color:var(--button-text); border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
+                <button class="btn-correct" title="Rate this direction correct; the SRS level advances only after both directions are correct" onclick="submitResult(true, event)" style="background:var(--success); color:var(--button-text); margin-bottom:8px; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Correct (1)</button>
+                <button class="btn-wrong" title="Rate this direction incorrect; the SRS level is assessed after both directions" onclick="submitResult(false, event)" style="background:var(--error); color:var(--button-text); border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
                 <button title="Show or hide the example sentence and conjugation details" style="background:none; border:none; color:var(--muted); font-size:0.55rem; width:100%; margin-top:10px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
             </div>
         </div>
@@ -439,7 +449,9 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_hN4AWln0HSGbmvbS2LQa_g_lRuxXpdI';
     const SUPABASE_TABLE = 'vocabulary';
 
-    let masterList = [], reviewQueue = [], currentItem = null, isFlipped = false, isPracticeMode = false;
+    let masterList = [], reviewQueue = [], reviewPromptQueue = [], currentItem = null, currentReviewTask = null;
+    let currentDirection = 'ja-en', isSubmittingResult = false;
+    let isFlipped = false, isPracticeMode = false;
     let completedCount = 0, initialQueueLength = 0, audioMode = false, sessionWrongCount = 0;
     const kanjiDetailsCache = new Map();
     let kanjiInfoRequest = 0, activeKanjiTrigger = null, kanjiInfoPinned = false, kanjiInfoHideTimer = null;
@@ -528,14 +540,8 @@
 
     document.getElementById('audio-mode-checkbox').addEventListener('change', (e) => {
         audioMode = e.target.checked;
-        /* Update card face immediately if toggled during an active session */
         if (currentItem && !isFlipped && document.getElementById('card').style.display === 'block') {
-            if (audioMode) {
-                renderKanjiPrompt("👂");
-                playAudio();
-            } else {
-                renderKanjiPrompt(currentItem.kanji);
-            }
+            updateFrontPrompt();
         }
     });
 
@@ -694,9 +700,22 @@
             isPracticeMode = true;
         }
         if (reviewQueue.length === 0) return alert("Nothing to cook right now!");
+        const firstDirectionTasks = [];
+        const secondDirectionTasks = [];
+        for (const item of reviewQueue) {
+            const firstDirection = Math.random() < 0.5 ? 'ja-en' : 'en-ja';
+            const round = { answers: 0, correct: true };
+            firstDirectionTasks.push({ item, direction: firstDirection, round });
+            secondDirectionTasks.push({ item, direction: firstDirection === 'ja-en' ? 'en-ja' : 'ja-en', round });
+        }
+        reviewPromptQueue = [
+            ...firstDirectionTasks.sort(() => 0.5 - Math.random()),
+            ...secondDirectionTasks.sort(() => 0.5 - Math.random())
+        ];
         initialQueueLength = reviewQueue.length;
         completedCount = 0;
         sessionWrongCount = 0;
+        currentReviewTask = null;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('card').style.display = 'block';
         document.getElementById('exit-btn').style.display = 'block';
@@ -710,7 +729,7 @@
     /* Select and display the next word from the review queue */
     function nextItem(first = false) {
         hideKanjiInfo();
-        if (reviewQueue.length === 0) {
+        if (reviewPromptQueue.length === 0) {
             /* Session complete: Reset UI and return to dashboard after delay */
             document.getElementById('card').classList.remove('is-flipped');
             isFlipped = false;
@@ -720,28 +739,38 @@
             
             document.getElementById('session-counter').style.display = 'none';
             document.getElementById('summary-total').innerText = initialQueueLength;
-            document.getElementById('summary-correct').innerText = initialQueueLength - sessionWrongCount;
+            document.getElementById('summary-correct').innerText = completedCount;
             document.getElementById('summary-wrong').innerText = sessionWrongCount;
 
             return;
         }
         document.getElementById('front-audio-button').style.display = "block";
-        document.getElementById('session-counter').innerText = `${reviewQueue.length} LEFT`;
-        
-        currentItem = reviewQueue[Math.floor(Math.random() * reviewQueue.length)];
-        
-        /* Adjust font size dynamically based on character count */
-        const kanjiLength = currentItem.kanji.length;
-        document.getElementById('display-front').style.fontSize = kanjiLength > 8 ? "2.5rem" : kanjiLength > 4 ? "3.5rem" : "5rem";
-        
-        if (audioMode) {
-            renderKanjiPrompt("👂");
-            playAudio();
-        } else {
-            renderKanjiPrompt(currentItem.kanji);
-        }
+        document.getElementById('session-counter').innerText = `${reviewQueue.length} ITEMS LEFT`;
+        currentReviewTask = reviewPromptQueue.shift();
+        currentItem = currentReviewTask.item;
+        currentDirection = currentReviewTask.direction;
+        updateFrontPrompt();
         
         if (first) updateBackUI();
+    }
+
+    function updateFrontPrompt() {
+        if (!currentItem) return;
+        const displayFront = document.getElementById('display-front');
+        const prompt = currentDirection === 'en-ja' ? currentItem.meaning : (audioMode ? '👂' : currentItem.kanji);
+        document.getElementById('direction-indicator').innerText = currentDirection === 'en-ja' ? 'ENGLISH → JAPANESE' : 'JAPANESE → ENGLISH';
+        displayFront.style.fontFamily = currentDirection === 'en-ja' ? "'Inter', 'Noto Sans JP', sans-serif" : "'Noto Sans JP', sans-serif";
+        if (currentDirection === 'en-ja') {
+            const length = Array.from(prompt).length;
+            displayFront.style.fontSize = `${Math.max(1.5, Math.min(3.5, 42 / Math.max(length, 1)))}rem`;
+        } else {
+            const kanjiLength = currentItem.kanji.length;
+            displayFront.style.fontSize = kanjiLength > 8 ? "2.5rem" : kanjiLength > 4 ? "3.5rem" : "5rem";
+        }
+        renderKanjiPrompt(prompt);
+        const audioButton = document.getElementById('front-audio-button');
+        audioButton.style.display = currentDirection === 'ja-en' ? 'block' : 'none';
+        if (audioMode && currentDirection === 'ja-en') playAudio();
     }
 
     /* Populate the back of the card with definitions and examples */
@@ -749,14 +778,17 @@
         if (!currentItem) return;
         const s = STAGES[getStageIdx(currentItem.level)];
         document.getElementById('card-back-ui').style.borderBottom = `10px solid ${s.color}`;
+        document.getElementById('kanji-text').innerText = currentItem.kanji;
         document.getElementById('reading-text').innerText = currentItem.reading;
         document.getElementById('reading-text').style.color = s.color;
         document.getElementById('meaning-text').innerText = currentItem.meaning;
         document.getElementById('type-text').innerText = currentItem.type;
+        document.getElementById('conjugation-text').innerText = currentItem.conjugation || '';
+        document.getElementById('conjugation-section').style.display = currentItem.conjugation ? 'block' : 'none';
         document.getElementById('level-indicator').title = `SRS level ${currentItem.level}. ${s.name}: ${s.description}`;
         document.getElementById('sent-text').innerText = currentItem.sent || "No example provided.";
         document.getElementById('level-indicator').innerText = `LVL ${currentItem.level}`;
-        document.getElementById('info-tray').style.display = "none";
+        document.getElementById('info-tray').style.display = "block";
     }
 
     function renderKanjiPrompt(text) {
@@ -955,41 +987,57 @@
     /* Process user feedback, update SRS level, and persist it to Supabase */
     async function submitResult(isCorrect, e) {
         if(e) e.stopPropagation();
+        if (isSubmittingResult || !currentItem || !isFlipped) return;
+        isSubmittingResult = true;
         const cardEl = document.getElementById('card');
         const oldItem = currentItem;
-        const nl = isCorrect ? oldItem.level + 1 : Math.max(0, oldItem.level - 1);
-        const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
-        
+        const round = currentReviewTask.round;
         const levelInd = document.getElementById('level-indicator');
-        if (isCorrect) {
-            cardEl.classList.add('card-correct');
-            levelInd.innerText = `LVL ${oldItem.level} → ${nl}`;
-            levelInd.style.color = "var(--success)";
-            reviewQueue = reviewQueue.filter(i => i !== oldItem);
-            completedCount++;
-        } else {
-            cardEl.classList.add('card-wrong');
-            levelInd.innerText = `LVL ${oldItem.level} → ${nl}`;
-            levelInd.style.color = "var(--error)";
-            sessionWrongCount++;
-        }
+        round.correct &&= isCorrect;
+        round.answers++;
+        if (!isCorrect) sessionWrongCount++;
+        const roundComplete = round.answers === 2;
+        let resultingLevel = oldItem.level;
 
-        /* Persist SRS changes only during a review session. */
-        if (!isPracticeMode) {
-            const nextReview = Date.now() + ivs[Math.min(nl, 8)];
-            const localItem = masterList.find(item => item.id === oldItem.id);
-            if (localItem) {
-                localItem.level = nl;
-                localItem.nextReview = nextReview;
+        if (!roundComplete) {
+            cardEl.classList.add(isCorrect ? 'card-correct' : 'card-wrong');
+            levelInd.innerText = `DIRECTION ${round.answers}/2 COMPLETE`;
+            levelInd.style.color = isCorrect ? "var(--success)" : "var(--error)";
+        } else {
+            const passed = round.correct;
+            resultingLevel = passed ? oldItem.level + 1 : Math.max(0, oldItem.level - 1);
+            cardEl.classList.add(passed ? 'card-correct' : 'card-wrong');
+            levelInd.innerText = `LVL ${oldItem.level} → ${resultingLevel}`;
+            levelInd.style.color = passed ? "var(--success)" : "var(--error)";
+            if (passed) {
+                reviewQueue = reviewQueue.filter(i => i !== oldItem);
+                completedCount++;
+            } else {
+                const firstDirection = Math.random() < 0.5 ? 'ja-en' : 'en-ja';
+                const retryRound = { answers: 0, correct: true };
+                reviewPromptQueue.push(
+                    { item: oldItem, direction: firstDirection, round: retryRound },
+                    { item: oldItem, direction: firstDirection === 'ja-en' ? 'en-ja' : 'ja-en', round: retryRound }
+                );
             }
 
-            const stage = STAGES[getStageIdx(nl)];
-            showToast(`SRS ${isCorrect ? '↑' : '↓'} ${stage.name} (LVL ${nl})`, stage.color);
+            if (!isPracticeMode) {
+                const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
+                const nextReview = Date.now() + ivs[Math.min(resultingLevel, 8)];
+                const localItem = masterList.find(item => item.id === oldItem.id);
+                if (localItem) {
+                    localItem.level = resultingLevel;
+                    localItem.nextReview = nextReview;
+                }
 
-            DatabaseService.updateSRS(oldItem.id, nl, nextReview).catch(error => {
-                console.error('Supabase SRS update failed', error);
-                showToast(`SRS save failed: ${error.message || 'Please try again.'}`, 'var(--error)');
-            });
+                const stage = STAGES[getStageIdx(resultingLevel)];
+                showToast(`SRS ${passed ? '↑' : '↓'} ${stage.name} (LVL ${resultingLevel})`, stage.color);
+
+                DatabaseService.updateSRS(oldItem.id, resultingLevel, nextReview).catch(error => {
+                    console.error('Supabase SRS update failed', error);
+                    showToast(`SRS save failed: ${error.message || 'Please try again.'}`, 'var(--error)');
+                });
+            }
         }
 
         const progress = Math.round(completedCount / initialQueueLength * 100);
@@ -1002,6 +1050,7 @@
         levelInd.style.color = "inherit";
         nextItem();
         requestAnimationFrame(() => cardEl.classList.remove('is-advancing'));
+        isSubmittingResult = false;
     }
 
     /* Toggle visibility of the example sentence tray */
@@ -1122,7 +1171,7 @@
             if (e.key === '2') submitResult(false);
             if (e.key === 'f' || e.key === 'F') toggleDetails();
         }
-        if (e.key === 'v' || e.key === 'V') playAudio();
+        if ((e.key === 'v' || e.key === 'V') && currentDirection === 'ja-en') playAudio();
     });
     function toggleGroup(idx) { document.querySelectorAll('.stat-group').forEach((g, i) => { if(i === idx) g.classList.toggle('active'); else g.classList.remove('active'); }); }
     function toggleAddForm() { document.getElementById('add-form-overlay').classList.toggle('active'); }

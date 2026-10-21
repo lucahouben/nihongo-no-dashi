@@ -4,7 +4,7 @@ A single-page Japanese vocabulary flashcard app with spaced repetition, a cyberp
 
 ## Features
 
-- Flip cards to reveal readings, meanings, word types, and optional example sentences.
+- Review each vocabulary item in both directions: Japanese → English and English → Japanese. The revealed answer includes the kanji, reading, meaning, type, conjugation, and example sentence.
 - Review cards due for repetition, or practice all words or a selected memory stage without changing SRS data.
 - Track vocabulary through five themed stages:
 
@@ -65,9 +65,20 @@ The database column names must stay in sync with the `DatabaseService` mapping i
 
 ## Spaced repetition
 
-Marking a card correct raises its level by one. Marking it incorrect lowers the level by one, stopping at level 0. In a due-card session, incorrect cards remain in the session queue to be reviewed again; correct cards leave the queue. Practice sessions do not save SRS changes.
+Each due session has two shuffled passes. In the first pass, each item is prompted in one randomly chosen direction; the second pass tests that same item in the opposite direction. This separates the prompts instead of showing an item's answer immediately before testing it in reverse:
 
-After an answer in a due-card session, the next review time is calculated from the resulting level:
+1. Recall the English meaning from the Japanese word (or Japanese audio when audio mode is enabled).
+2. Recall the Japanese word from its English meaning.
+3. Reveal the answer, which includes the kanji, reading, meaning, word type, conjugation when present, and example.
+
+An item advances one level only when both directions are marked correct. If either direction is marked incorrect, the level drops by one, stopping at level 0, after both prompts have been answered. The item remains in the due-session queue for another pair of prompts after the other queued prompts; a successful item leaves the queue. Practice sessions use the same two-pass prompts but do not save SRS changes. Existing levels, due dates, and the interval schedule are unchanged, so no database migration is needed.
+
+This design applies two established learning principles: spaced review and retrieval practice. The evidence supports distributing retrieval over time, and each prompt direction exercises recall from a different cue. The cited research does not prescribe this exact two-prompt rule or the app's level schedule; the two-direction gate is a practical way to require success with both kinds of recall before increasing the shared item level.
+
+- Cepeda et al. (2006), [Distributed practice in verbal recall tasks: A review and quantitative synthesis](https://doi.org/10.1037/0033-2909.132.3.354), *Psychological Bulletin*.
+- Karpicke & Roediger (2008), [The critical importance of retrieval for learning](https://doi.org/10.1126/science.1152408), *Science*.
+
+After a completed two-direction round in a due-card session, the next review time is calculated from the resulting level:
 
 | Resulting level | Interval |
 | --- | --- |
@@ -88,7 +99,7 @@ After an answer in a due-card session, the next review time is calculated from t
 | Click or tap the card / **Space** | Reveal the answer |
 | **1** | Mark correct |
 | **2** | Mark incorrect |
-| **F** | Show or hide the example sentence |
+| **F** | Show or hide example and conjugation details |
 | **V** | Play Japanese pronunciation |
 | **Esc** | Exit the review session |
 | Click or tap a kanji | Open kanji details |
