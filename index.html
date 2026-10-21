@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>日本語のダシ</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='22' y='22' width='56' height='56' rx='8' fill='%231a1b26' stroke='%237dcfff' stroke-width='5'/%3E%3Cpath d='M35 12v10m15-10v10m15-10v10m15-10v10M35 78v10m15-10v10m15-10v10m15-10v10M12 35h10m-10 15h10m-10 15h10m-10 15h10m56-45h10m-10 15h10m-10 15h10m-10 15h10' stroke='%23bb9af7' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M39 40h22v20H39z' fill='%23e0af68'/%3E%3Cpath d='M43 47h14m-14 6h10' stroke='%231a1b26' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         :root {
@@ -759,7 +759,9 @@
         const displayFront = document.getElementById('display-front');
         const prompt = currentDirection === 'en-ja' ? currentItem.meaning : (audioMode ? '👂' : currentItem.kanji);
         document.getElementById('direction-indicator').innerText = currentDirection === 'en-ja' ? 'ENGLISH → JAPANESE' : 'JAPANESE → ENGLISH';
-        displayFront.style.fontFamily = currentDirection === 'en-ja' ? "'Inter', 'Noto Sans JP', sans-serif" : "'Noto Sans JP', sans-serif";
+        displayFront.style.fontFamily = currentDirection === 'en-ja'
+            ? "'JetBrains Mono', 'Fira Code', monospace"
+            : "'Noto Sans JP', sans-serif";
         if (currentDirection === 'en-ja') {
             const length = Array.from(prompt).length;
             displayFront.style.fontSize = `${Math.max(1.5, Math.min(3.5, 42 / Math.max(length, 1)))}rem`;
