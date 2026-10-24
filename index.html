@@ -187,6 +187,11 @@
         }
         .flashcard.is-advancing { transition: none !important; }
         .flashcard.is-flipped { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
+        #session-summary { animation: summary-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+        @keyframes summary-in {
+            from { opacity: 0; transform: translateY(16px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         .card-face {
             position: absolute; display: flex; width: 100%; height: 100%; flex-direction: column;
             align-items: center; padding: 30px 25px; border: 1px solid var(--card-border);
@@ -385,7 +390,7 @@
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
         <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation of this word" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
-        <div id="session-summary" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
+        <div id="session-summary" onclick="event.stopPropagation()" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">SESSION_DIAGNOSTICS</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
                 <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span title="Vocabulary items in this session">ITEMS_IN_SESSION</span><span id="summary-total" title="Vocabulary items in this session">0</span></div>
@@ -984,7 +989,7 @@
     }
 
     /* Flip the card to reveal the answer */
-    function handleCardClick() { if(!isFlipped) { isFlipped = true; document.getElementById('card').classList.add('is-flipped'); updateBackUI(); } }
+    function handleCardClick() { if(isFlipped || document.getElementById('session-summary').style.display === 'flex') return; isFlipped = true; document.getElementById('card').classList.add('is-flipped'); updateBackUI(); }
 
     /* Process user feedback, update SRS level, and persist it to Supabase */
     async function submitResult(isCorrect, e) {
