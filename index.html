@@ -307,8 +307,18 @@
         #summary-correct { color: var(--success) !important; }
         #summary-wrong { color: var(--error) !important; }
         #session-counter, #audio-mode-toggle { color: var(--muted) !important; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
-        .card-correct .card-face { border: 4px solid var(--success) !important; }
-        .card-wrong .card-face { border: 4px solid var(--error) !important; }
+        .card-correct .card-face {
+            border-color: var(--success) !important;
+            outline: 4px solid var(--success);
+            outline-offset: -4px;
+            box-shadow: 0 0 34px rgba(158, 206, 106, 0.4), var(--panel-shadow);
+        }
+        .card-wrong .card-face {
+            border-color: var(--error) !important;
+            outline: 4px solid var(--error);
+            outline-offset: -4px;
+            box-shadow: 0 0 34px rgba(247, 118, 142, 0.4), var(--panel-shadow);
+        }
         #toast-container { position: fixed; top: 20px; left: 50%; z-index: 4000; display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); pointer-events: none; }
         .toast {
             margin-bottom: 10px; padding: 10px 20px; border: 1px solid var(--card-border); border-left: 4px solid var(--dashi-gold);
@@ -1099,6 +1109,7 @@
         const progress = Math.round(completedCount / initialQueueLength * 100);
         document.getElementById('progress-bar').style.width = `${progress}%`;
         document.getElementById('progress-container').setAttribute('aria-valuenow', progress);
+        await new Promise(resolve => setTimeout(resolve, 500));
         isFlipped = false;
         cardEl.classList.add('is-advancing');
         void cardEl.offsetWidth;
