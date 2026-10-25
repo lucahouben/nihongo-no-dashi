@@ -699,6 +699,20 @@
         document.getElementById('stats-display').innerHTML = html;
     }
 
+    function shuffleReviewTasks(tasks) {
+        if (tasks.length <= 2) return [...tasks];
+        for (let attempt = 0; attempt < 200; attempt++) {
+            const shuffled = [...tasks];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            const repeats = shuffled.some((task, index) => index > 0 && task.item === shuffled[index - 1].item);
+            if (!repeats) return shuffled;
+        }
+        return [...tasks];
+    }
+
     /* Initialize a study session based on selected mode (Due, All, or specific Stage) */
     function startSession(mode, stageIdx = null, event = null) {
         if(event) event.stopPropagation();
@@ -712,18 +726,16 @@
             isPracticeMode = true;
         }
         if (reviewQueue.length === 0) return alert("Nothing to cook right now!");
-        const firstDirectionTasks = [];
-        const secondDirectionTasks = [];
+        const reviewTasks = [];
         for (const item of reviewQueue) {
             const firstDirection = Math.random() < 0.5 ? 'ja-en' : 'en-ja';
             const round = { answers: 0, correct: true };
-            firstDirectionTasks.push({ item, direction: firstDirection, round });
-            secondDirectionTasks.push({ item, direction: firstDirection === 'ja-en' ? 'en-ja' : 'ja-en', round });
+            reviewTasks.push(
+                { item, direction: firstDirection, round },
+                { item, direction: firstDirection === 'ja-en' ? 'en-ja' : 'ja-en', round }
+            );
         }
-        reviewPromptQueue = [
-            ...firstDirectionTasks.sort(() => 0.5 - Math.random()),
-            ...secondDirectionTasks.sort(() => 0.5 - Math.random())
-        ];
+        reviewPromptQueue = shuffleReviewTasks(reviewTasks);
         initialQueueLength = reviewQueue.length;
         completedCount = 0;
         sessionWrongCount = 0;
@@ -732,6 +744,8 @@
         document.getElementById('card').style.display = 'block';
         document.getElementById('exit-btn').style.display = 'block';
         document.getElementById('progress-container').style.display = 'block';
+        document.getElementById('progress-bar').style.width = '0%';
+        document.getElementById('progress-container').setAttribute('aria-valuenow', 0);
         document.getElementById('keyboard-legend').style.display = 'flex';
         document.getElementById('session-counter').style.display = 'block';
         document.getElementById('audio-mode-toggle').style.display = 'flex';
@@ -1056,6 +1070,11 @@
                     { item: oldItem, direction: firstDirection, round: retryRound },
                     { item: oldItem, direction: firstDirection === 'ja-en' ? 'en-ja' : 'ja-en', round: retryRound }
                 );
+                if (reviewPromptQueue.length >= 4) {
+                    const lastIndex = reviewPromptQueue.length - 1;
+                    const swapIndex = Math.floor(Math.random() * (reviewPromptQueue.length - 3));
+                    [reviewPromptQueue[lastIndex], reviewPromptQueue[swapIndex]] = [reviewPromptQueue[swapIndex], reviewPromptQueue[lastIndex]];
+                }
             }
 
             if (!isPracticeMode) {
