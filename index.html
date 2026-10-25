@@ -977,6 +977,28 @@
         window.speechSynthesis.speak(u);
     }
 
+    /* Play a short two-note chime for correct answers */
+    let correctAudioContext;
+    function playCorrectSound() {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        if (!correctAudioContext) correctAudioContext = new AudioContextClass();
+        if (correctAudioContext.state === 'suspended') correctAudioContext.resume();
+        const now = correctAudioContext.currentTime;
+        [[880, 0], [1174.66, 0.09]].forEach(([frequency, delay]) => {
+            const oscillator = correctAudioContext.createOscillator();
+            const gain = correctAudioContext.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            gain.gain.setValueAtTime(0.0001, now + delay);
+            gain.gain.exponentialRampToValueAtTime(0.18, now + delay + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.18);
+            oscillator.connect(gain).connect(correctAudioContext.destination);
+            oscillator.start(now + delay);
+            oscillator.stop(now + delay + 0.2);
+        });
+    }
+
     /* Show a brief notification for SRS level changes */
     function showToast(msg, color) {
         const container = document.getElementById('toast-container');
@@ -1000,6 +1022,7 @@
         const oldItem = currentItem;
         const round = currentReviewTask.round;
         const levelInd = document.getElementById('level-indicator');
+        if (isCorrect) playCorrectSound();
         round.correct &&= isCorrect;
         round.answers++;
         if (!isCorrect) sessionWrongCount++;
