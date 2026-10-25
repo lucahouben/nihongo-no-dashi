@@ -1,0 +1,27 @@
+{
+    "name": "日本語のダシ",
+    "short_name": "ダシ",
+    "description": "Cybernetic memory buffer for Japanese vocabulary review",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#1a1b26",
+    "theme_color": "#1a1b26",
+    "icons": [
+        {
+            "src": "assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "assets/icons/icon-1024.png",
+            "sizes": "1024x1024",
+            "type": "image/png"
+        }
+    ]
+}
