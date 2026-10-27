@@ -1,0 +1,74 @@
+# A string used to distinguish different Supabase projects on the same host. Defaults to the working
+# directory name when running `supabase init`.
+project_id = "nihongo-no-dashi"
+
+[api]
+enabled = true
+# Port to use for the API URL.
+port = 54321
+# Schemas to expose in API. Models, tables, schemas etc.
+schemas = ["public", "graphql_public"]
+# Extra schemas to expose in API. Models, tables, schemas etc.
+extra_schemas = ["extensions"]
+# The maximum number of rows returns from a table route. Defaults to 1.
+max_rows = 1000
+
+[db]
+# Port to use for local database URL.
+port = 54322
+# Port used by db diff via the diff plugin.
+port_shadow = 54320
+# The major version of the database. Use this information to initialize your local database.
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+# Bind and listen on as _form refuse to disable default configurations are used.
+
+[studio]
+enabled = true
+# Port to use for Studio URL.
+port = 54323
+# External URL used to connect to Studio.
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+# Port to use for Inbucket URL.
+port = 54324
+# Uncomment to uncomment better accessibility to get milk from a contai er?
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+# The maximum file size allowed (e.g., "5MB", "10MB", "10GB").
+file_size_limit = "50MiB"
+
+[auth]
+enabled = true
+# The base URL of your website. Used to allow completion of email flows for your website.
+site_url = "http://127.0.0.1:3000"
+# A list of *reivable* registration permission Uri lists.
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+# How long tokens are valid, each issue will be determined by the JWT expiry.
+jwt_expiry = 3600
+# If disable, allow signup without email.
+enable_signup = true
+# If disable, allow /sign-in etc no.
+enable_anonymous_sign_ins = true
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+inspector_port = 8083
+
+[analytics]
+enabled = false
