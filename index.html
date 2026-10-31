@@ -290,6 +290,8 @@
         }
         .btn-lookup::before { content: "> "; }
         .btn-lookup:disabled { cursor: wait; opacity: 0.65; }
+        #clear-btn { color: var(--muted); border-color: var(--muted); }
+        #clear-btn:hover, #clear-btn:focus-visible { color: var(--text); border-color: var(--text); }
         #lookup-status { min-height: 1em; margin-top: 5px; color: var(--muted); font-size: 0.7rem; }
         #sync-loader { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--dark-kombu); }
         .spinner { width: 40px; height: 40px; margin-bottom: 20px; border: 3px solid var(--card-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -387,6 +389,7 @@
             <div class="kanji-input-row">
                 <input type="text" id="new-kanji">
                 <button type="button" class="btn-lookup" id="lookup-btn" title="Look up this word and fill in available dictionary details" onclick="lookupNewWord()">Auto-fill</button>
+                <button type="button" class="btn-lookup" id="clear-btn" title="Clear all capture form fields" onclick="clearNewWordFields()">Clear</button>
             </div>
             <div id="lookup-status" aria-live="polite"></div>
         </div>
@@ -1123,6 +1126,43 @@
     /* Toggle visibility of the example sentence tray */
     function toggleDetails(e) { if(e) e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
 
+    const AUTOFILL_FIELD_IDS = ['new-reading', 'new-meaning', 'new-type', 'new-example'];
+
+    /* Remember which fields came from Auto-fill so a new kanji only resets those */
+    function setAutofilledField(id, value) {
+        const input = document.getElementById(id);
+        input.value = value;
+        input.dataset.autofilled = 'true';
+    }
+
+    function clearAutofilledFields() {
+        AUTOFILL_FIELD_IDS.forEach(id => {
+            const input = document.getElementById(id);
+            if (input.dataset.autofilled === 'true') {
+                input.value = '';
+                delete input.dataset.autofilled;
+            }
+        });
+    }
+
+    function clearNewWordFields() {
+        document.getElementById('new-kanji').value = '';
+        AUTOFILL_FIELD_IDS.forEach(id => {
+            const input = document.getElementById(id);
+            input.value = '';
+            delete input.dataset.autofilled;
+        });
+        document.getElementById('lookup-status').textContent = '';
+        document.getElementById('new-kanji').focus();
+    }
+
+    document.getElementById('new-kanji').addEventListener('input', clearAutofilledFields);
+    AUTOFILL_FIELD_IDS.forEach(id => {
+        document.getElementById(id).addEventListener('input', event => {
+            delete event.target.dataset.autofilled;
+        });
+    });
+
     async function lookupNewWord() {
         const query = document.getElementById('new-kanji').value.trim();
         const button = document.getElementById('lookup-btn');
@@ -1177,7 +1217,7 @@
             const exampleInput = document.getElementById('new-example');
             let hasExample = Boolean(exampleInput.value.trim());
 
-            if (!hasExample) {
+            if (!hasExample || exampleInput.dataset.autofilled === 'true') {
                 try {
                     const exampleResponse = await fetch('https://jotoba.de/api/search/sentences', {
                         method: 'POST',
@@ -1190,9 +1230,9 @@
                         .find(entry => typeof entry.content === 'string' && entry.content.trim());
                     if (sentence) {
                         const translation = sentence.translation?.trim();
-                        exampleInput.value = translation
+                        setAutofilledField('new-example', translation
                             ? `${sentence.content.trim()} (${translation})`
-                            : sentence.content.trim();
+                            : sentence.content.trim());
                         filled.push('example');
                         hasExample = true;
                     }
@@ -1201,16 +1241,16 @@
                 }
             }
 
-            if (reading && !document.getElementById('new-reading').value.trim()) {
-                document.getElementById('new-reading').value = reading;
+            if (reading && (!document.getElementById('new-reading').value.trim() || document.getElementById('new-reading').dataset.autofilled === 'true')) {
+                setAutofilledField('new-reading', reading);
                 filled.push('reading');
             }
-            if (meaning && !document.getElementById('new-meaning').value.trim()) {
-                document.getElementById('new-meaning').value = meaning;
+            if (meaning && (!document.getElementById('new-meaning').value.trim() || document.getElementById('new-meaning').dataset.autofilled === 'true')) {
+                setAutofilledField('new-meaning', meaning);
                 filled.push('meaning');
             }
-            if (type && !document.getElementById('new-type').value.trim()) {
-                document.getElementById('new-type').value = type;
+            if (type && (!document.getElementById('new-type').value.trim() || document.getElementById('new-type').dataset.autofilled === 'true')) {
+                setAutofilledField('new-type', type);
                 filled.push('type');
             }
 
@@ -1279,6 +1319,7 @@
             document.getElementById('new-meaning').value = '';
             document.getElementById('new-type').value = '';
             document.getElementById('new-example').value = '';
+            clearAutofilledFields();
             toggleAddForm();
             showToast('Word added to the database.', 'var(--success)');
         } catch (error) {
