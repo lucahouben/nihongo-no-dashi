@@ -140,6 +140,31 @@
             box-shadow: 0 0 15px rgba(125, 207, 255, 0.15);
             transform: translateY(-1px);
         }
+        .deck-selector {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px; margin-bottom: 20px;
+        }
+        .deck-tab {
+            display: flex; flex-direction: column; gap: 5px; padding: 12px 14px;
+            border: 1px solid var(--border-soft); border-radius: 9px; background: var(--dark-kombu);
+            color: var(--muted); cursor: pointer; text-align: left; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .deck-tab:hover { border-color: var(--accent); box-shadow: 0 0 15px rgba(125, 207, 255, 0.1); }
+        .deck-tab.active {
+            border-color: var(--dashi-gold); color: var(--dashi-gold);
+            background: color-mix(in srgb, var(--dashi-gold) 10%, var(--card-bg));
+        }
+        .deck-tab-name { font: 800 0.78rem 'JetBrains Mono', 'Fira Code', monospace; letter-spacing: 0.6px; }
+        .deck-tab-meta { font: 600 0.58rem 'JetBrains Mono', 'Fira Code', monospace; letter-spacing: 0.4px; text-transform: uppercase; }
+        .deck-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: -10px 0 16px; }
+        .btn-deck {
+            padding: 6px 9px; border: 1px solid var(--border-soft); border-radius: 6px;
+            background: transparent; color: var(--muted); cursor: pointer;
+            font: 700 0.58rem 'JetBrains Mono', 'Fira Code', monospace;
+            letter-spacing: 0.4px; text-transform: uppercase;
+        }
+        .btn-deck:hover, .btn-deck:focus-visible { border-color: var(--accent); color: var(--accent); }
+        .btn-deck.danger:hover, .btn-deck.danger:focus-visible { border-color: var(--error); color: var(--error); }
         .stats-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .stat-group {
             overflow: hidden; border: 1px solid var(--border-soft); border-radius: 9px;
@@ -241,6 +266,15 @@
         .front-audio-button { position: absolute; z-index: 2; bottom: 16px; left: 50%; white-space: nowrap; transform: translateX(-50%); }
         .flashcard.is-flipped .front-audio-button { display: none; }
         .meaning { margin-bottom: 15px; color: var(--text); font-size: 1.5rem; }
+        .flashcard.deck-sentences .card-front { font-size: 1.8rem; line-height: 1.5; word-break: normal; overflow-wrap: anywhere; }
+        .flashcard.deck-sentences .card-back-content #kanji-text {
+            margin-bottom: 16px !important; font-size: clamp(1.25rem, 4.5vw, 1.9rem) !important;
+            line-height: 1.65; text-align: left; overflow-wrap: anywhere;
+        }
+        .flashcard.deck-sentences .meaning {
+            margin-bottom: 0; font-size: 1.15rem; line-height: 1.6; text-align: left;
+        }
+        .flashcard.deck-sentences .card-back-actions > button:last-child { display: none; }
         #kanji-info {
             position: fixed; z-index: 5000; width: min(320px, calc(100vw - 24px)); max-height: min(70vh, 420px);
             overflow-y: auto; padding: 16px; border: 1px solid var(--card-border); border-radius: 10px;
@@ -276,11 +310,13 @@
         #add-form-overlay .btn-add-toggle { background: var(--card-bg) !important; color: var(--text) !important; }
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; margin-bottom: 5px; color: var(--dashi-gold); font: 700 0.65rem 'JetBrains Mono', 'Fira Code', monospace; text-transform: uppercase; }
-        .form-group input {
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%; padding: 12px; border: 1px solid var(--card-border); border-radius: 8px;
             outline: none; background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 1rem;
         }
-        .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(125, 207, 255, 0.12); }
+        .form-group textarea { resize: vertical; line-height: 1.5; }
+        .form-group select { appearance: none; cursor: pointer; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(125, 207, 255, 0.12); }
         .kanji-input-row { display: flex; gap: 8px; }
         .kanji-input-row input { min-width: 0; flex: 1; }
         .btn-lookup {
@@ -375,45 +411,54 @@
     <div class="theme-switch-wrapper"><label class="theme-switch" title="Switch between dark and light color themes"><input type="checkbox" id="theme-toggle" aria-label="Switch between dark and light color themes" /><div class="slider"></div></label></div>
 
     <div id="audio-mode-toggle" style="position: absolute; top: -45px; right: 50px; display: none; align-items: center; gap: 5px; font-size: 0.6rem; font-weight: 800; color: #888;">
-        <span title="Hear the Japanese reading instead of seeing the kanji prompt">AUDIO MODE</span>
-        <label class="theme-switch" title="Hear the Japanese reading instead of seeing the kanji prompt"><input type="checkbox" id="audio-mode-checkbox" aria-label="Hear the Japanese reading instead of seeing the kanji prompt" /><div class="slider"></div></label>
+        <span title="Hear the Japanese text instead of seeing the Japanese prompt">AUDIO MODE</span>
+        <label class="theme-switch" title="Hear the Japanese text instead of seeing the Japanese prompt"><input type="checkbox" id="audio-mode-checkbox" aria-label="Hear the Japanese text instead of seeing the Japanese prompt" /><div class="slider"></div></label>
     </div>
 
     <div id="add-form-overlay">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <h2 class="dash-title">CAPTURE_DATA</h2>
-            <button class="btn-add-toggle" type="button" title="Close the new-word capture form" aria-label="Close the new-word capture form" onclick="toggleAddForm()">×</button>
+            <h2 class="dash-title" id="add-form-title">CAPTURE_DATA</h2>
+            <button class="btn-add-toggle" type="button" title="Close the capture form" aria-label="Close the capture form" onclick="toggleAddForm()">×</button>
         </div>
-        <div class="form-group">
-            <label for="new-kanji">Kanji</label>
-            <div class="kanji-input-row">
-                <input type="text" id="new-kanji">
-                <button type="button" class="btn-lookup" id="lookup-btn" title="Look up this word and fill in available dictionary details" onclick="lookupNewWord()">Auto-fill</button>
-                <button type="button" class="btn-lookup" id="clear-btn" title="Clear all capture form fields" onclick="clearNewWordFields()">Clear</button>
+        <div id="vocab-form-fields">
+            <div class="form-group">
+                <label for="new-kanji">Kanji</label>
+                <div class="kanji-input-row">
+                    <input type="text" id="new-kanji">
+                    <button type="button" class="btn-lookup" id="lookup-btn" title="Look up this word and fill in available dictionary details" onclick="lookupNewWord()">Auto-fill</button>
+                    <button type="button" class="btn-lookup" id="clear-btn" title="Clear all capture form fields" onclick="clearNewWordFields()">Clear</button>
+                </div>
+                <div id="lookup-status" aria-live="polite"></div>
             </div>
-            <div id="lookup-status" aria-live="polite"></div>
+            <div class="form-group"><label>Reading</label><input type="text" id="new-reading"></div>
+            <div class="form-group"><label>Meaning</label><input type="text" id="new-meaning"></div>
+            <div class="form-group"><label>Type</label><input type="text" id="new-type"></div>
+            <div class="form-group"><label>Example</label><input type="text" id="new-example"></div>
         </div>
-        <div class="form-group"><label>Reading</label><input type="text" id="new-reading"></div>
-        <div class="form-group"><label>Meaning</label><input type="text" id="new-meaning"></div>
-        <div class="form-group"><label>Type</label><input type="text" id="new-type"></div>
-        <div class="form-group"><label>Example</label><input type="text" id="new-example"></div>
-        <button class="btn-main" title="Add new word to database" onclick="submitNewWord()" id="add-submit-btn" style="margin-top:auto;">CAPTURE_DATA</button>
+        <div id="sentence-form-fields" hidden>
+            <div class="form-group"><label for="new-sentence-deck">Deck</label><select id="new-sentence-deck"></select></div>
+            <div class="form-group"><label for="new-sentence">Japanese sentence</label><textarea id="new-sentence" rows="4" lang="ja"></textarea></div>
+            <div class="form-group"><label for="new-translation">English translation</label><textarea id="new-translation" rows="3"></textarea></div>
+        </div>
+        <button class="btn-main" title="Add new item to the active deck" onclick="submitNewItem()" id="add-submit-btn" style="margin-top:auto;">CAPTURE_DATA</button>
     </div>
 
     <div id="dashboard">
-        <div class="dash-header"><div><h1 class="dash-title">日本語のダシ</h1><p class="dash-tagline">CYBERNETIC MEMORY BUFFER</p></div><button class="btn-add-toggle" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
+        <div class="dash-header"><div><h1 class="dash-title">日本語のダシ</h1><p class="dash-tagline">CYBERNETIC MEMORY BUFFER</p></div><button class="btn-add-toggle" id="open-add-form-btn" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
+        <div id="deck-selector" class="deck-selector" role="tablist" aria-label="Select a deck"></div>
+        <div id="deck-controls" class="deck-controls"></div>
         <div id="stats-display" class="stats-list"></div>
         <button class="btn-main" id="start-btn" title="Start reviewing due cards" onclick="startSession('due')">INITIALIZE_SESSION (0)</button>
-        <button class="btn-secondary" title="Practice all words without SRS level penalties" onclick="startSession('all')">&gt; MEMORY_SIMULATION (all)</button>
+        <button class="btn-secondary" title="Practice all items without SRS level penalties" onclick="startSession('all')">&gt; MEMORY_SIMULATION (all)</button>
     </div>
 
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation of this word" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
+        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
         <div id="session-summary" onclick="event.stopPropagation()" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">SESSION_DIAGNOSTICS</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span title="Vocabulary items in this session">ITEMS_IN_SESSION</span><span id="summary-total" title="Vocabulary items in this session">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span title="Items in this session">ITEMS_IN_SESSION</span><span id="summary-total" title="Items in this session">0</span></div>
                 <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span title="Items recalled correctly in both directions">BIDIRECTIONAL_RECALL</span><span id="summary-correct" title="Items recalled correctly in both directions">0</span></div>
                 <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--error);"><span title="Incorrect direction answers during this session">RECALL_ERRORS</span><span id="summary-wrong" title="Incorrect direction answers during this session">0</span></div>
             </div>
@@ -436,6 +481,7 @@
                 </div>
             </div>
             <div class="card-back-actions">
+                <button class="btn-audio" id="back-audio-button" type="button" title="Play the Japanese text" onclick="playAudio(event)" style="width:100%; margin:0 0 10px;">Replay audio (V)</button>
                 <button class="btn-correct" title="Rate this direction correct; the SRS level advances only after both directions are correct" onclick="submitResult(true, event)" style="background:var(--success); color:var(--button-text); margin-bottom:8px; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Correct (1)</button>
                 <button class="btn-wrong" title="Rate this direction incorrect; the SRS level is assessed after both directions" onclick="submitResult(false, event)" style="background:var(--error); color:var(--button-text); border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
                 <button title="Show or hide the example sentence and conjugation details" style="background:none; border:none; color:var(--muted); font-size:0.55rem; width:100%; margin-top:10px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
@@ -472,11 +518,75 @@
 <script>
     const SUPABASE_URL = 'https://qrwigrbmjobfypvymrev.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_hN4AWln0HSGbmvbS2LQa_g_lRuxXpdI';
-    const SUPABASE_TABLE = 'vocabulary';
+
+    const VOCAB_COLUMNS = 'id, kanji, reading, meaning, type, conjugation, sent, level, next_review, created_at';
+    const SENTENCE_COLUMNS = 'id, deck_id, sentence, translation, level, next_review, created_at';
+
+    const VOCAB_DECK = Object.freeze({
+        id: 'vocabulary',
+        kind: 'vocabulary',
+        label: 'VOCABULARY',
+        noun: 'words',
+        table: 'vocabulary',
+        columns: VOCAB_COLUMNS,
+        frontJa: item => item.kanji,
+        frontEn: item => item.meaning,
+        listText: item => item.kanji,
+        listSeparator: ', ',
+        audioText: item => item.reading
+    });
+
+    function makeSentenceDeck(row) {
+        return Object.freeze({
+            id: `sentence:${row.id}`,
+            kind: 'sentences',
+            deckId: row.id,
+            name: row.name,
+            label: String(row.name || 'SENTENCES').toUpperCase(),
+            noun: 'sentences',
+            table: 'sentences',
+            columns: SENTENCE_COLUMNS,
+            frontJa: item => item.sentence,
+            frontEn: item => item.translation,
+            listText: item => item.sentence,
+            listSeparator: ' · ',
+            audioText: item => item.sentence
+        });
+    }
+
+    let decks = { vocabulary: VOCAB_DECK };
+    let deckOrder = ['vocabulary'];
+    let sentenceDecks = [];
+    let deckItems = { vocabulary: [] };
+    let activeDeckId = 'vocabulary';
+
+    function rebuildDeckRegistry() {
+        decks = { vocabulary: VOCAB_DECK };
+        deckOrder = ['vocabulary'];
+        sentenceDecks.forEach(row => {
+            const deck = makeSentenceDeck(row);
+            decks[deck.id] = deck;
+            deckOrder.push(deck.id);
+        });
+        deckOrder.forEach(deckId => {
+            if (!deckItems[deckId]) deckItems[deckId] = [];
+        });
+        Object.keys(deckItems).forEach(deckId => {
+            if (!decks[deckId]) delete deckItems[deckId];
+        });
+    }
+
+    function isSentenceDeckId(deckId) {
+        return decks[deckId]?.kind === 'sentences';
+    }
+
+    function sentenceDeckKey(id) {
+        return `sentence:${id}`;
+    }
 
     let masterList = [], reviewQueue = [], reviewPromptQueue = [], currentItem = null, currentReviewTask = null;
     let currentDirection = 'ja-en', isSubmittingResult = false;
-    let isFlipped = false, isPracticeMode = false;
+    let isFlipped = false, isPracticeMode = false, sessionDeckId = activeDeckId;
     let completedCount = 0, initialQueueLength = 0, audioMode = false, sessionWrongCount = 0;
     const kanjiDetailsCache = new Map();
     let kanjiInfoRequest = 0, activeKanjiTrigger = null, kanjiInfoPinned = false, kanjiInfoHideTimer = null;
@@ -492,7 +602,6 @@
     function getStageIdx(level) { return STAGES.findIndex(s => level >= s.min && level <= s.max); }
 
     const DatabaseService = (() => {
-        const columns = 'id, kanji, reading, meaning, type, conjugation, sent, level, next_review, created_at';
         let client;
 
         function getClient() {
@@ -504,6 +613,12 @@
             return client;
         }
 
+        function getDeck(deckId) {
+            const deck = decks[deckId];
+            if (!deck) throw new Error(`Unknown deck: ${deckId}`);
+            return deck;
+        }
+
         function toAppItem(row) {
             const reviewTime = Date.parse(row.next_review);
             return {
@@ -513,31 +628,56 @@
             };
         }
 
-        async function getItems() {
+        async function getSentenceDecks() {
             const { data, error } = await getClient()
-                .from(SUPABASE_TABLE)
-                .select(columns)
+                .from('sentence_decks')
+                .select('id, name, created_at')
                 .order('created_at', { ascending: true });
             if (error) throw error;
-            return (data || []).map(toAppItem);
+            return data || [];
         }
 
-        async function updateSRS(id, level, nextReview) {
+        async function getItems(deckId) {
+            const deck = getDeck(deckId);
+            const pageSize = 1000;
+            const rows = [];
+            for (let from = 0; ; from += pageSize) {
+                let query = getClient().from(deck.table).select(deck.columns);
+                if (deck.kind === 'sentences') query = query.eq('deck_id', deck.deckId);
+                const { data, error } = await query
+                    .order('created_at', { ascending: true })
+                    .range(from, from + pageSize - 1);
+                if (error) throw error;
+                rows.push(...(data || []));
+                if (!data || data.length < pageSize) break;
+            }
+            return rows.map(toAppItem);
+        }
+
+        async function updateSRS(deckId, id, level, nextReview) {
+            const deck = getDeck(deckId);
             const { data, error } = await getClient()
-                .from(SUPABASE_TABLE)
+                .from(deck.table)
                 .update({ level, next_review: new Date(nextReview).toISOString() })
                 .eq('id', id)
                 .select('id')
                 .maybeSingle();
             if (error) throw error;
-            if (!data) throw new Error('Vocabulary item was not found.');
+            if (!data) throw new Error(`${deck.label} item was not found.`);
             return data;
         }
 
-        async function addWord(item) {
-            const { data, error } = await getClient()
-                .from(SUPABASE_TABLE)
-                .insert({
+        async function addWord(deckId, item) {
+            const deck = getDeck(deckId);
+            const payload = deck.kind === 'sentences'
+                ? {
+                    deck_id: deck.deckId,
+                    sentence: item.sentence,
+                    translation: item.translation,
+                    level: item.level,
+                    next_review: new Date(item.nextReview).toISOString()
+                }
+                : {
                     kanji: item.kanji,
                     reading: item.reading,
                     meaning: item.meaning,
@@ -546,14 +686,55 @@
                     sent: item.sent,
                     level: item.level,
                     next_review: new Date(item.nextReview).toISOString()
-                })
-                .select(columns)
+                };
+            const { data, error } = await getClient()
+                .from(deck.table)
+                .insert(payload)
+                .select(deck.columns)
                 .single();
             if (error) throw error;
             return toAppItem(data);
         }
 
-        return Object.freeze({ getItems, updateSRS, addWord });
+        async function createSentenceDeck(name) {
+            const { data, error } = await getClient()
+                .from('sentence_decks')
+                .insert({ name })
+                .select('id, name, created_at')
+                .single();
+            if (error) throw error;
+            return data;
+        }
+
+        async function renameSentenceDeck(id, name) {
+            const { data, error } = await getClient()
+                .from('sentence_decks')
+                .update({ name })
+                .eq('id', id)
+                .select('id, name, created_at')
+                .maybeSingle();
+            if (error) throw error;
+            if (!data) throw new Error('Sentence deck was not found.');
+            return data;
+        }
+
+        async function deleteSentenceDeck(id) {
+            const { error } = await getClient()
+                .from('sentence_decks')
+                .delete()
+                .eq('id', id);
+            if (error) throw error;
+        }
+
+        return Object.freeze({
+            getSentenceDecks,
+            getItems,
+            updateSRS,
+            addWord,
+            createSentenceDeck,
+            renameSentenceDeck,
+            deleteSentenceDeck
+        });
     })();
 
     const themeToggle = document.getElementById('theme-toggle');
@@ -570,17 +751,38 @@
         }
     });
 
-    /* Fetch vocabulary data from Supabase and populate the master list */
+    /* Fetch sentence decks and every deck's items, then populate the active deck */
     async function init() {
+        const failures = [];
         try {
-            masterList = await DatabaseService.getItems();
-            document.getElementById('sync-loader').style.display = 'none';
-            updateDashboard();
+            sentenceDecks = await DatabaseService.getSentenceDecks();
         } catch (error) {
-            console.error('Supabase load failed', error);
-            document.getElementById('sync-loader').style.display = 'none';
-            updateDashboard();
-            showToast(`Database load failed: ${error.message || 'Check Supabase configuration.'}`, 'var(--error)');
+            console.error('Sentence decks load failed', error);
+            sentenceDecks = [];
+            failures.push('SENTENCE DECKS');
+        }
+        rebuildDeckRegistry();
+
+        const savedDeckId = localStorage.getItem('activeDeck');
+        activeDeckId = decks[savedDeckId] ? savedDeckId : 'vocabulary';
+
+        const itemFailures = await Promise.all(deckOrder.map(async deckId => {
+            try {
+                deckItems[deckId] = await DatabaseService.getItems(deckId);
+                return null;
+            } catch (error) {
+                console.error(`${decks[deckId].label} load failed`, error);
+                deckItems[deckId] = [];
+                return decks[deckId].label;
+            }
+        }));
+        failures.push(...itemFailures.filter(Boolean));
+
+        masterList = deckItems[activeDeckId];
+        document.getElementById('sync-loader').style.display = 'none';
+        updateDashboard();
+        if (failures.length) {
+            showToast(`Database load failed: ${failures.join(', ')}`, 'var(--error)');
         }
         await processQuickAddUrl();
     }
@@ -640,7 +842,7 @@
             }
 
             if (!sent) {
-                const existingExample = masterList.find(item =>
+                const existingExample = deckItems.vocabulary.find(item =>
                     item.kanji === kanji && typeof item.sent === 'string' && item.sent.trim()
                 );
                 if (existingExample) sent = existingExample.sent.trim();
@@ -677,7 +879,7 @@
             }
             type = type || 'Unknown';
 
-            const savedItem = await DatabaseService.addWord({
+            const savedItem = await DatabaseService.addWord('vocabulary', {
                 kanji,
                 reading,
                 meaning,
@@ -687,9 +889,9 @@
                 level: 0,
                 nextReview: Date.now()
             });
-            masterList.push(savedItem);
+            deckItems.vocabulary.push(savedItem);
             updateDashboard();
-            showToast(`Quick Added: ${kanji}`, 'var(--success)');
+            showToast(`Quick Added to Vocabulary: ${kanji}`, 'var(--success)');
         } catch (error) {
             console.error('Quick add failed', error);
             showToast(`Quick add failed: ${error.message || 'Please check the URL parameters and try again.'}`, 'var(--error)');
@@ -698,16 +900,123 @@
         }
     }
 
-    /* Refresh the dashboard UI with current SRS stage counts and word lists */
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, character => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[character]);
+    }
+
+    /* Show every deck with its total and due counts, and mark the active one */
+    function renderDeckSelector(now) {
+        document.getElementById('deck-selector').innerHTML = deckOrder.map(deckId => {
+            const deck = decks[deckId];
+            const items = deckItems[deckId] || [];
+            const dueCount = items.filter(item => item.nextReview <= now).length;
+            const isActive = deckId === activeDeckId;
+            const name = deck.kind === 'sentences' ? deck.name : deck.label;
+            return `<button type="button" class="deck-tab${isActive ? ' active' : ''}" role="tab" aria-selected="${isActive}" onclick="selectDeck('${deckId}')" title="Review the ${escapeHtml(name)} deck"><span class="deck-tab-name">${escapeHtml(deck.label)}</span><span class="deck-tab-meta">${items.length} ${deck.noun} · ${dueCount} due</span></button>`;
+        }).join('');
+    }
+
+    function renderDeckControls() {
+        const controls = document.getElementById('deck-controls');
+        const deck = decks[activeDeckId];
+        if (!controls || !deck) return;
+        const isSentence = deck.kind === 'sentences';
+        controls.innerHTML = `
+            <button type="button" class="btn-deck" onclick="promptCreateSentenceDeck()" title="Create a new sentence deck">+ NEW_DECK</button>
+            ${isSentence ? `<button type="button" class="btn-deck" onclick="promptRenameSentenceDeck()" title="Rename this sentence deck">RENAME</button><button type="button" class="btn-deck danger" onclick="promptDeleteSentenceDeck()" title="Delete this sentence deck and its sentences">DELETE</button>` : ''}
+        `;
+    }
+
+    function selectDeck(deckId) {
+        if (!decks[deckId] || deckId === activeDeckId) return;
+        activeDeckId = deckId;
+        localStorage.setItem('activeDeck', deckId);
+        masterList = deckItems[activeDeckId] || [];
+        updateDashboard();
+    }
+
+    async function promptCreateSentenceDeck() {
+        const input = prompt('Name for the new sentence deck:');
+        const name = (input || '').trim();
+        if (!name) return;
+        try {
+            const row = await DatabaseService.createSentenceDeck(name);
+            sentenceDecks.push(row);
+            rebuildDeckRegistry();
+            deckItems[sentenceDeckKey(row.id)] = [];
+            activeDeckId = sentenceDeckKey(row.id);
+            localStorage.setItem('activeDeck', activeDeckId);
+            updateDashboard();
+            showToast(`Deck created: ${name}`, 'var(--success)');
+        } catch (error) {
+            console.error('Create sentence deck failed', error);
+            showToast(`Could not create deck: ${error.message || 'Please try again.'}`, 'var(--error)');
+        }
+    }
+
+    async function promptRenameSentenceDeck() {
+        const deck = decks[activeDeckId];
+        if (!deck || deck.kind !== 'sentences') return;
+        const input = prompt('Rename sentence deck:', deck.name);
+        const name = (input || '').trim();
+        if (!name || name === deck.name) return;
+        try {
+            await DatabaseService.renameSentenceDeck(deck.deckId, name);
+            const row = sentenceDecks.find(entry => entry.id === deck.deckId);
+            if (row) row.name = name;
+            rebuildDeckRegistry();
+            updateDashboard();
+            showToast(`Deck renamed: ${name}`, 'var(--success)');
+        } catch (error) {
+            console.error('Rename sentence deck failed', error);
+            showToast(`Could not rename deck: ${error.message || 'Please try again.'}`, 'var(--error)');
+        }
+    }
+
+    async function promptDeleteSentenceDeck() {
+        const deck = decks[activeDeckId];
+        if (!deck || deck.kind !== 'sentences') return;
+        const itemCount = (deckItems[activeDeckId] || []).length;
+        if (!confirm(`Delete the "${deck.name}" deck and its ${itemCount} sentence${itemCount === 1 ? '' : 's'}? This cannot be undone.`)) return;
+        try {
+            await DatabaseService.deleteSentenceDeck(deck.deckId);
+            sentenceDecks = sentenceDecks.filter(entry => entry.id !== deck.deckId);
+            delete deckItems[activeDeckId];
+            rebuildDeckRegistry();
+            activeDeckId = 'vocabulary';
+            localStorage.setItem('activeDeck', activeDeckId);
+            updateDashboard();
+            showToast(`Deck deleted: ${deck.name}`, 'var(--success)');
+        } catch (error) {
+            console.error('Delete sentence deck failed', error);
+            showToast(`Could not delete deck: ${error.message || 'Please try again.'}`, 'var(--error)');
+        }
+    }
+
+    /* Refresh the dashboard UI with current deck totals and SRS stage counts */
     function updateDashboard() {
         const now = Date.now();
+        const deck = decks[activeDeckId] || VOCAB_DECK;
+        masterList = deckItems[activeDeckId] || [];
         const dueCount = masterList.filter(i => i.nextReview <= now).length;
         document.getElementById('start-btn').innerText = `INITIALIZE_SESSION (${dueCount})`;
+        const addButton = document.getElementById('open-add-form-btn');
+        addButton.title = deck.kind === 'sentences'
+            ? `Add new sentence to the ${deck.name} deck`
+            : 'Add new word to the vocabulary deck';
+        addButton.setAttribute('aria-label', addButton.title);
+        renderDeckSelector(now);
+        renderDeckControls();
         let html = '';
         STAGES.forEach((stage, idx) => {
-            const wordsInStage = masterList.filter(i => getStageIdx(i.level) === idx);
-            const kanjiList = wordsInStage.map(w => w.kanji).join(', ') || 'No items yet';
-            html += `<div class="stat-group" id="group-${idx}" title="${stage.description}"><div class="stat-row" style="--stage-color:${stage.color}" title="${stage.description}" onclick="toggleGroup(${idx})"><span title="${wordsInStage.length} words in ${stage.name}. ${stage.description}">${stage.name} (${wordsInStage.length})</span><button class="btn-mini-play" title="Practice ${stage.name} items without SRS level penalties" aria-label="Practice ${stage.name} items without SRS level penalties" onclick="startSession('stage', ${idx}, event)">RECALL</button></div><div class="level-items">${kanjiList}</div></div>`;
+            const itemsInStage = masterList.filter(i => getStageIdx(i.level) === idx);
+            const itemList = itemsInStage.map(item => {
+                const text = deck.listText(item) || '';
+                return escapeHtml(text.length > 60 ? `${text.slice(0, 60)}…` : text);
+            }).join(deck.listSeparator) || 'No items yet';
+            html += `<div class="stat-group" id="group-${idx}" title="${stage.description}"><div class="stat-row" style="--stage-color:${stage.color}" title="${stage.description}" onclick="toggleGroup(${idx})"><span title="${itemsInStage.length} ${deck.noun} in ${stage.name}. ${stage.description}">${stage.name} (${itemsInStage.length})</span><button class="btn-mini-play" title="Practice ${stage.name} items without SRS level penalties" aria-label="Practice ${stage.name} items without SRS level penalties" onclick="startSession('stage', ${idx}, event)">RECALL</button></div><div class="level-items">${itemList}</div></div>`;
         });
         document.getElementById('stats-display').innerHTML = html;
     }
@@ -739,6 +1048,7 @@
             isPracticeMode = true;
         }
         if (reviewQueue.length === 0) return alert("Nothing to cook right now!");
+        sessionDeckId = activeDeckId;
         const reviewTasks = [];
         for (const item of reviewQueue) {
             const firstDirection = Math.random() < 0.5 ? 'ja-en' : 'en-ja';
@@ -755,6 +1065,7 @@
         currentReviewTask = null;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('card').style.display = 'block';
+        document.getElementById('card').classList.toggle('deck-sentences', isSentenceDeckId(sessionDeckId));
         document.getElementById('exit-btn').style.display = 'block';
         document.getElementById('progress-container').style.display = 'block';
         document.getElementById('progress-bar').style.width = '0%';
@@ -793,19 +1104,31 @@
         if (first) updateBackUI();
     }
 
+    function sentencePromptSize(text, maxSize, factor) {
+        const length = Array.from(text || '').length;
+        return `${Math.max(1.05, Math.min(maxSize, factor / Math.max(length, 1)))}rem`;
+    }
+
     function updateFrontPrompt() {
         if (!currentItem) return;
+        const deck = decks[sessionDeckId];
+        const isSentenceDeck = deck.kind === 'sentences';
         const displayFront = document.getElementById('display-front');
-        const prompt = currentDirection === 'en-ja' ? currentItem.meaning : (audioMode ? '👂' : currentItem.kanji);
+        const prompt = currentDirection === 'en-ja'
+            ? (deck.frontEn(currentItem) || '')
+            : (audioMode ? '👂' : (deck.frontJa(currentItem) || ''));
         document.getElementById('direction-indicator').innerText = currentDirection === 'en-ja' ? 'ENGLISH → JAPANESE' : 'JAPANESE → ENGLISH';
         displayFront.style.fontFamily = currentDirection === 'en-ja'
             ? "'JetBrains Mono', 'Fira Code', monospace"
             : "'Noto Sans JP', sans-serif";
         if (currentDirection === 'en-ja') {
-            const length = Array.from(prompt).length;
-            displayFront.style.fontSize = `${Math.max(1.5, Math.min(3.5, 42 / Math.max(length, 1)))}rem`;
+            displayFront.style.fontSize = isSentenceDeck
+                ? sentencePromptSize(prompt, 2.2, 44)
+                : `${Math.max(1.5, Math.min(3.5, 42 / Math.max(Array.from(prompt).length, 1)))}rem`;
+        } else if (isSentenceDeck) {
+            displayFront.style.fontSize = sentencePromptSize(prompt, 2.2, 36);
         } else {
-            const kanjiLength = currentItem.kanji.length;
+            const kanjiLength = (currentItem.kanji || '').length;
             displayFront.style.fontSize = kanjiLength > 8 ? "2.5rem" : kanjiLength > 4 ? "3.5rem" : "5rem";
         }
         renderKanjiPrompt(prompt);
@@ -814,22 +1137,40 @@
         if (audioMode && currentDirection === 'ja-en') playAudio();
     }
 
-    /* Populate the back of the card with definitions and examples */
+    /* Populate the back of the card with the answer for the active deck */
     function updateBackUI() {
         if (!currentItem) return;
+        const isSentenceDeck = isSentenceDeckId(sessionDeckId);
         const s = STAGES[getStageIdx(currentItem.level)];
+        const readingText = document.getElementById('reading-text');
+        const typeText = document.getElementById('type-text');
+        const infoTray = document.getElementById('info-tray');
+        const conjugationSection = document.getElementById('conjugation-section');
         document.getElementById('card-back-ui').style.borderBottom = `10px solid ${s.color}`;
-        document.getElementById('kanji-text').innerText = currentItem.kanji;
-        document.getElementById('reading-text').innerText = currentItem.reading;
-        document.getElementById('reading-text').style.color = s.color;
-        document.getElementById('meaning-text').innerText = currentItem.meaning;
-        document.getElementById('type-text').innerText = currentItem.type;
-        document.getElementById('conjugation-text').innerText = currentItem.conjugation || '';
-        document.getElementById('conjugation-section').style.display = currentItem.conjugation ? 'block' : 'none';
         document.getElementById('level-indicator').title = `SRS level ${currentItem.level}. ${s.name}: ${s.description}`;
-        document.getElementById('sent-text').innerText = currentItem.sent || "No example provided.";
         document.getElementById('level-indicator').innerText = `LVL ${currentItem.level}`;
-        document.getElementById('info-tray').style.display = "block";
+
+        if (isSentenceDeck) {
+            document.getElementById('kanji-text').innerText = currentItem.sentence;
+            document.getElementById('meaning-text').innerText = currentItem.translation;
+            readingText.style.display = 'none';
+            typeText.style.display = 'none';
+            conjugationSection.style.display = 'none';
+            infoTray.style.display = 'none';
+            return;
+        }
+
+        document.getElementById('kanji-text').innerText = currentItem.kanji;
+        readingText.innerText = currentItem.reading;
+        readingText.style.color = s.color;
+        readingText.style.display = '';
+        document.getElementById('meaning-text').innerText = currentItem.meaning;
+        typeText.innerText = currentItem.type;
+        typeText.style.display = '';
+        document.getElementById('conjugation-text').innerText = currentItem.conjugation || '';
+        conjugationSection.style.display = currentItem.conjugation ? 'block' : 'none';
+        document.getElementById('sent-text').innerText = currentItem.sent || "No example provided.";
+        infoTray.style.display = "block";
     }
 
     function renderKanjiPrompt(text) {
@@ -992,16 +1333,18 @@
     window.addEventListener('resize', () => positionKanjiInfo(activeKanjiTrigger));
     window.addEventListener('scroll', () => positionKanjiInfo(activeKanjiTrigger), true);
 
-    /* Trigger browser text-to-speech for the current reading */
+    /* Trigger browser text-to-speech for the current Japanese text */
     function playAudio(event) {
         if (event) event.stopPropagation();
-        if (!currentItem || !currentItem.reading) return;
+        const deck = decks[sessionDeckId];
+        const text = currentItem && deck ? deck.audioText(currentItem) : '';
+        if (!text) return;
         if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
             showToast('Audio is not supported in this browser.');
             return;
         }
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(currentItem.reading);
+        const u = new SpeechSynthesisUtterance(text);
         u.lang = 'ja-JP';
         const japaneseVoice = window.speechSynthesis.getVoices().find(voice => voice.lang.toLowerCase().startsWith('ja'));
         if (japaneseVoice) u.voice = japaneseVoice;
@@ -1093,7 +1436,7 @@
             if (!isPracticeMode) {
                 const ivs = [0, 14400000, 28800000, 86400000, 172800000, 604800000, 1209600000, 2592000000, 10000000000];
                 const nextReview = Date.now() + ivs[Math.min(resultingLevel, 8)];
-                const localItem = masterList.find(item => item.id === oldItem.id);
+                const localItem = deckItems[sessionDeckId].find(item => item.id === oldItem.id);
                 if (localItem) {
                     localItem.level = resultingLevel;
                     localItem.nextReview = nextReview;
@@ -1102,7 +1445,7 @@
                 const stage = STAGES[getStageIdx(resultingLevel)];
                 showToast(`SRS ${passed ? '↑' : '↓'} ${stage.name} (LVL ${resultingLevel})`, stage.color);
 
-                DatabaseService.updateSRS(oldItem.id, resultingLevel, nextReview).catch(error => {
+                DatabaseService.updateSRS(sessionDeckId, oldItem.id, resultingLevel, nextReview).catch(error => {
                     console.error('Supabase SRS update failed', error);
                     showToast(`SRS save failed: ${error.message || 'Please try again.'}`, 'var(--error)');
                 });
@@ -1124,7 +1467,7 @@
     }
 
     /* Toggle visibility of the example sentence tray */
-    function toggleDetails(e) { if(e) e.stopPropagation(); const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
+    function toggleDetails(e) { if(e) e.stopPropagation(); if (isSentenceDeckId(sessionDeckId)) return; const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
 
     const AUTOFILL_FIELD_IDS = ['new-reading', 'new-meaning', 'new-type', 'new-example'];
 
@@ -1278,10 +1621,35 @@
             if (e.key === '2') submitResult(false);
             if (e.key === 'f' || e.key === 'F') toggleDetails();
         }
-        if ((e.key === 'v' || e.key === 'V') && currentDirection === 'ja-en') playAudio();
+        if ((e.key === 'v' || e.key === 'V') && (isFlipped || currentDirection === 'ja-en')) playAudio();
     });
     function toggleGroup(idx) { document.querySelectorAll('.stat-group').forEach((g, i) => { if(i === idx) g.classList.toggle('active'); else g.classList.remove('active'); }); }
-    function toggleAddForm() { document.getElementById('add-form-overlay').classList.toggle('active'); }
+    function configureAddForm() {
+        const isSentenceDeck = isSentenceDeckId(activeDeckId);
+        document.getElementById('add-form-title').innerText = isSentenceDeck ? 'CAPTURE_SENTENCE' : 'CAPTURE_DATA';
+        document.getElementById('vocab-form-fields').hidden = isSentenceDeck;
+        document.getElementById('sentence-form-fields').hidden = !isSentenceDeck;
+        if (isSentenceDeck) {
+            const deckSelect = document.getElementById('new-sentence-deck');
+            deckSelect.innerHTML = deckOrder.filter(isSentenceDeckId).map(deckId =>
+                `<option value="${deckId}">${escapeHtml(decks[deckId].name)}</option>`
+            ).join('');
+            deckSelect.value = activeDeckId;
+        }
+        const submitButton = document.getElementById('add-submit-btn');
+        submitButton.innerText = isSentenceDeck ? 'SAVE_SENTENCE' : 'CAPTURE_DATA';
+        submitButton.title = isSentenceDeck
+            ? 'Add new sentence to the selected sentence deck'
+            : 'Add new word to the vocabulary deck';
+    }
+    function toggleAddForm() {
+        const overlay = document.getElementById('add-form-overlay');
+        if (!overlay.classList.contains('active')) configureAddForm();
+        overlay.classList.toggle('active');
+    }
+    function submitNewItem() {
+        return isSentenceDeckId(activeDeckId) ? submitNewSentence() : submitNewWord();
+    }
     async function submitNewWord() {
         const kanji = document.getElementById('new-kanji').value.trim();
         const reading = document.getElementById('new-reading').value.trim();
@@ -1310,8 +1678,8 @@
         };
 
         try {
-            const savedItem = await DatabaseService.addWord(newItem);
-            masterList.push(savedItem);
+            const savedItem = await DatabaseService.addWord('vocabulary', newItem);
+            deckItems.vocabulary.push(savedItem);
             updateDashboard();
 
             document.getElementById('new-kanji').value = '';
@@ -1321,12 +1689,53 @@
             document.getElementById('new-example').value = '';
             clearAutofilledFields();
             toggleAddForm();
-            showToast('Word added to the database.', 'var(--success)');
+            showToast('Word added to the vocabulary deck.', 'var(--success)');
         } catch (error) {
             console.error('Supabase word insert failed', error);
             showToast(`Could not add word: ${error.message || 'Please try again.'}`, 'var(--error)');
         } finally {
             btn.innerText = 'CAPTURE_DATA';
+            btn.disabled = false;
+        }
+    }
+    async function submitNewSentence() {
+        const sentence = document.getElementById('new-sentence').value.trim();
+        const translation = document.getElementById('new-translation').value.trim();
+        const deckKey = document.getElementById('new-sentence-deck').value;
+        const deck = decks[deckKey];
+        const btn = document.getElementById('add-submit-btn');
+
+        if (!deck || deck.kind !== 'sentences') {
+            alert('Please choose a sentence deck.');
+            return;
+        }
+        if (!sentence || !translation) {
+            alert('Please fill in both the Japanese sentence and its English translation.');
+            return;
+        }
+
+        btn.innerText = "SAVING_SENTENCE...";
+        btn.disabled = true;
+
+        try {
+            const savedItem = await DatabaseService.addWord(deckKey, {
+                sentence,
+                translation,
+                level: 0,
+                nextReview: Date.now()
+            });
+            deckItems[deckKey].push(savedItem);
+            updateDashboard();
+
+            document.getElementById('new-sentence').value = '';
+            document.getElementById('new-translation').value = '';
+            toggleAddForm();
+            showToast(`Sentence added to ${deck.name}.`, 'var(--success)');
+        } catch (error) {
+            console.error('Supabase sentence insert failed', error);
+            showToast(`Could not add sentence: ${error.message || 'Please try again.'}`, 'var(--error)');
+        } finally {
+            btn.innerText = 'SAVE_SENTENCE';
             btn.disabled = false;
         }
     }
