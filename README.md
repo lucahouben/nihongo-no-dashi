@@ -4,8 +4,8 @@ A single-page Japanese vocabulary and sentence flashcard app with spaced repetit
 
 ## Features
 
-- Review the vocabulary deck or any of your named sentence decks from the dashboard. Every deck keeps its own items, due counts, stages, and review schedule.
-- Create, rename, and delete sentence decks. The vocabulary deck stays as a single deck and is unchanged.
+- Review the built-in vocabulary deck or any of your named vocabulary or sentence decks from the dashboard. Every deck keeps its own items, due counts, stages, and review schedule.
+- Create, rename, and delete named decks. A new deck can be a vocabulary deck with the full set of word fields or a sentence deck with a Japanese sentence and translation. The built-in vocabulary deck stays as the default deck.
 - Review each item in both directions: Japanese → English and English → Japanese. Vocabulary answers include kanji, reading, meaning, type, conjugation, and an example sentence; sentence answers show the full Japanese sentence and its translation.
 - Review cards due for repetition, or practice all items or a selected memory stage without changing SRS data.
 - Track vocabulary through five themed stages:
@@ -18,17 +18,26 @@ A single-page Japanese vocabulary and sentence flashcard app with spaced repetit
   | 7–8 | `COMPILED` | Deeply integrated vocabulary |
   | 9+ | `FIRMWARE` | Permanently mastered / Read-Only Memory |
 
-- Add words or sentences manually. Vocabulary capture supports dictionary auto-fill and example lookup powered by Jotoba. The `+` button adapts to the active deck; the sentence form also lets you pick which sentence deck receives the item, defaulting to the active one.
+- Add words or sentences manually. Vocabulary capture supports dictionary auto-fill and example lookup powered by Jotoba. The `+` button adapts to the active deck; the capture form lets you pick which vocabulary or sentence deck receives the item, defaulting to the active one.
 - View kanji readings, definitions, radicals, and stroke counts from the card prompt. The interface uses KanjiAPI and KanjiVG for these details.
 - Play Japanese pronunciation with the browser's speech synthesis from the front of the card or the revealed answer (or press `V`). Sentence cards speak the full Japanese sentence.
 - Switch between dark and light themes; the interface is responsive and includes accessible labels and tooltips.
 - Add a word from a URL with `kanji`, `reading`, `meaning`, `type`, and `example` parameters. Missing reading, meaning, or type are looked up when possible; an example sentence is also searched for when one is not provided. URL quick-add always targets the vocabulary deck.
+- Open `BETA_EMULINGO` from the dashboard to load a local GBA ROM into an isolated EmulatorJS player. ROMs are read in the browser and never uploaded, and battery saves persist locally for the same ROM. Use `TRANSLATE_SCREEN` to send a paused frame to the Gemini-backed `translate-screen` function, review the Japanese text and English translation, and add suggested vocabulary or dialogue lines to a chosen deck.
 
 ## Run the app
 
 The app is a static `index.html` page and does not require a build step or package installation. Serve the project directory with any static web server, or deploy it to a static host such as GitHub Pages or Vercel. Use HTTPS so browser integrations and Supabase requests work as expected.
 
 The page loads Supabase JS and fonts from external CDNs. Dictionary and kanji lookup features also require network access to their respective services.
+
+## Emulingo beta
+
+`BETA_EMULINGO` opens a GBA player powered by [EmulatorJS](https://emulatorjs.org/). The emulator runtime and cores load from `cdn.emulatorjs.org` on first use, so this mode needs network access. Choose a `.gba`, `.agb`, or `.zip` ROM from your device; the ROM is read in the browser and is not uploaded.
+
+Battery saves are written to the browser's IndexedDB and reload automatically for the same ROM. Use `SAVE_AND_CLOSE` or `EJECT_ROM` to flush the current save before leaving. Save states and save-file export are available from the in-emulator menu. The emulator runs in an isolated same-origin iframe so it does not interfere with the flashcard app.
+
+`TRANSLATE_SCREEN` pauses the game, captures the emulator canvas at 2× resolution, and sends the frame to the `translate-screen` Edge Function. The panel shows the detected Japanese, an English translation, a reading, and optional notes, plus suggested vocabulary and dialogue lines. Each candidate has a deck selector and an `ADD` button: vocabulary goes to a vocabulary deck and sentences go to a sentence deck. Closing the panel resumes the game. Capture is always user-triggered; nothing is extracted automatically.
 
 ## Supabase setup
 
@@ -111,11 +120,26 @@ create policy "Public can update sentences"
 
 If you already created the original single `sentences` table, run `supabase/sql/sentence_decks.sql` instead. It adds `sentence_decks`, adds `sentences.deck_id`, and moves existing sentences into a deck named `Sentences`.
 
+Then run `supabase/sql/named_decks.sql`. It adds `sentence_decks.kind` so the shared deck registry can hold both vocabulary and sentence decks, adds `vocabulary.deck_id` for items in named vocabulary decks, and allows deleting a named vocabulary deck and its items. Items in the built-in vocabulary deck have `deck_id = null`.
+
 The app's Supabase URL and browser-safe publishable/anon key are configured in the constants near the top of the script in `index.html`. Never put a Supabase `service_role` key in browser code.
 
-These example policies allow any visitor to read, add, update, and delete decks and sentences. This is suitable only for a public, shared dataset. For private data or user-specific collections, add Supabase Auth and restrict the Row Level Security policies before deployment. Deleting a sentence deck deletes its sentences through the `on delete cascade` foreign key.
+These example policies allow any visitor to read, add, update, and delete decks, sentences, and vocabulary items. This is suitable only for a public, shared dataset. For private data or user-specific collections, add Supabase Auth and restrict the Row Level Security policies before deployment. Deleting a named deck deletes its items through the `on delete cascade` foreign key.
 
-The database column names must stay in sync with the `VOCAB_DECK`, `makeSentenceDeck`, and `DatabaseService` mappings in `index.html`. `next_review` is stored as a timestamp; the app converts it to milliseconds for review calculations and back to an ISO timestamp when saving.
+The database column names must stay in sync with the `VOCAB_DECK`, `makeVocabDeck`, `makeSentenceDeck`, and `DatabaseService` mappings in `index.html`. `sentence_decks.kind` is either `vocabulary` or `sentences`. `next_review` is stored as a timestamp; the app converts it to milliseconds for review calculations and back to an ISO timestamp when saving.
+
+## Screen translation setup
+
+`TRANSLATE_SCREEN` is backed by `supabase/functions/translate-screen`, which sends the captured frame to Gemini. The function reads `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) from the project's Edge Function secrets and is deployed without JWT verification because the browser app does not sign users in.
+
+```sh
+supabase secrets set GEMINI_API_KEY=...
+supabase functions deploy translate-screen --no-verify-jwt
+```
+
+Set `VISION_MODEL` to pin a specific Gemini vision model. Otherwise the function tries the listed `gemini-*-flash` models in order and retries when a model is unavailable or rate-limited.
+
+Because the function is public, anyone who knows the project URL and publishable key can invoke it. Configure Gemini quota limits before sharing the app widely.
 
 ## Spaced repetition
 

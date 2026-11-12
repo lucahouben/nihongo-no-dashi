@@ -329,6 +329,103 @@
         #clear-btn { color: var(--muted); border-color: var(--muted); }
         #clear-btn:hover, #clear-btn:focus-visible { color: var(--text); border-color: var(--text); }
         #lookup-status { min-height: 1em; margin-top: 5px; color: var(--muted); font-size: 0.7rem; }
+        #deck-form-overlay {
+            position: fixed; inset: 0; z-index: 2500; display: flex; align-items: center; justify-content: center;
+            padding: 20px; background: rgba(8, 10, 20, 0.72); backdrop-filter: blur(4px);
+        }
+        #deck-form-overlay[hidden] { display: none; }
+        .deck-form-card {
+            width: 100%; max-width: 380px; padding: 24px; border: 1px solid var(--card-border);
+            border-radius: 12px; background: var(--card-bg); box-shadow: var(--panel-shadow); text-align: left;
+        }
+        .deck-form-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .deck-form-actions { display: flex; gap: 8px; margin-top: 20px; }
+        .deck-form-actions .btn-main { flex: 1; width: auto; }
+        .deck-form-actions .btn-secondary { flex: 0 0 auto; width: auto; margin-top: 0; padding: 12px 16px; }
+        #emulingo-overlay {
+            position: fixed; inset: 0; z-index: 1800; display: none; flex-direction: column;
+            padding: 16px; background: var(--dark-kombu); color: var(--text);
+        }
+        #emulingo-overlay.active { display: flex; }
+        .emulingo-header { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+        .emulingo-header .dash-title { margin-bottom: 3px; }
+        #emulingo-body { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; }
+        #emulingo-launcher {
+            max-width: 520px; margin: auto; padding: 24px; border: 1px solid var(--card-border);
+            border-radius: 12px; background: var(--card-bg); text-align: center;
+        }
+        #emulingo-launcher[hidden], #emulingo-stage[hidden] { display: none; }
+        .emulingo-copy { margin: 0 0 18px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
+        #emulingo-status { min-height: 1.2em; margin: 14px 0 0; color: var(--dashi-gold); font-size: 0.72rem; }
+        #emulingo-stage { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; gap: 10px; }
+        #emulingo-frame-wrap {
+            position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden;
+            border: 1px solid var(--card-border); border-radius: 12px; background: #000;
+        }
+        #emulingo-frame { display: block; width: 100%; height: 100%; border: 0; background: #000; }
+        .emulingo-loading {
+            position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.86); color: var(--accent);
+            font: 700 0.7rem 'JetBrains Mono', 'Fira Code', monospace; letter-spacing: 1px; text-transform: uppercase;
+        }
+        .emulingo-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 8px; }
+        .emulingo-actions .btn-main { width: auto; margin-top: 0; flex: 1 1 180px; }
+        .emulingo-actions .btn-secondary { width: auto; margin-top: 0; flex: 1 1 180px; }
+        .emulingo-hint { margin: 0; color: var(--muted); font-size: 0.62rem; line-height: 1.5; text-align: left; }
+        #emulingo-capture-overlay {
+            position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center;
+            padding: 16px; background: rgba(8, 10, 20, 0.8); backdrop-filter: blur(4px);
+        }
+        #emulingo-capture-overlay[hidden] { display: none; }
+        .emulingo-capture-card {
+            width: 100%; max-width: 680px; max-height: calc(100dvh - 40px); overflow-y: auto;
+            padding: 20px; border: 1px solid var(--card-border); border-radius: 14px;
+            background: var(--card-bg); box-shadow: var(--panel-shadow); text-align: left;
+        }
+        .emulingo-capture-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .emulingo-capture-image {
+            display: block; width: 100%; max-width: 380px; margin: 0 auto 14px;
+            border: 1px solid var(--card-border); border-radius: 8px; background: #000;
+            image-rendering: pixelated;
+        }
+        .emulingo-capture-image[hidden] { display: none; }
+        #emulingo-capture-status { min-height: 1.2em; margin: 0 0 12px; color: var(--dashi-gold); font-size: 0.72rem; line-height: 1.5; }
+        .emulingo-capture-section { margin-top: 16px; }
+        .emulingo-capture-section h3 {
+            margin: 0 0 8px; color: var(--dashi-gold); font: 800 0.64rem 'JetBrains Mono', 'Fira Code', monospace;
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        .emulingo-capture-text {
+            margin: 0; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 8px;
+            background: var(--dark-kombu); color: var(--text); font-size: 0.82rem; line-height: 1.6;
+            white-space: pre-wrap; overflow-wrap: anywhere;
+        }
+        .emulingo-capture-text.japanese { font-family: 'Noto Sans JP', sans-serif; font-size: 1rem; font-weight: 700; }
+        .emulingo-capture-muted { margin: 4px 0 0; color: var(--muted); font-size: 0.72rem; line-height: 1.5; }
+        .emulingo-capture-empty { margin: 0; color: var(--muted); font-size: 0.74rem; line-height: 1.5; }
+        .emulingo-capture-item {
+            margin-bottom: 9px; padding: 10px 12px; border: 1px solid var(--card-border);
+            border-radius: 9px; background: var(--dark-kombu);
+        }
+        .emulingo-capture-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+        .emulingo-capture-item-title { color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-size: 1.02rem; font-weight: 800; line-height: 1.35; }
+        .emulingo-capture-item-reading { color: var(--dashi-gold); font-family: 'Noto Sans JP', sans-serif; font-size: 0.72rem; }
+        .emulingo-capture-item-meta { margin-top: 4px; color: var(--muted); font-size: 0.7rem; line-height: 1.5; overflow-wrap: anywhere; }
+        .emulingo-capture-add {
+            flex: 0 0 auto; width: auto; margin: 0; padding: 8px 10px; border-radius: 7px;
+            font-size: 0.62rem; line-height: 1;
+        }
+        .emulingo-capture-add:disabled { opacity: 0.55; cursor: default; }
+        .emulingo-capture-deck { margin: 10px 0; }
+        .emulingo-capture-deck select { font-size: 0.82rem; }
+        @media (max-width: 480px) {
+            #emulingo-overlay { padding: 10px; }
+            .emulingo-header { align-items: flex-start; }
+            .emulingo-header .btn-deck { flex: 0 0 auto; }
+            #emulingo-launcher { padding: 18px; }
+            #emulingo-capture-overlay { padding: 8px; }
+            .emulingo-capture-card { max-height: calc(100dvh - 16px); padding: 15px; }
+        }
         #sync-loader { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--dark-kombu); }
         .spinner { width: 40px; height: 40px; margin-bottom: 20px; border: 3px solid var(--card-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -421,6 +518,7 @@
             <button class="btn-add-toggle" type="button" title="Close the capture form" aria-label="Close the capture form" onclick="toggleAddForm()">×</button>
         </div>
         <div id="vocab-form-fields">
+            <div class="form-group"><label for="new-vocab-deck">Deck</label><select id="new-vocab-deck"></select></div>
             <div class="form-group">
                 <label for="new-kanji">Kanji</label>
                 <div class="kanji-input-row">
@@ -443,6 +541,30 @@
         <button class="btn-main" title="Add new item to the active deck" onclick="submitNewItem()" id="add-submit-btn" style="margin-top:auto;">CAPTURE_DATA</button>
     </div>
 
+    <div id="deck-form-overlay" hidden>
+        <div class="deck-form-card" role="dialog" aria-modal="true" aria-labelledby="deck-form-title">
+            <div class="deck-form-header">
+                <h2 class="dash-title" id="deck-form-title">NEW_DECK</h2>
+                <button class="btn-add-toggle" type="button" title="Close the new deck form" aria-label="Close the new deck form" onclick="closeDeckForm()">×</button>
+            </div>
+            <div class="form-group">
+                <label for="new-deck-name">Deck name</label>
+                <input type="text" id="new-deck-name" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="new-deck-kind">Deck type</label>
+                <select id="new-deck-kind">
+                    <option value="vocabulary">Vocabulary (full fields)</option>
+                    <option value="sentences">Sentences (Japanese + translation)</option>
+                </select>
+            </div>
+            <div class="deck-form-actions">
+                <button class="btn-main" type="button" onclick="submitNewDeck()" id="new-deck-submit">CREATE_DECK</button>
+                <button class="btn-secondary" type="button" onclick="closeDeckForm()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
     <div id="dashboard">
         <div class="dash-header"><div><h1 class="dash-title">日本語のダシ</h1><p class="dash-tagline">CYBERNETIC MEMORY BUFFER</p></div><button class="btn-add-toggle" id="open-add-form-btn" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
         <div id="deck-selector" class="deck-selector" role="tablist" aria-label="Select a deck"></div>
@@ -450,6 +572,42 @@
         <div id="stats-display" class="stats-list"></div>
         <button class="btn-main" id="start-btn" title="Start reviewing due cards" onclick="startSession('due')">INITIALIZE_SESSION (0)</button>
         <button class="btn-secondary" title="Practice all items without SRS level penalties" onclick="startSession('all')">&gt; MEMORY_SIMULATION (all)</button>
+        <button class="btn-secondary" id="emulingo-open-btn" title="Open the beta GBA translation feature" onclick="openEmulingo()">&gt; BETA_EMULINGO</button>
+    </div>
+
+    <div id="emulingo-overlay" aria-hidden="true">
+        <div class="emulingo-header">
+            <div><h1 class="dash-title">EMULINGO_BETA</h1><p class="dash-tagline">GBA CAPTURE LINK</p></div>
+            <button class="btn-deck" type="button" title="Return to the dashboard" onclick="closeEmulingo()">&gt; RETURN_TO_DASHBOARD</button>
+        </div>
+        <div id="emulingo-body">
+            <div id="emulingo-launcher">
+                <p class="emulingo-copy">Load a GBA ROM stored on this device. The ROM stays in your browser and is not uploaded.</p>
+                <input type="file" id="rom-file-input" accept=".gba,.agb,.zip" hidden>
+                <button class="btn-main" type="button" onclick="document.getElementById('rom-file-input').click()">LOAD_ROM</button>
+                <p id="emulingo-status" aria-live="polite"></p>
+            </div>
+            <div id="emulingo-stage" hidden>
+                <div id="emulingo-frame-wrap"></div>
+                <div class="emulingo-actions">
+                    <button class="btn-main" type="button" id="emulingo-translate-btn" onclick="captureEmulingoScreen()">TRANSLATE_SCREEN</button>
+                    <button class="btn-secondary" type="button" onclick="closeEmulingo()">&gt; SAVE_AND_CLOSE</button>
+                    <button class="btn-secondary" type="button" onclick="ejectEmulingoRom()">&gt; EJECT_ROM</button>
+                </div>
+                <p class="emulingo-hint">Battery saves are stored in this browser and reload automatically for the same ROM. Use the in-emulator menu for save states and save-file export.</p>
+            </div>
+        </div>
+        <div id="emulingo-capture-overlay" hidden onclick="if (event.target === this) closeEmulingoCapture()">
+            <div class="emulingo-capture-card" role="dialog" aria-modal="true" aria-labelledby="emulingo-capture-title">
+                <div class="emulingo-capture-header">
+                    <h2 class="dash-title" id="emulingo-capture-title">SCREEN_TRANSLATION</h2>
+                    <button class="btn-add-toggle" type="button" title="Close translation and resume the game" aria-label="Close translation and resume the game" onclick="closeEmulingoCapture()">×</button>
+                </div>
+                <img id="emulingo-capture-image" class="emulingo-capture-image" alt="Captured game screen" hidden>
+                <p id="emulingo-capture-status" aria-live="polite"></p>
+                <div id="emulingo-capture-result" hidden></div>
+            </div>
+        </div>
     </div>
 
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
@@ -525,6 +683,7 @@
     const VOCAB_DECK = Object.freeze({
         id: 'vocabulary',
         kind: 'vocabulary',
+        deckId: null,
         label: 'VOCABULARY',
         noun: 'words',
         table: 'vocabulary',
@@ -554,17 +713,35 @@
         });
     }
 
+    function makeVocabDeck(row) {
+        return Object.freeze({
+            id: `vocab:${row.id}`,
+            kind: 'vocabulary',
+            deckId: row.id,
+            name: row.name,
+            label: String(row.name || 'VOCABULARY').toUpperCase(),
+            noun: 'words',
+            table: 'vocabulary',
+            columns: VOCAB_COLUMNS,
+            frontJa: item => item.kanji,
+            frontEn: item => item.meaning,
+            listText: item => item.kanji,
+            listSeparator: ', ',
+            audioText: item => item.reading
+        });
+    }
+
     let decks = { vocabulary: VOCAB_DECK };
     let deckOrder = ['vocabulary'];
-    let sentenceDecks = [];
+    let namedDecks = [];
     let deckItems = { vocabulary: [] };
     let activeDeckId = 'vocabulary';
 
     function rebuildDeckRegistry() {
         decks = { vocabulary: VOCAB_DECK };
         deckOrder = ['vocabulary'];
-        sentenceDecks.forEach(row => {
-            const deck = makeSentenceDeck(row);
+        namedDecks.forEach(row => {
+            const deck = row.kind === 'vocabulary' ? makeVocabDeck(row) : makeSentenceDeck(row);
             decks[deck.id] = deck;
             deckOrder.push(deck.id);
         });
@@ -580,8 +757,8 @@
         return decks[deckId]?.kind === 'sentences';
     }
 
-    function sentenceDeckKey(id) {
-        return `sentence:${id}`;
+    function namedDeckKey(kind, id) {
+        return kind === 'sentences' ? `sentence:${id}` : `vocab:${id}`;
     }
 
     let masterList = [], reviewQueue = [], reviewPromptQueue = [], currentItem = null, currentReviewTask = null;
@@ -628,10 +805,10 @@
             };
         }
 
-        async function getSentenceDecks() {
+        async function getDecks() {
             const { data, error } = await getClient()
                 .from('sentence_decks')
-                .select('id, name, created_at')
+                .select('id, name, kind, created_at')
                 .order('created_at', { ascending: true });
             if (error) throw error;
             return data || [];
@@ -643,7 +820,8 @@
             const rows = [];
             for (let from = 0; ; from += pageSize) {
                 let query = getClient().from(deck.table).select(deck.columns);
-                if (deck.kind === 'sentences') query = query.eq('deck_id', deck.deckId);
+                if (deck.deckId) query = query.eq('deck_id', deck.deckId);
+                else query = query.is('deck_id', null);
                 const { data, error } = await query
                     .order('created_at', { ascending: true })
                     .range(from, from + pageSize - 1);
@@ -678,6 +856,7 @@
                     next_review: new Date(item.nextReview).toISOString()
                 }
                 : {
+                    deck_id: deck.deckId || null,
                     kanji: item.kanji,
                     reading: item.reading,
                     meaning: item.meaning,
@@ -696,29 +875,29 @@
             return toAppItem(data);
         }
 
-        async function createSentenceDeck(name) {
+        async function createDeck(name, kind) {
             const { data, error } = await getClient()
                 .from('sentence_decks')
-                .insert({ name })
-                .select('id, name, created_at')
+                .insert({ name, kind })
+                .select('id, name, kind, created_at')
                 .single();
             if (error) throw error;
             return data;
         }
 
-        async function renameSentenceDeck(id, name) {
+        async function renameDeck(id, name) {
             const { data, error } = await getClient()
                 .from('sentence_decks')
                 .update({ name })
                 .eq('id', id)
-                .select('id, name, created_at')
+                .select('id, name, kind, created_at')
                 .maybeSingle();
             if (error) throw error;
-            if (!data) throw new Error('Sentence deck was not found.');
+            if (!data) throw new Error('Deck was not found.');
             return data;
         }
 
-        async function deleteSentenceDeck(id) {
+        async function deleteDeck(id) {
             const { error } = await getClient()
                 .from('sentence_decks')
                 .delete()
@@ -726,14 +905,26 @@
             if (error) throw error;
         }
 
+        async function translateScreen(image) {
+            const { data, error } = await getClient().functions.invoke('translate-screen', {
+                body: { image }
+            });
+            if (error) throw error;
+            if (!data || data.success === false) {
+                throw new Error(data?.error || 'Screen translation failed.');
+            }
+            return data.result || {};
+        }
+
         return Object.freeze({
-            getSentenceDecks,
+            getDecks,
             getItems,
             updateSRS,
             addWord,
-            createSentenceDeck,
-            renameSentenceDeck,
-            deleteSentenceDeck
+            createDeck,
+            renameDeck,
+            deleteDeck,
+            translateScreen
         });
     })();
 
@@ -755,11 +946,11 @@
     async function init() {
         const failures = [];
         try {
-            sentenceDecks = await DatabaseService.getSentenceDecks();
+            namedDecks = await DatabaseService.getDecks();
         } catch (error) {
-            console.error('Sentence decks load failed', error);
-            sentenceDecks = [];
-            failures.push('SENTENCE DECKS');
+            console.error('Decks load failed', error);
+            namedDecks = [];
+            failures.push('DECKS');
         }
         rebuildDeckRegistry();
 
@@ -922,10 +1113,10 @@
         const controls = document.getElementById('deck-controls');
         const deck = decks[activeDeckId];
         if (!controls || !deck) return;
-        const isSentence = deck.kind === 'sentences';
+        const canManage = Boolean(deck.deckId);
         controls.innerHTML = `
-            <button type="button" class="btn-deck" onclick="promptCreateSentenceDeck()" title="Create a new sentence deck">+ NEW_DECK</button>
-            ${isSentence ? `<button type="button" class="btn-deck" onclick="promptRenameSentenceDeck()" title="Rename this sentence deck">RENAME</button><button type="button" class="btn-deck danger" onclick="promptDeleteSentenceDeck()" title="Delete this sentence deck and its sentences">DELETE</button>` : ''}
+            <button type="button" class="btn-deck" onclick="openDeckForm()" title="Create a new deck">+ NEW_DECK</button>
+            ${canManage ? `<button type="button" class="btn-deck" onclick="promptRenameDeck()" title="Rename this deck">RENAME</button><button type="button" class="btn-deck danger" onclick="promptDeleteDeck()" title="Delete this deck and its ${escapeHtml(deck.noun)}">DELETE</button>` : ''}
         `;
     }
 
@@ -937,52 +1128,80 @@
         updateDashboard();
     }
 
-    async function promptCreateSentenceDeck() {
-        const input = prompt('Name for the new sentence deck:');
-        const name = (input || '').trim();
-        if (!name) return;
+    function openDeckForm() {
+        document.getElementById('new-deck-name').value = '';
+        document.getElementById('new-deck-kind').value = 'vocabulary';
+        document.getElementById('deck-form-overlay').hidden = false;
+        document.getElementById('new-deck-name').focus();
+    }
+
+    function closeDeckForm() {
+        document.getElementById('deck-form-overlay').hidden = true;
+    }
+
+    document.getElementById('new-deck-name').addEventListener('keydown', event => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        submitNewDeck();
+    });
+
+    async function submitNewDeck() {
+        const nameInput = document.getElementById('new-deck-name');
+        const name = nameInput.value.trim();
+        const kind = document.getElementById('new-deck-kind').value === 'sentences' ? 'sentences' : 'vocabulary';
+        if (!name) {
+            nameInput.focus();
+            return;
+        }
+        const btn = document.getElementById('new-deck-submit');
+        btn.innerText = 'CREATING...';
+        btn.disabled = true;
         try {
-            const row = await DatabaseService.createSentenceDeck(name);
-            sentenceDecks.push(row);
+            const row = await DatabaseService.createDeck(name, kind);
+            namedDecks.push(row);
             rebuildDeckRegistry();
-            deckItems[sentenceDeckKey(row.id)] = [];
-            activeDeckId = sentenceDeckKey(row.id);
+            activeDeckId = namedDeckKey(kind, row.id);
+            deckItems[activeDeckId] = [];
             localStorage.setItem('activeDeck', activeDeckId);
+            closeDeckForm();
             updateDashboard();
             showToast(`Deck created: ${name}`, 'var(--success)');
         } catch (error) {
-            console.error('Create sentence deck failed', error);
+            console.error('Create deck failed', error);
             showToast(`Could not create deck: ${error.message || 'Please try again.'}`, 'var(--error)');
+        } finally {
+            btn.innerText = 'CREATE_DECK';
+            btn.disabled = false;
         }
     }
 
-    async function promptRenameSentenceDeck() {
+    async function promptRenameDeck() {
         const deck = decks[activeDeckId];
-        if (!deck || deck.kind !== 'sentences') return;
-        const input = prompt('Rename sentence deck:', deck.name);
+        if (!deck || !deck.deckId) return;
+        const input = prompt('Rename deck:', deck.name);
         const name = (input || '').trim();
         if (!name || name === deck.name) return;
         try {
-            await DatabaseService.renameSentenceDeck(deck.deckId, name);
-            const row = sentenceDecks.find(entry => entry.id === deck.deckId);
+            await DatabaseService.renameDeck(deck.deckId, name);
+            const row = namedDecks.find(entry => entry.id === deck.deckId);
             if (row) row.name = name;
             rebuildDeckRegistry();
             updateDashboard();
             showToast(`Deck renamed: ${name}`, 'var(--success)');
         } catch (error) {
-            console.error('Rename sentence deck failed', error);
+            console.error('Rename deck failed', error);
             showToast(`Could not rename deck: ${error.message || 'Please try again.'}`, 'var(--error)');
         }
     }
 
-    async function promptDeleteSentenceDeck() {
+    async function promptDeleteDeck() {
         const deck = decks[activeDeckId];
-        if (!deck || deck.kind !== 'sentences') return;
+        if (!deck || !deck.deckId) return;
         const itemCount = (deckItems[activeDeckId] || []).length;
-        if (!confirm(`Delete the "${deck.name}" deck and its ${itemCount} sentence${itemCount === 1 ? '' : 's'}? This cannot be undone.`)) return;
+        if (!confirm(`Delete the "${deck.name}" deck and its ${itemCount} ${deck.noun}? This cannot be undone.`)) return;
         try {
-            await DatabaseService.deleteSentenceDeck(deck.deckId);
-            sentenceDecks = sentenceDecks.filter(entry => entry.id !== deck.deckId);
+            await DatabaseService.deleteDeck(deck.deckId);
+            namedDecks = namedDecks.filter(entry => entry.id !== deck.deckId);
             delete deckItems[activeDeckId];
             rebuildDeckRegistry();
             activeDeckId = 'vocabulary';
@@ -990,8 +1209,434 @@
             updateDashboard();
             showToast(`Deck deleted: ${deck.name}`, 'var(--success)');
         } catch (error) {
-            console.error('Delete sentence deck failed', error);
+            console.error('Delete deck failed', error);
             showToast(`Could not delete deck: ${error.message || 'Please try again.'}`, 'var(--error)');
+        }
+    }
+
+    /* --- Emulingo beta: isolated GBA emulator shell ---------------------- */
+    let emulingoRomUrl = null;
+    let emulingoGameId = null;
+    let emulingoGameName = '';
+    let emulingoReadyTimer = null;
+    let emulingoCleanupTimer = null;
+    let emulingoTranslation = null;
+    let emulingoCaptureRequest = 0;
+    let emulingoCaptureWasPaused = false;
+
+    function openEmulingo() {
+        const overlay = document.getElementById('emulingo-overlay');
+        overlay.classList.add('active');
+        overlay.setAttribute('aria-hidden', 'false');
+        hideEmulingoCapture();
+        resetEmulingoLauncher();
+        document.getElementById('rom-file-input').value = '';
+    }
+
+    function closeEmulingo() {
+        hideEmulingoCapture();
+        saveEmulingoProgress();
+        destroyEmulingoFrame();
+        const overlay = document.getElementById('emulingo-overlay');
+        overlay.classList.remove('active');
+        overlay.setAttribute('aria-hidden', 'true');
+        resetEmulingoLauncher();
+    }
+
+    function ejectEmulingoRom() {
+        hideEmulingoCapture();
+        saveEmulingoProgress();
+        destroyEmulingoFrame();
+        resetEmulingoLauncher();
+        document.getElementById('emulingo-status').textContent = 'ROM EJECTED. PROGRESS SAVED IN THIS BROWSER.';
+    }
+
+    function resetEmulingoLauncher() {
+        document.getElementById('emulingo-launcher').hidden = false;
+        document.getElementById('emulingo-stage').hidden = true;
+        document.getElementById('emulingo-status').textContent = '';
+        clearTimeout(emulingoReadyTimer);
+        emulingoReadyTimer = null;
+    }
+
+    document.getElementById('rom-file-input').addEventListener('change', handleEmulingoRomSelected);
+
+    async function handleEmulingoRomSelected(event) {
+        const input = event.target;
+        const file = input.files && input.files[0];
+        input.value = '';
+        if (!file) return;
+        if (!/\.(gba|agb|zip)$/i.test(file.name)) {
+            document.getElementById('emulingo-status').textContent = 'CHOOSE A .GBA, .AGB, OR .ZIP ROM FILE.';
+            return;
+        }
+        document.getElementById('emulingo-launcher').hidden = true;
+        document.getElementById('emulingo-stage').hidden = false;
+        try {
+            const buffer = await file.arrayBuffer();
+            const gameId = await computeEmulingoGameId(buffer);
+            destroyEmulingoFrame();
+            emulingoGameName = file.name.replace(/\.[^.]+$/, '') || 'GBA';
+            emulingoGameId = gameId;
+            emulingoRomUrl = URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }));
+            startEmulingoFrame();
+        } catch (error) {
+            console.error('Emulingo ROM load failed', error);
+            destroyEmulingoFrame();
+            resetEmulingoLauncher();
+            document.getElementById('emulingo-status').textContent = 'ROM LOAD FAILED. TRY ANOTHER FILE.';
+            showToast(`Could not load ROM: ${error.message || 'Please try again.'}`, 'var(--error)');
+        }
+    }
+
+    async function computeEmulingoGameId(buffer) {
+        try {
+            const digest = await crypto.subtle.digest('SHA-256', buffer);
+            const view = new DataView(digest);
+            return (view.getUint32(0) & 0x7fffffff) || 1;
+        } catch (error) {
+            const bytes = new Uint8Array(buffer);
+            let hash = 2166136261;
+            for (let i = 0; i < bytes.length; i += 997) {
+                hash = Math.imul(hash ^ bytes[i], 16777619);
+            }
+            return (hash >>> 0) || 1;
+        }
+    }
+
+    function startEmulingoFrame() {
+        const wrap = document.getElementById('emulingo-frame-wrap');
+        wrap.replaceChildren();
+        const loading = document.createElement('div');
+        loading.id = 'emulingo-loading';
+        loading.className = 'emulingo-loading';
+        loading.textContent = 'INITIALIZING_EMULATOR...';
+        wrap.appendChild(loading);
+
+        const frame = document.createElement('iframe');
+        frame.id = 'emulingo-frame';
+        frame.title = 'GBA emulator';
+        frame.setAttribute('allow', 'autoplay; gamepad; fullscreen');
+        wrap.appendChild(frame);
+
+        const doc = frame.contentDocument;
+        const win = frame.contentWindow;
+        if (!doc || !win) {
+            loading.textContent = 'EMULATOR FRAME UNAVAILABLE';
+            return;
+        }
+        doc.open();
+        doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div></body></html>');
+        doc.close();
+
+        win.EJS_player = '#game';
+        win.EJS_core = 'gba';
+        win.EJS_gameUrl = emulingoRomUrl;
+        win.EJS_gameName = emulingoGameName;
+        win.EJS_gameID = emulingoGameId;
+        win.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+        win.EJS_color = '#e0af68';
+        win.EJS_startOnLoaded = true;
+        win.EJS_defaultOptions = { 'save-state-location': 'browser' };
+        win.EJS_ready = markEmulingoReady;
+        win.EJS_onGameStart = markEmulingoReady;
+
+        const script = doc.createElement('script');
+        script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+        script.onerror = () => { loading.textContent = 'EMULATOR FAILED TO LOAD. CHECK YOUR CONNECTION.'; };
+        doc.body.appendChild(script);
+
+        emulingoReadyTimer = setTimeout(() => {
+            if (document.getElementById('emulingo-loading')) {
+                loading.textContent = 'STILL LOADING... CHECK YOUR CONNECTION OR TRY ANOTHER ROM.';
+            }
+        }, 30000);
+    }
+
+    function markEmulingoReady() {
+        clearTimeout(emulingoReadyTimer);
+        emulingoReadyTimer = null;
+        const loading = document.getElementById('emulingo-loading');
+        if (loading) loading.remove();
+        const frame = document.getElementById('emulingo-frame');
+        if (!frame) return;
+        try {
+            frame.contentWindow.focus();
+            const canvas = frame.contentDocument.querySelector('canvas');
+            if (canvas) canvas.focus();
+        } catch (error) {
+            console.warn('Emulingo focus failed', error);
+        }
+    }
+
+    function saveEmulingoProgress() {
+        const frame = document.getElementById('emulingo-frame');
+        const emu = frame && frame.contentWindow && frame.contentWindow.EJS_emulator;
+        if (!emu) return;
+        try {
+            if (emu.started) {
+                emu.callEvent('exit');
+            } else {
+                emu.gameManager.getSaveFile();
+            }
+        } catch (error) {
+            console.warn('Emulingo save failed', error);
+        }
+    }
+
+    function destroyEmulingoFrame() {
+        clearTimeout(emulingoReadyTimer);
+        emulingoReadyTimer = null;
+        const frame = document.getElementById('emulingo-frame');
+        if (frame) {
+            clearTimeout(emulingoCleanupTimer);
+            emulingoCleanupTimer = setTimeout(() => frame.remove(), 1200);
+        }
+        if (emulingoRomUrl) {
+            URL.revokeObjectURL(emulingoRomUrl);
+            emulingoRomUrl = null;
+        }
+        emulingoGameId = null;
+        emulingoGameName = '';
+    }
+
+    function hideEmulingoCapture() {
+        emulingoCaptureRequest++;
+        emulingoTranslation = null;
+        emulingoCaptureWasPaused = false;
+        document.getElementById('emulingo-capture-overlay').hidden = true;
+        const image = document.getElementById('emulingo-capture-image');
+        image.hidden = true;
+        image.removeAttribute('src');
+        document.getElementById('emulingo-capture-status').textContent = '';
+        const result = document.getElementById('emulingo-capture-result');
+        result.hidden = true;
+        result.innerHTML = '';
+    }
+
+    function closeEmulingoCapture() {
+        const wasPaused = emulingoCaptureWasPaused;
+        hideEmulingoCapture();
+        if (wasPaused) return;
+        const frame = document.getElementById('emulingo-frame');
+        const emu = frame && frame.contentWindow && frame.contentWindow.EJS_emulator;
+        try {
+            if (emu && emu.started) emu.play();
+        } catch (error) {
+            console.warn('Emulingo resume failed', error);
+        }
+    }
+
+    function blobToDataUrl(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error || new Error('Could not read the screenshot.'));
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    function emulingoDeckOptions(kind) {
+        return deckOrder.filter(deckId => decks[deckId].kind === kind);
+    }
+
+    function emulingoDeckOptionHtml(kind, selectId) {
+        const deckIds = emulingoDeckOptions(kind);
+        const selected = deckIds.includes(activeDeckId) ? activeDeckId : deckIds[0];
+        return `<div class="form-group emulingo-capture-deck"><label for="${selectId}">Add to ${kind === 'sentences' ? 'sentence' : 'vocabulary'} deck</label><select id="${selectId}">${deckIds.map(deckId => `<option value="${deckId}"${deckId === selected ? ' selected' : ''}>${escapeHtml(decks[deckId].label)}</option>`).join('')}</select></div>`;
+    }
+
+    function openEmulingoCapturePanel() {
+        document.getElementById('emulingo-capture-overlay').hidden = false;
+        const image = document.getElementById('emulingo-capture-image');
+        image.hidden = true;
+        image.removeAttribute('src');
+        document.getElementById('emulingo-capture-status').textContent = 'CAPTURING_SCREEN...';
+        const result = document.getElementById('emulingo-capture-result');
+        result.hidden = true;
+        result.innerHTML = '';
+        emulingoTranslation = null;
+    }
+
+    function emulingoTranslateButtonBusy(busy) {
+        const button = document.getElementById('emulingo-translate-btn');
+        if (!button) return;
+        button.disabled = busy;
+        button.textContent = busy ? 'CAPTURING...' : 'TRANSLATE_SCREEN';
+    }
+
+    async function captureEmulingoScreen() {
+        const frame = document.getElementById('emulingo-frame');
+        const emu = frame && frame.contentWindow && frame.contentWindow.EJS_emulator;
+        if (!emu || !emu.started) {
+            showToast('Load a ROM and wait for the game to start.', 'var(--error)');
+            return;
+        }
+        const requestId = ++emulingoCaptureRequest;
+        emulingoTranslateButtonBusy(true);
+        emulingoCaptureWasPaused = Boolean(emu.paused);
+        try {
+            emu.pause();
+            openEmulingoCapturePanel();
+            const { screenshot, format } = await emu.takeScreenshot('canvas', 'png', 2);
+            if (requestId !== emulingoCaptureRequest) return;
+            const blob = new Blob([screenshot], { type: `image/${format || 'png'}` });
+            const dataUrl = await blobToDataUrl(blob);
+            if (requestId !== emulingoCaptureRequest) return;
+            const image = document.getElementById('emulingo-capture-image');
+            image.src = dataUrl;
+            image.hidden = false;
+            document.getElementById('emulingo-capture-status').textContent = 'READING_SCREEN...';
+            const result = await DatabaseService.translateScreen(dataUrl);
+            if (requestId !== emulingoCaptureRequest) return;
+            emulingoTranslation = result;
+            renderEmulingoTranslation(result);
+        } catch (error) {
+            console.error('Emulingo screen translation failed', error);
+            if (requestId === emulingoCaptureRequest) {
+                document.getElementById('emulingo-capture-status').textContent = `TRANSLATION_FAILED: ${String(error.message || 'PLEASE TRY AGAIN.').toUpperCase()}`;
+                showToast(`Translation failed: ${error.message || 'Please try again.'}`, 'var(--error)');
+            }
+        } finally {
+            if (requestId === emulingoCaptureRequest) emulingoTranslateButtonBusy(false);
+        }
+    }
+
+    function renderEmulingoTranslation(result) {
+        document.getElementById('emulingo-capture-status').textContent = '';
+        const output = document.getElementById('emulingo-capture-result');
+        const vocabulary = Array.isArray(result.vocabulary) ? result.vocabulary : [];
+        const sentences = Array.isArray(result.sentences) ? result.sentences : [];
+        let html = '';
+
+        if (result.detectedText) {
+            html += `<div class="emulingo-capture-section"><h3>DETECTED_TEXT</h3><p class="emulingo-capture-text japanese" lang="ja">${escapeHtml(result.detectedText)}</p>`;
+            if (result.reading) html += `<p class="emulingo-capture-muted" lang="ja">${escapeHtml(result.reading)}</p>`;
+            if (result.translation) html += `<p class="emulingo-capture-muted">${escapeHtml(result.translation)}</p>`;
+            html += `</div>`;
+        } else {
+            html += `<div class="emulingo-capture-section"><h3>DETECTED_TEXT</h3><p class="emulingo-capture-empty">No readable Japanese was found. Try capturing again on a dialogue box or menu.</p></div>`;
+        }
+        if (result.notes) {
+            html += `<p class="emulingo-capture-muted">${escapeHtml(result.notes)}</p>`;
+        }
+
+        if (vocabulary.length) {
+            html += `<div class="emulingo-capture-section"><h3>VOCABULARY_CANDIDATES</h3>${emulingoDeckOptionHtml('vocabulary', 'emulingo-vocab-deck')}`;
+            vocabulary.forEach((item, index) => {
+                const title = item.kanji || item.reading || '';
+                html += `<div class="emulingo-capture-item"><div class="emulingo-capture-item-head"><div><div class="emulingo-capture-item-title" lang="ja">${escapeHtml(title)}</div>`;
+                if (item.reading && item.reading !== title) html += `<div class="emulingo-capture-item-reading" lang="ja">${escapeHtml(item.reading)}</div>`;
+                html += `</div><button class="btn-main emulingo-capture-add" type="button" onclick="addEmulingoVocab(${index}, this)">ADD</button></div>`;
+                html += `<div class="emulingo-capture-item-meta">${escapeHtml(item.meaning || '')}${item.type ? ` · ${escapeHtml(item.type)}` : ''}</div>`;
+                if (item.example) html += `<div class="emulingo-capture-item-meta" lang="ja">${escapeHtml(item.example)}</div>`;
+                html += `</div>`;
+            });
+            html += `</div>`;
+        }
+
+        if (sentences.length) {
+            html += `<div class="emulingo-capture-section"><h3>DIALOGUE_CANDIDATES</h3>`;
+            if (emulingoDeckOptions('sentences').length) {
+                html += emulingoDeckOptionHtml('sentences', 'emulingo-sentence-deck');
+                sentences.forEach((item, index) => {
+                    html += `<div class="emulingo-capture-item"><div class="emulingo-capture-item-head"><div><div class="emulingo-capture-item-title" lang="ja">${escapeHtml(item.sentence)}</div><div class="emulingo-capture-item-meta">${escapeHtml(item.translation)}</div></div><button class="btn-main emulingo-capture-add" type="button" onclick="addEmulingoSentence(${index}, this)">ADD</button></div></div>`;
+                });
+            } else {
+                html += `<p class="emulingo-capture-empty">Create a sentence deck from the dashboard to save dialogue lines.</p>`;
+                sentences.forEach(item => {
+                    html += `<div class="emulingo-capture-item"><div class="emulingo-capture-item-title" lang="ja">${escapeHtml(item.sentence)}</div><div class="emulingo-capture-item-meta">${escapeHtml(item.translation)}</div></div>`;
+                });
+            }
+            html += `</div>`;
+        }
+
+        if (!vocabulary.length && !sentences.length && result.detectedText) {
+            html += `<p class="emulingo-capture-muted">No vocabulary or dialogue candidates were extracted.</p>`;
+        }
+
+        output.innerHTML = html;
+        output.hidden = false;
+        document.querySelector('.emulingo-capture-card').scrollTop = 0;
+    }
+
+    async function addEmulingoVocab(index, button) {
+        const item = emulingoTranslation && emulingoTranslation.vocabulary ? emulingoTranslation.vocabulary[index] : null;
+        const select = document.getElementById('emulingo-vocab-deck');
+        const deckKey = select ? select.value : '';
+        const deck = decks[deckKey];
+        if (!item || !deck || deck.kind !== 'vocabulary' || (!item.kanji && !item.reading) || !item.meaning) {
+            showToast('Could not add that word. Capture the screen again.', 'var(--error)');
+            return;
+        }
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'ADDING...';
+        }
+        try {
+            const savedItem = await DatabaseService.addWord(deckKey, {
+                kanji: item.kanji || item.reading,
+                reading: item.reading || item.kanji,
+                meaning: item.meaning,
+                type: item.type || 'Unknown',
+                conjugation: item.conjugation || '',
+                sent: item.example || '',
+                level: 0,
+                nextReview: Date.now()
+            });
+            if (!deckItems[deckKey]) deckItems[deckKey] = [];
+            deckItems[deckKey].push(savedItem);
+            updateDashboard();
+            if (button) {
+                button.textContent = 'ADDED';
+                button.disabled = true;
+            }
+            showToast(`Word added to ${deck.deckId ? deck.name : 'the vocabulary deck'}.`, 'var(--success)');
+        } catch (error) {
+            console.error('Emulingo vocabulary insert failed', error);
+            showToast(`Could not add word: ${error.message || 'Please try again.'}`, 'var(--error)');
+            if (button) {
+                button.textContent = 'ADD';
+                button.disabled = false;
+            }
+        }
+    }
+
+    async function addEmulingoSentence(index, button) {
+        const item = emulingoTranslation && emulingoTranslation.sentences ? emulingoTranslation.sentences[index] : null;
+        const select = document.getElementById('emulingo-sentence-deck');
+        const deckKey = select ? select.value : '';
+        const deck = decks[deckKey];
+        if (!item || !deck || deck.kind !== 'sentences' || !item.sentence || !item.translation) {
+            showToast('Could not add that sentence. Capture the screen again.', 'var(--error)');
+            return;
+        }
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'ADDING...';
+        }
+        try {
+            const savedItem = await DatabaseService.addWord(deckKey, {
+                sentence: item.sentence,
+                translation: item.translation,
+                level: 0,
+                nextReview: Date.now()
+            });
+            if (!deckItems[deckKey]) deckItems[deckKey] = [];
+            deckItems[deckKey].push(savedItem);
+            updateDashboard();
+            if (button) {
+                button.textContent = 'ADDED';
+                button.disabled = true;
+            }
+            showToast(`Sentence added to ${deck.name}.`, 'var(--success)');
+        } catch (error) {
+            console.error('Emulingo sentence insert failed', error);
+            showToast(`Could not add sentence: ${error.message || 'Please try again.'}`, 'var(--error)');
+            if (button) {
+                button.textContent = 'ADD';
+                button.disabled = false;
+            }
         }
     }
 
@@ -1005,7 +1650,9 @@
         const addButton = document.getElementById('open-add-form-btn');
         addButton.title = deck.kind === 'sentences'
             ? `Add new sentence to the ${deck.name} deck`
-            : 'Add new word to the vocabulary deck';
+            : deck.deckId
+                ? `Add new word to the ${deck.name} deck`
+                : 'Add new word to the vocabulary deck';
         addButton.setAttribute('aria-label', addButton.title);
         renderDeckSelector(now);
         renderDeckControls();
@@ -1612,6 +2259,17 @@
 
     /* Global keyboard shortcuts for session navigation */
     window.addEventListener('keydown', e => {
+        if (!document.getElementById('deck-form-overlay').hidden) {
+            if (e.key === 'Escape') closeDeckForm();
+            return;
+        }
+        if (document.getElementById('emulingo-overlay').classList.contains('active')) {
+            if (e.key === 'Escape') {
+                if (!document.getElementById('emulingo-capture-overlay').hidden) closeEmulingoCapture();
+                else if (document.getElementById('emulingo-stage').hidden) closeEmulingo();
+            }
+            return;
+        }
         if (document.getElementById('card').style.display !== 'block') return;
         if (e.key === 'Escape' && !document.getElementById('kanji-info').hidden) { hideKanjiInfo(); return; }
         if (e.key === 'Escape') location.reload();
@@ -1635,12 +2293,20 @@
                 `<option value="${deckId}">${escapeHtml(decks[deckId].name)}</option>`
             ).join('');
             deckSelect.value = activeDeckId;
+        } else {
+            const deckSelect = document.getElementById('new-vocab-deck');
+            deckSelect.innerHTML = deckOrder.filter(deckId =>
+                decks[deckId].kind === 'vocabulary'
+            ).map(deckId =>
+                `<option value="${deckId}">${escapeHtml(decks[deckId].label)}</option>`
+            ).join('');
+            deckSelect.value = activeDeckId;
         }
         const submitButton = document.getElementById('add-submit-btn');
         submitButton.innerText = isSentenceDeck ? 'SAVE_SENTENCE' : 'CAPTURE_DATA';
         submitButton.title = isSentenceDeck
             ? 'Add new sentence to the selected sentence deck'
-            : 'Add new word to the vocabulary deck';
+            : 'Add new word to the selected vocabulary deck';
     }
     function toggleAddForm() {
         const overlay = document.getElementById('add-form-overlay');
@@ -1656,8 +2322,14 @@
         const meaning = document.getElementById('new-meaning').value.trim();
         const type = document.getElementById('new-type').value.trim();
         const example = document.getElementById('new-example').value.trim();
+        const deckKey = document.getElementById('new-vocab-deck').value;
+        const deck = decks[deckKey];
         const btn = document.getElementById('add-submit-btn');
 
+        if (!deck || deck.kind !== 'vocabulary') {
+            alert('Please choose a vocabulary deck.');
+            return;
+        }
         if (!kanji || !reading || !meaning) {
             alert('Please fill in at least Kanji, Reading, and Meaning.');
             return;
@@ -1678,8 +2350,8 @@
         };
 
         try {
-            const savedItem = await DatabaseService.addWord('vocabulary', newItem);
-            deckItems.vocabulary.push(savedItem);
+            const savedItem = await DatabaseService.addWord(deckKey, newItem);
+            deckItems[deckKey].push(savedItem);
             updateDashboard();
 
             document.getElementById('new-kanji').value = '';
@@ -1689,7 +2361,8 @@
             document.getElementById('new-example').value = '';
             clearAutofilledFields();
             toggleAddForm();
-            showToast('Word added to the vocabulary deck.', 'var(--success)');
+            const deckName = deck.deckId ? `the ${deck.name} deck` : 'the vocabulary deck';
+            showToast(`Word added to ${deckName}.`, 'var(--success)');
         } catch (error) {
             console.error('Supabase word insert failed', error);
             showToast(`Could not add word: ${error.message || 'Please try again.'}`, 'var(--error)');
