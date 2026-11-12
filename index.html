@@ -909,7 +909,18 @@
             const { data, error } = await getClient().functions.invoke('translate-screen', {
                 body: { image }
             });
-            if (error) throw error;
+            if (error) {
+                let message = error.message || 'Screen translation failed.';
+                try {
+                    if (error.context && typeof error.context.json === 'function') {
+                        const body = await error.context.json();
+                        if (body && typeof body.error === 'string' && body.error) message = body.error;
+                    }
+                } catch (parseError) {
+                    console.warn('Could not read translation error body', parseError);
+                }
+                throw new Error(message);
+            }
             if (!data || data.success === false) {
                 throw new Error(data?.error || 'Screen translation failed.');
             }
@@ -1219,7 +1230,7 @@
     let emulingoGameId = null;
     let emulingoGameName = '';
     let emulingoReadyTimer = null;
-    let emulingoCleanupTimer = null;
+    let emulingoSavePromise = Promise.resolve();
     let emulingoTranslation = null;
     let emulingoCaptureRequest = 0;
     let emulingoCaptureWasPaused = false;
@@ -1235,20 +1246,24 @@
 
     function closeEmulingo() {
         hideEmulingoCapture();
-        saveEmulingoProgress();
-        destroyEmulingoFrame();
+        const flush = stopEmulingoSession();
         const overlay = document.getElementById('emulingo-overlay');
         overlay.classList.remove('active');
         overlay.setAttribute('aria-hidden', 'true');
         resetEmulingoLauncher();
+        return flush;
     }
 
     function ejectEmulingoRom() {
         hideEmulingoCapture();
-        saveEmulingoProgress();
-        destroyEmulingoFrame();
         resetEmulingoLauncher();
-        document.getElementById('emulingo-status').textContent = 'ROM EJECTED. PROGRESS SAVED IN THIS BROWSER.';
+        document.getElementById('emulingo-status').textContent = 'SAVING PROGRESS...';
+        return stopEmulingoSession().then(() => {
+            const status = document.getElementById('emulingo-status');
+            if (status && status.textContent === 'SAVING PROGRESS...') {
+                status.textContent = 'ROM EJECTED. PROGRESS SAVED IN THIS BROWSER.';
+            }
+        });
     }
 
     function resetEmulingoLauncher() {
@@ -1275,14 +1290,14 @@
         try {
             const buffer = await file.arrayBuffer();
             const gameId = await computeEmulingoGameId(buffer);
-            destroyEmulingoFrame();
-            emulingoGameName = file.name.replace(/\.[^.]+$/, '') || 'GBA';
+            await stopEmulingoSession();
+            emulingoGameName = `gba-${gameId}`;
             emulingoGameId = gameId;
             emulingoRomUrl = URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }));
             startEmulingoFrame();
         } catch (error) {
             console.error('Emulingo ROM load failed', error);
-            destroyEmulingoFrame();
+            await stopEmulingoSession();
             resetEmulingoLauncher();
             document.getElementById('emulingo-status').textContent = 'ROM LOAD FAILED. TRY ANOTHER FILE.';
             showToast(`Could not load ROM: ${error.message || 'Please try again.'}`, 'var(--error)');
@@ -1337,6 +1352,7 @@
         win.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
         win.EJS_color = '#e0af68';
         win.EJS_startOnLoaded = true;
+        win.EJS_Buttons = { exitEmulation: false };
         win.EJS_defaultOptions = { 'save-state-location': 'browser' };
         win.EJS_ready = markEmulingoReady;
         win.EJS_onGameStart = markEmulingoReady;
@@ -1353,6 +1369,30 @@
         }, 30000);
     }
 
+    /* EmulatorJS's default exit handler unmounts /data/saves before IDBFS finishes
+       auto-persisting, which wipes IndexedDB saves. Replace it with an explicit sync. */
+    function patchEmulingoExit(emu) {
+        if (!emu || !emu.functions || !Array.isArray(emu.functions.exit)) return;
+        emu.functions.exit = [() => {
+            try {
+                if (emu.saveSaveInterval) {
+                    clearInterval(emu.saveSaveInterval);
+                    emu.saveSaveInterval = null;
+                }
+                const gm = emu.gameManager;
+                if (!emu.failedToStart && gm) {
+                    gm.saveSaveFiles();
+                    gm.toggleMainLoop(0);
+                    if (gm.FS && typeof gm.FS.syncfs === 'function') {
+                        gm.FS.syncfs(false, () => {});
+                    }
+                }
+            } catch (error) {
+                console.warn('Emulingo exit save failed', error);
+            }
+        }];
+    }
+
     function markEmulingoReady() {
         clearTimeout(emulingoReadyTimer);
         emulingoReadyTimer = null;
@@ -1361,6 +1401,8 @@
         const frame = document.getElementById('emulingo-frame');
         if (!frame) return;
         try {
+            const emu = frame.contentWindow && frame.contentWindow.EJS_emulator;
+            patchEmulingoExit(emu);
             frame.contentWindow.focus();
             const canvas = frame.contentDocument.querySelector('canvas');
             if (canvas) canvas.focus();
@@ -1369,35 +1411,54 @@
         }
     }
 
-    function saveEmulingoProgress() {
-        const frame = document.getElementById('emulingo-frame');
+    async function flushEmulingoSave(frame) {
         const emu = frame && frame.contentWindow && frame.contentWindow.EJS_emulator;
         if (!emu) return;
         try {
-            if (emu.started) {
-                emu.callEvent('exit');
-            } else {
-                emu.gameManager.getSaveFile();
+            if (emu.saveSaveInterval) {
+                clearInterval(emu.saveSaveInterval);
+                emu.saveSaveInterval = null;
+            }
+            const gm = emu.gameManager;
+            if (!gm) return;
+            if (emu.started && !emu.failedToStart) {
+                gm.saveSaveFiles();
+                emu.pause();
+                gm.toggleMainLoop(0);
+            }
+            if (gm.FS && typeof gm.FS.syncfs === 'function') {
+                await Promise.race([
+                    new Promise(resolve => gm.FS.syncfs(false, () => resolve())),
+                    new Promise(resolve => setTimeout(resolve, 1500))
+                ]);
             }
         } catch (error) {
             console.warn('Emulingo save failed', error);
         }
     }
 
-    function destroyEmulingoFrame() {
+    function stopEmulingoSession() {
         clearTimeout(emulingoReadyTimer);
         emulingoReadyTimer = null;
         const frame = document.getElementById('emulingo-frame');
-        if (frame) {
-            clearTimeout(emulingoCleanupTimer);
-            emulingoCleanupTimer = setTimeout(() => frame.remove(), 1200);
-        }
-        if (emulingoRomUrl) {
-            URL.revokeObjectURL(emulingoRomUrl);
-            emulingoRomUrl = null;
-        }
+        const romUrl = emulingoRomUrl;
+        emulingoRomUrl = null;
         emulingoGameId = null;
         emulingoGameName = '';
+        if (frame) {
+            frame.removeAttribute('id');
+            frame.hidden = true;
+        }
+        const task = async () => {
+            try {
+                if (frame) await flushEmulingoSave(frame);
+            } finally {
+                if (frame) frame.remove();
+                if (romUrl) URL.revokeObjectURL(romUrl);
+            }
+        };
+        emulingoSavePromise = emulingoSavePromise.then(task, task);
+        return emulingoSavePromise;
     }
 
     function hideEmulingoCapture() {
@@ -1476,11 +1537,15 @@
         emulingoTranslateButtonBusy(true);
         emulingoCaptureWasPaused = Boolean(emu.paused);
         try {
-            emu.pause();
             openEmulingoCapturePanel();
-            const { screenshot, format } = await emu.takeScreenshot('canvas', 'png', 2);
+            const shot = await emu.takeScreenshot('canvas', 'png', 2);
+            emu.pause();
             if (requestId !== emulingoCaptureRequest) return;
-            const blob = new Blob([screenshot], { type: `image/${format || 'png'}` });
+            const captured = shot && (shot.blob || shot.screenshot);
+            if (!captured) throw new Error('The emulator did not return a screenshot.');
+            const blob = captured instanceof Blob
+                ? captured
+                : new Blob([captured], { type: `image/${shot.format || 'png'}` });
             const dataUrl = await blobToDataUrl(blob);
             if (requestId !== emulingoCaptureRequest) return;
             const image = document.getElementById('emulingo-capture-image');
