@@ -362,7 +362,10 @@
             position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden;
             border: 1px solid var(--card-border); border-radius: 12px; background: #000;
         }
-        #emulingo-frame { display: block; width: 100%; height: 100%; border: 0; background: #000; }
+        #emulingo-frame {
+            position: absolute; inset: 0; display: block; width: 100%; height: 100%;
+            border: 0; background: #000; -webkit-tap-highlight-color: transparent;
+        }
         .emulingo-loading {
             position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
             background: rgba(0, 0, 0, 0.86); color: var(--accent);
@@ -583,7 +586,7 @@
         <div id="emulingo-body">
             <div id="emulingo-launcher">
                 <p class="emulingo-copy">Load a GBA ROM stored on this device. The ROM stays in your browser and is not uploaded.</p>
-                <input type="file" id="rom-file-input" accept=".gba,.agb,.zip" hidden>
+                <input type="file" id="rom-file-input" accept=".gba,.agb,.zip,application/zip,application/x-zip-compressed,application/octet-stream" style="position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;" aria-hidden="true" tabindex="-1">
                 <button class="btn-main" type="button" onclick="document.getElementById('rom-file-input').click()">LOAD_ROM</button>
                 <p id="emulingo-status" aria-live="polite"></p>
             </div>
@@ -1280,6 +1283,7 @@
 
     /* --- Emulingo beta: isolated GBA emulator shell ---------------------- */
     let emulingoRomUrl = null;
+    let emulingoRomBytes = null;
     let emulingoGameId = null;
     let emulingoGameName = '';
     let emulingoReadyTimer = null;
@@ -1321,6 +1325,10 @@
         if (frame && frame.__emulingoCloudDebounceTimer) {
             clearTimeout(frame.__emulingoCloudDebounceTimer);
             frame.__emulingoCloudDebounceTimer = null;
+        }
+        if (frame && frame.__emulingoBootTimer) {
+            clearTimeout(frame.__emulingoBootTimer);
+            frame.__emulingoBootTimer = null;
         }
     }
 
@@ -1590,8 +1598,15 @@
     function putEmulingoState(emu, key, bytes) {
         if (!emu || !emu.storage || !emu.storage.states) return Promise.resolve();
         return trackEmulingoPending((async () => {
-            await emu.storage.states.put(key, bytes);
-            await new Promise(resolve => setTimeout(resolve, 50));
+            try {
+                await Promise.race([
+                    emu.storage.states.put(key, bytes),
+                    new Promise(resolve => setTimeout(resolve, 3000))
+                ]);
+                await new Promise(resolve => setTimeout(resolve, 50));
+            } catch (error) {
+                console.warn('Emulingo state persistence skipped', error);
+            }
         })());
     }
 
@@ -1655,9 +1670,12 @@
     async function handleEmulingoRomSelected(event) {
         const input = event.target;
         const file = input.files && input.files[0];
-        input.value = '';
-        if (!file) return;
+        if (!file) {
+            input.value = '';
+            return;
+        }
         if (!/\.(gba|agb|zip)$/i.test(file.name)) {
+            input.value = '';
             document.getElementById('emulingo-status').textContent = 'CHOOSE A .GBA, .AGB, OR .ZIP ROM FILE.';
             return;
         }
@@ -1665,8 +1683,9 @@
         document.getElementById('emulingo-stage').hidden = false;
         const wrap = document.getElementById('emulingo-frame-wrap');
         try {
-            const buffer = await file.arrayBuffer();
-            const gameId = await computeEmulingoGameId(buffer);
+            const rawBuffer = await readEmulingoFileBuffer(file);
+            const gameId = await computeEmulingoGameId(rawBuffer);
+            const romBytes = await extractEmulingoRomPayload(rawBuffer);
             await stopEmulingoSession();
             wrap.replaceChildren();
             const syncBanner = document.createElement('div');
@@ -1677,7 +1696,7 @@
             const cloudPrefetch = await prefetchEmulingoCloudSrm(gameId);
             emulingoGameName = `gba-${gameId}`;
             emulingoGameId = gameId;
-            emulingoRomUrl = URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }));
+            emulingoRomBytes = romBytes;
             startEmulingoFrame(cloudPrefetch);
         } catch (error) {
             console.error('Emulingo ROM load failed', error);
@@ -1685,6 +1704,117 @@
             resetEmulingoLauncher();
             document.getElementById('emulingo-status').textContent = 'ROM LOAD FAILED. TRY ANOTHER FILE.';
             showToast(`Could not load ROM: ${error.message || 'Please try again.'}`, 'var(--error)');
+        } finally {
+            input.value = '';
+        }
+    }
+
+    /* iOS Safari can invalidate a security-scoped File handle if the input is reset
+       before the bytes are read, so read first and use FileReader as a fallback. */
+    function readEmulingoFileBuffer(file) {
+        if (file && typeof file.arrayBuffer === 'function') {
+            return file.arrayBuffer().catch(error => {
+                console.warn('Emulingo file.arrayBuffer failed, using FileReader', error);
+                return readEmulingoFileBufferWithReader(file);
+            });
+        }
+        return readEmulingoFileBufferWithReader(file);
+    }
+
+    function readEmulingoFileBufferWithReader(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error || new Error('Could not read the ROM file.'));
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    /* Extract the ROM inside a .zip in-browser so WebKit does not depend on the
+       core's blob worker. Falls back to the raw bytes (EmulatorJS decompression)
+       when the browser or archive is unsupported. */
+    async function extractEmulingoRomPayload(buffer) {
+        const bytes = new Uint8Array(buffer);
+        if (!(bytes.length > 4 && bytes[0] === 0x50 && bytes[1] === 0x4b)) return bytes;
+        try {
+            const extracted = await extractEmulingoZipRom(bytes);
+            if (extracted && extracted.length) return extracted;
+        } catch (error) {
+            console.warn('Emulingo native ZIP extraction failed; falling back to EmulatorJS decompression.', error);
+        }
+        return bytes;
+    }
+
+    async function extractEmulingoZipRom(bytes) {
+        if (bytes.length < 22) return null;
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        let eocd = -1;
+        const minEocd = Math.max(0, bytes.length - 65557);
+        for (let i = bytes.length - 22; i >= minEocd; i--) {
+            if (view.getUint32(i, true) === 0x06054b50) {
+                eocd = i;
+                break;
+            }
+        }
+        if (eocd < 0) return null;
+
+        const entryCount = view.getUint16(eocd + 10, true);
+        const directoryOffset = view.getUint32(eocd + 16, true);
+        if (!entryCount || directoryOffset >= bytes.length) return null;
+
+        const decoder = new TextDecoder();
+        const candidates = [];
+        let pointer = directoryOffset;
+        for (let index = 0; index < entryCount; index++) {
+            if (pointer + 46 > bytes.length || view.getUint32(pointer, true) !== 0x02014b50) break;
+            const flags = view.getUint16(pointer + 8, true);
+            const method = view.getUint16(pointer + 10, true);
+            const compressedSize = view.getUint32(pointer + 20, true);
+            const uncompressedSize = view.getUint32(pointer + 24, true);
+            const nameLength = view.getUint16(pointer + 28, true);
+            const extraLength = view.getUint16(pointer + 30, true);
+            const commentLength = view.getUint16(pointer + 32, true);
+            const localOffset = view.getUint32(pointer + 42, true);
+            const name = decoder.decode(bytes.subarray(pointer + 46, pointer + 46 + nameLength));
+            pointer += 46 + nameLength + extraLength + commentLength;
+
+            if (!/\.(gba|agb|bin)$/i.test(name)) continue;
+            if (/\/$/.test(name) || /(^|\/)__MACOSX\//.test(name) || /(^|\/)\._/.test(name) || /(^|\/)\.DS_Store$/i.test(name)) continue;
+            if (flags & 0x1) continue;
+            if (compressedSize === 0xffffffff || uncompressedSize === 0xffffffff || localOffset === 0xffffffff) continue;
+            candidates.push({ name, method, compressedSize, uncompressedSize, localOffset });
+        }
+        if (!candidates.length) return null;
+
+        const rank = name => /\.gba$/i.test(name) ? 3 : /\.agb$/i.test(name) ? 2 : 1;
+        candidates.sort((a, b) => rank(b.name) - rank(a.name) || b.uncompressedSize - a.uncompressedSize);
+        for (const candidate of candidates) {
+            const extracted = await readEmulingoZipEntry(bytes, view, candidate);
+            if (extracted && extracted.length) return extracted;
+        }
+        return null;
+    }
+
+    async function readEmulingoZipEntry(bytes, view, entry) {
+        if (entry.localOffset + 30 > bytes.length || view.getUint32(entry.localOffset, true) !== 0x04034b50) return null;
+        const nameLength = view.getUint16(entry.localOffset + 26, true);
+        const extraLength = view.getUint16(entry.localOffset + 28, true);
+        const dataStart = entry.localOffset + 30 + nameLength + extraLength;
+        const dataEnd = dataStart + entry.compressedSize;
+        if (dataEnd > bytes.length) return null;
+        const compressed = bytes.subarray(dataStart, dataEnd);
+
+        if (entry.method === 0) return compressed.slice();
+        if (entry.method !== 8 || typeof DecompressionStream !== 'function') return null;
+        try {
+            const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+            const inflated = new Uint8Array(await new Response(stream).arrayBuffer());
+            if (!inflated.length) return null;
+            if (entry.uncompressedSize && inflated.length !== entry.uncompressedSize) return null;
+            return inflated;
+        } catch (error) {
+            console.warn('Emulingo deflate-raw extraction failed', error);
+            return null;
         }
     }
 
@@ -1702,6 +1832,8 @@
             return (hash >>> 0) || 1;
         }
     }
+
+    const EMULINGO_FRAME_URL = 'assets/emulingo-frame.html';
 
     function startEmulingoFrame(cloudPrefetch = null) {
         const wrap = document.getElementById('emulingo-frame-wrap');
@@ -1722,15 +1854,66 @@
         frame.__emulingoSessionQuickSlots = new Set();
         wrap.appendChild(frame);
 
-        const doc = frame.contentDocument;
-        const win = frame.contentWindow;
-        if (!doc || !win) {
-            loading.textContent = 'EMULATOR FRAME UNAVAILABLE';
+        let booted = false;
+        let fallbackTimer = null;
+        const finish = useHostPage => {
+            if (booted || frame.__emulingoDisposed) return;
+            booted = true;
+            if (fallbackTimer) {
+                clearTimeout(fallbackTimer);
+                fallbackTimer = null;
+            }
+            frame.__emulingoBootTimer = null;
+            bootEmulingoFrame(frame, cloudPrefetch, useHostPage);
+        };
+
+        /* Prefer a real same-origin document. WebKit treats about:blank iframes as
+           an opaque origin, which breaks IndexedDB, blob workers, and saves. */
+        fallbackTimer = setTimeout(() => finish(false), 3000);
+        frame.__emulingoBootTimer = fallbackTimer;
+        frame.addEventListener('load', () => {
+            if (emulingoFrameHasHostDocument(frame)) finish(true);
+        });
+        frame.addEventListener('error', () => finish(false));
+        frame.src = `${EMULINGO_FRAME_URL}?v=${Date.now()}`;
+
+        emulingoReadyTimer = setTimeout(() => {
+            if (document.getElementById('emulingo-loading')) {
+                loading.textContent = 'STILL LOADING... CHECK YOUR CONNECTION OR TRY ANOTHER ROM.';
+            }
+        }, 30000);
+    }
+
+    function emulingoFrameHasHostDocument(frame) {
+        try {
+            const win = frame && frame.contentWindow;
+            if (!win || !win.document) return false;
+            const href = (win.location && win.location.href) || '';
+            if (!href || href.startsWith('about:')) return false;
+            return Boolean(win.document.getElementById('game'));
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function bootEmulingoFrame(frame, cloudPrefetch, useHostPage) {
+        const win = frame && frame.contentWindow;
+        const loading = document.getElementById('emulingo-loading');
+        if (!win || !win.document) {
+            if (loading) loading.textContent = 'EMULATOR FRAME UNAVAILABLE';
             return;
         }
-        doc.open();
-        doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div></body></html>');
-        doc.close();
+        let doc = win.document;
+        if (!useHostPage || !doc.getElementById('game')) {
+            doc.open();
+            doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div></body></html>');
+            doc.close();
+            doc = win.document;
+        }
+        if (!doc || !doc.body) {
+            if (loading) loading.textContent = 'EMULATOR FRAME UNAVAILABLE';
+            return;
+        }
 
         doc.addEventListener('visibilitychange', () => {
             if (doc.visibilityState === 'hidden') {
@@ -1745,16 +1928,32 @@
             checkpointEmulingoSave(frame, { forceSync: true, immediateCloud: true, keepalive: true });
         });
 
+        installEmulingoFrameHooks(win);
+
+        if (!emulingoRomUrl && emulingoRomBytes) {
+            try {
+                emulingoRomUrl = win.URL.createObjectURL(new win.Blob([emulingoRomBytes], { type: 'application/octet-stream' }));
+            } catch (error) {
+                console.warn('Emulingo ROM URL failed', error);
+                emulingoRomUrl = URL.createObjectURL(new Blob([emulingoRomBytes], { type: 'application/octet-stream' }));
+            }
+        }
+
+        const touchDevice = isEmulingoTouchDevice(win);
         win.EJS_player = '#game';
         win.EJS_core = 'gba';
         win.EJS_gameUrl = emulingoRomUrl;
-        win.EJS_gameName = emulingoGameName;
-        win.EJS_gameID = emulingoGameId;
+        win.EJS_gameName = frame.__emulingoGameName || emulingoGameName;
+        win.EJS_gameID = frame.__emulingoGameId || emulingoGameId;
         win.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
         win.EJS_color = '#e0af68';
         win.EJS_startOnLoaded = true;
         win.EJS_Buttons = { exitEmulation: false };
-        win.EJS_defaultOptions = { 'save-state-location': 'browser', 'save-save-interval': '30' };
+        win.EJS_defaultOptions = {
+            'save-state-location': 'browser',
+            'save-save-interval': '30',
+            'virtual-gamepad': touchDevice ? 'enabled' : 'disabled'
+        };
         win.EJS_ready = markEmulingoReady;
         win.EJS_onGameStart = markEmulingoReady;
         win.EJS_onSaveState = event => handleEmulingoSaveState(frame, event);
@@ -1763,14 +1962,107 @@
 
         const script = doc.createElement('script');
         script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-        script.onerror = () => { loading.textContent = 'EMULATOR FAILED TO LOAD. CHECK YOUR CONNECTION.'; };
+        script.onerror = () => {
+            const banner = document.getElementById('emulingo-loading');
+            if (banner) banner.textContent = 'EMULATOR FAILED TO LOAD. CHECK YOUR CONNECTION.';
+        };
         doc.body.appendChild(script);
+    }
 
-        emulingoReadyTimer = setTimeout(() => {
-            if (document.getElementById('emulingo-loading')) {
-                loading.textContent = 'STILL LOADING... CHECK YOUR CONNECTION OR TRY ANOTHER ROM.';
+    function isEmulingoTouchDevice(win) {
+        try {
+            const nav = (win && win.navigator) || {};
+            const maxTouchPoints = nav.maxTouchPoints || 0;
+            const userAgent = nav.userAgent || '';
+            const iPadOS = nav.platform === 'MacIntel' && maxTouchPoints > 1;
+            if (iPadOS || /iPad|iPhone|iPod|Android/i.test(userAgent) || maxTouchPoints > 0) return true;
+            return Boolean(win.matchMedia && win.matchMedia('(any-pointer: coarse)').matches);
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function isEmulingoAppleTouch(win) {
+        try {
+            const nav = (win && win.navigator) || {};
+            const maxTouchPoints = nav.maxTouchPoints || 0;
+            return /iPad|iPhone|iPod/i.test(nav.userAgent || '') || (nav.platform === 'MacIntel' && maxTouchPoints > 1);
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /* iOS suspends WebAudio until a gesture inside the frame, and EmulatorJS only
+       handles narrow iPhone Safari. Track every AudioContext and resume on input. */
+    function installEmulingoFrameHooks(win) {
+        if (!win || win.__emulingoHooksInstalled) return;
+        win.__emulingoHooksInstalled = true;
+        const contexts = [];
+        win.__emulingoAudioContexts = contexts;
+
+        const trackContext = context => {
+            if (context && contexts.indexOf(context) === -1) contexts.push(context);
+        };
+
+        ['AudioContext', 'webkitAudioContext'].forEach(name => {
+            const Original = win[name];
+            if (typeof Original !== 'function') return;
+            const Patched = function (...args) {
+                const context = new Original(...args);
+                trackContext(context);
+                return context;
+            };
+            Patched.prototype = Original.prototype;
+            try {
+                Object.defineProperty(win, name, { configurable: true, writable: true, value: Patched });
+            } catch (error) {
+                try { win[name] = Patched; } catch (innerError) { /* ignore */ }
             }
-        }, 30000);
+        });
+
+        const resumeAudio = () => {
+            const emu = win.EJS_emulator;
+            const al = emu && emu.Module && emu.Module.AL;
+            const alContext = al && al.currentCtx && al.currentCtx.audioCtx;
+            if (alContext) trackContext(alContext);
+            contexts.forEach(context => {
+                try {
+                    if (context.state && context.state !== 'running' && typeof context.resume === 'function') {
+                        context.resume();
+                    }
+                } catch (error) { /* ignore */ }
+            });
+        };
+        win.__emulingoResumeAudio = resumeAudio;
+
+        ['touchstart', 'touchend', 'touchcancel', 'pointerdown', 'pointerup', 'mousedown', 'mouseup', 'keydown', 'click'].forEach(type => {
+            win.document.addEventListener(type, resumeAudio, { capture: true, passive: true });
+        });
+        win.addEventListener('focus', resumeAudio);
+
+        /* Some WebKit modes throw synchronously from indexedDB.open (private
+           browsing / blocked storage). Keep EmulatorJS from hanging on it. */
+        try {
+            const factory = win.IDBFactory && win.IDBFactory.prototype;
+            if (factory && typeof factory.open === 'function' && !factory.__emulingoPatched) {
+                const originalOpen = factory.open;
+                factory.open = function (...args) {
+                    try {
+                        return originalOpen.apply(this, args);
+                    } catch (error) {
+                        console.warn('Emulingo IndexedDB unavailable', error);
+                        const request = { onsuccess: null, onerror: null, onupgradeneeded: null, onblocked: null };
+                        setTimeout(() => {
+                            try {
+                                if (typeof request.onerror === 'function') request.onerror({ target: request });
+                            } catch (innerError) { /* ignore */ }
+                        }, 0);
+                        return request;
+                    }
+                };
+                factory.__emulingoPatched = true;
+            }
+        } catch (error) { /* ignore */ }
     }
 
     function toEmulingoBytes(raw, win) {
@@ -1856,7 +2148,9 @@
         const gameId = frame && frame.__emulingoGameId;
         const cloudSlot = `state:${slot}`;
         const localPromise = (emu.saveInBrowserSupported() && emu.storage && emu.storage.states)
-            ? emu.storage.states.get(emulingoStateKey(emu, slot)).catch(() => null)
+            ? Promise.resolve()
+                .then(() => emu.storage.states.get(emulingoStateKey(emu, slot)))
+                .catch(() => null)
             : Promise.resolve(null);
         const cloudPromise = gameId
             ? Promise.race([
@@ -2002,10 +2296,45 @@
         })();
     }
 
+    /* EmulatorJS's Safari audio check throws when OpenAL sources is not an array
+       and can hang while the context is suspended. Replace it with a resume call. */
+    function patchEmulingoAudioStartup(emu, frame) {
+        if (!emu || emu.__emulingoAudioStartupPatched) return;
+        emu.__emulingoAudioStartupPatched = true;
+        emu.checkStarted = function () {
+            try {
+                const win = frame && frame.contentWindow;
+                if (win && typeof win.__emulingoResumeAudio === 'function') {
+                    win.__emulingoResumeAudio();
+                }
+            } catch (error) {
+                console.warn('Emulingo audio resume failed', error);
+            }
+        };
+    }
+
+    function enableEmulingoVirtualGamepad(emu, frame) {
+        const win = frame && frame.contentWindow;
+        if (!isEmulingoAppleTouch(win)) return;
+        emu.touch = true;
+        try {
+            if (typeof emu.changeSettingOption === 'function') {
+                emu.changeSettingOption('virtual-gamepad', 'enabled');
+            }
+        } catch (error) {
+            console.warn('Emulingo virtual gamepad setting failed', error);
+        }
+        try {
+            if (emu.virtualGamepad) emu.virtualGamepad.style.display = '';
+        } catch (error) { /* ignore */ }
+    }
+
     /* EmulatorJS's default exit handler unmounts /data/saves before IDBFS finishes
        auto-persisting, and Quick Save only writes to volatile RAM. Patch both. */
     function patchEmulingoEmulator(emu, frame) {
         if (!emu) return;
+        patchEmulingoAudioStartup(emu, frame);
+        enableEmulingoVirtualGamepad(emu, frame);
         if (emu.functions && Array.isArray(emu.functions.exit)) {
             emu.functions.exit = [() => {
                 try {
@@ -2169,9 +2498,11 @@
         const frame = document.getElementById('emulingo-frame');
         const romUrl = emulingoRomUrl;
         emulingoRomUrl = null;
+        emulingoRomBytes = null;
         emulingoGameId = null;
         emulingoGameName = '';
         if (frame) {
+            frame.__emulingoDisposed = true;
             clearEmulingoFrameTimers(frame);
             frame.removeAttribute('id');
             frame.hidden = true;
