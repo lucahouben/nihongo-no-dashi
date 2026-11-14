@@ -23,7 +23,7 @@ A single-page Japanese vocabulary and sentence flashcard app with spaced repetit
 - Play Japanese pronunciation with the browser's speech synthesis from the front of the card or the revealed answer (or press `V`). Sentence cards speak the full Japanese sentence.
 - Switch between dark and light themes; the interface is responsive and includes accessible labels and tooltips.
 - Add a word from a URL with `kanji`, `reading`, `meaning`, `type`, and `example` parameters. Missing reading, meaning, or type are looked up when possible; an example sentence is also searched for when one is not provided. URL quick-add always targets the vocabulary deck.
-- Open `BETA_EMULINGO` from the dashboard to load a local GBA ROM into an isolated EmulatorJS player. ROMs are read in the browser and never uploaded, and battery saves persist locally for the same ROM. Use `TRANSLATE_SCREEN` to send a paused frame to the Gemini-backed `translate-screen` function, review the Japanese text and English translation, and add suggested vocabulary or dialogue lines to a chosen deck.
+- Open `BETA_EMULINGO` from the dashboard to load a local GBA ROM into an isolated EmulatorJS player. ROMs are read in the browser and never uploaded, while battery saves and browser save states sync automatically across devices via Supabase for the same ROM. Use `TRANSLATE_SCREEN` to send a paused frame to the Gemini-backed `translate-screen` function, review the Japanese text and English translation, and add suggested vocabulary or dialogue lines to a chosen deck.
 
 ## Run the app
 
@@ -35,13 +35,13 @@ The page loads Supabase JS and fonts from external CDNs. Dictionary and kanji lo
 
 `BETA_EMULINGO` opens a GBA player powered by [EmulatorJS](https://emulatorjs.org/). The emulator runtime and cores load from `cdn.emulatorjs.org` on first use, so this mode needs network access. Choose a `.gba`, `.agb`, or `.zip` ROM from your device; the ROM is read in the browser and is not uploaded.
 
-Battery saves are synced automatically to the browser's IndexedDB while playing and reload automatically for the same ROM; `SAVE_AND_CLOSE` and `EJECT_ROM` also flush the current save before leaving. Browser-persisted save states (slots 1–9 and quick save/load) and save-file import/export are available from the in-emulator menu. The emulator runs in an isolated same-origin iframe so it does not interfere with the flashcard app.
+Battery saves and browser save states (slots 1–9 and quick save/load) are cached in the browser's IndexedDB and synced automatically to Supabase (`public.emulingo_saves`, compressed and keyed by the ROM hash) so you can continue on another device by loading the same ROM file. `SAVE_AND_CLOSE` and `EJECT_ROM` also flush the current save before leaving, and offline saves upload on the next online session. Save-file import/export is available from the in-emulator menu. The emulator runs in an isolated same-origin iframe so it does not interfere with the flashcard app.
 
 `TRANSLATE_SCREEN` pauses the game, captures the emulator canvas at 2× resolution, and sends the frame to the `translate-screen` Edge Function. The panel shows the detected Japanese, an English translation, a reading, and optional notes, plus suggested vocabulary and dialogue lines. Each candidate has a deck selector and an `ADD` button: vocabulary goes to a vocabulary deck and sentences go to a sentence deck. Closing the panel resumes the game. Capture is always user-triggered; nothing is extracted automatically.
 
 ## Supabase setup
 
-The app reads and writes `public.vocabulary`, `public.sentence_decks`, and `public.sentences`. Create the vocabulary table in the Supabase SQL Editor:
+The app reads and writes `public.vocabulary`, `public.sentence_decks`, `public.sentences`, and `public.emulingo_saves`. Create the vocabulary table in the Supabase SQL Editor:
 
 ```sql
 create table public.vocabulary (
@@ -121,6 +121,8 @@ create policy "Public can update sentences"
 If you already created the original single `sentences` table, run `supabase/sql/sentence_decks.sql` instead. It adds `sentence_decks`, adds `sentences.deck_id`, and moves existing sentences into a deck named `Sentences`.
 
 Then run `supabase/sql/named_decks.sql`. It adds `sentence_decks.kind` so the shared deck registry can hold both vocabulary and sentence decks, adds `vocabulary.deck_id` for items in named vocabulary decks, and allows deleting a named vocabulary deck and its items. Items in the built-in vocabulary deck have `deck_id = null`.
+
+For Emulingo cross-device save sync, run `supabase/sql/emulingo_saves.sql`. It creates `public.emulingo_saves` for compressed battery saves (`srm`) and browser save states (`state:1`–`state:9`) keyed by the ROM hash.
 
 The app's Supabase URL and browser-safe publishable/anon key are configured in the constants near the top of the script in `index.html`. Never put a Supabase `service_role` key in browser code.
 
