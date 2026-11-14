@@ -35,7 +35,7 @@ The page loads Supabase JS and fonts from external CDNs. Dictionary and kanji lo
 
 `BETA_EMULINGO` opens a GBA player powered by [EmulatorJS](https://emulatorjs.org/). The emulator runtime and cores load from `cdn.emulatorjs.org` on first use, so this mode needs network access. Choose a `.gba`, `.agb`, or `.zip` ROM from your device; the ROM is read in the browser and is not uploaded.
 
-Battery saves are written to the browser's IndexedDB and reload automatically for the same ROM. Use `SAVE_AND_CLOSE` or `EJECT_ROM` to flush the current save before leaving. Save states and save-file export are available from the in-emulator menu. The emulator runs in an isolated same-origin iframe so it does not interfere with the flashcard app.
+Battery saves are synced automatically to the browser's IndexedDB while playing and reload automatically for the same ROM; `SAVE_AND_CLOSE` and `EJECT_ROM` also flush the current save before leaving. Browser-persisted save states (slots 1–9 and quick save/load) and save-file import/export are available from the in-emulator menu. The emulator runs in an isolated same-origin iframe so it does not interfere with the flashcard app.
 
 `TRANSLATE_SCREEN` pauses the game, captures the emulator canvas at 2× resolution, and sends the frame to the `translate-screen` Edge Function. The panel shows the detected Japanese, an English translation, a reading, and optional notes, plus suggested vocabulary and dialogue lines. Each candidate has a deck selector and an `ADD` button: vocabulary goes to a vocabulary deck and sentences go to a sentence deck. Closing the panel resumes the game. Capture is always user-triggered; nothing is extracted automatically.
 

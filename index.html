@@ -1230,10 +1230,148 @@
     let emulingoGameId = null;
     let emulingoGameName = '';
     let emulingoReadyTimer = null;
+    let emulingoAutoSaveTimer = null;
     let emulingoSavePromise = Promise.resolve();
+    const emulingoPendingWrites = new Set();
     let emulingoTranslation = null;
     let emulingoCaptureRequest = 0;
     let emulingoCaptureWasPaused = false;
+
+    function trackEmulingoPending(promise) {
+        const task = Promise.resolve(promise);
+        emulingoPendingWrites.add(task);
+        const cleanup = () => emulingoPendingWrites.delete(task);
+        task.then(cleanup, cleanup);
+        return task;
+    }
+
+    async function waitForEmulingoPending() {
+        while (emulingoPendingWrites.size) {
+            const snapshot = Array.from(emulingoPendingWrites);
+            await Promise.race([
+                Promise.allSettled(snapshot),
+                new Promise(resolve => setTimeout(resolve, 1500))
+            ]);
+            if (snapshot.every(p => emulingoPendingWrites.has(p))) break;
+        }
+    }
+
+    function clearEmulingoAutoSave() {
+        if (emulingoAutoSaveTimer) {
+            clearInterval(emulingoAutoSaveTimer);
+            emulingoAutoSaveTimer = null;
+        }
+    }
+
+    function hashEmulingoBytes(bytes) {
+        if (!bytes || !bytes.length) return 'empty';
+        let hash = 2166136261;
+        let allBlank = true;
+        for (let i = 0; i < bytes.length; i++) {
+            const b = bytes[i] & 0xff;
+            if (b !== 0xff) allBlank = false;
+            hash = Math.imul(hash ^ b, 16777619);
+        }
+        return allBlank ? 'blank' : `${bytes.length}:${hash >>> 0}`;
+    }
+
+    function syncEmulingoFs(gm) {
+        if (!gm || !gm.FS || typeof gm.FS.syncfs !== 'function') return Promise.resolve();
+        const run = async () => {
+            for (let attempt = 0; attempt < 5; attempt++) {
+                const err = await Promise.race([
+                    new Promise(resolve => gm.FS.syncfs(false, e => resolve(e || null))),
+                    new Promise(resolve => setTimeout(() => resolve(null), 1500))
+                ]);
+                if (!err) return;
+                await new Promise(resolve => setTimeout(resolve, 60));
+            }
+        };
+        gm.__emulingoSyncChain = (gm.__emulingoSyncChain || Promise.resolve()).then(run, run);
+        return trackEmulingoPending(gm.__emulingoSyncChain);
+    }
+
+    function checkpointEmulingoSave(frame, forceSync = false) {
+        const emu = frame && frame.contentWindow && frame.contentWindow.EJS_emulator;
+        const gm = emu && emu.gameManager;
+        if (!emu || !gm || !emu.started || emu.failedToStart) return Promise.resolve();
+        try {
+            if (gm.functions && typeof gm.functions.saveSaveFiles === 'function') {
+                gm.functions.saveSaveFiles();
+            } else {
+                gm.saveSaveFiles();
+            }
+            const savePath = gm.getSaveFilePath();
+            if (!savePath || !gm.FS || !gm.FS.analyzePath(savePath).exists) {
+                return forceSync ? syncEmulingoFs(gm) : Promise.resolve();
+            }
+            const hash = hashEmulingoBytes(gm.FS.readFile(savePath));
+            if (forceSync || hash !== emu.__emulingoLastSaveHash) {
+                emu.__emulingoLastSaveHash = hash;
+                return syncEmulingoFs(gm);
+            }
+        } catch (error) {
+            console.warn('Emulingo save checkpoint failed', error);
+        }
+        return Promise.resolve();
+    }
+
+    function checkpointEmulingoActiveSave(forceSync = false) {
+        const frame = document.getElementById('emulingo-frame');
+        if (!frame) return Promise.resolve();
+        return checkpointEmulingoSave(frame, forceSync);
+    }
+
+    window.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') checkpointEmulingoActiveSave(true);
+    });
+    window.addEventListener('pagehide', () => checkpointEmulingoActiveSave(true));
+    window.addEventListener('beforeunload', () => checkpointEmulingoActiveSave(true));
+
+    function emulingoStateSlot(emu, explicitSlot) {
+        const raw = explicitSlot || (emu && typeof emu.getSettingValue === 'function' && emu.getSettingValue('save-state-slot')) || '1';
+        return String(raw).trim() || '1';
+    }
+
+    function emulingoStateKey(emu, slot) {
+        const base = emu.getBaseFileName();
+        return slot === '1' ? `${base}.state` : `${base}-slot-${slot}.state`;
+    }
+
+    function writeEmulingoQuickSlot(gm, slot, bytes) {
+        if (!gm || !gm.FS || !bytes) return;
+        const quickPath = `/${slot}-quick.state`;
+        try {
+            if (gm.FS.analyzePath(quickPath).exists) gm.FS.unlink(quickPath);
+            gm.FS.writeFile(quickPath, bytes);
+        } catch (error) {
+            console.warn('Emulingo quick slot cache failed', error);
+        }
+    }
+
+    function putEmulingoState(emu, key, bytes) {
+        if (!emu || !emu.storage || !emu.storage.states) return Promise.resolve();
+        return trackEmulingoPending((async () => {
+            await emu.storage.states.put(key, bytes);
+            await new Promise(resolve => setTimeout(resolve, 50));
+        })());
+    }
+
+    function showEmulingoEmuMessage(emu, text, kind = 'success') {
+        if (!emu) return;
+        if (typeof emu.displayMessage === 'function') {
+            emu.displayMessage(text);
+        } else if (emu.frontend && typeof emu.frontend.displayMessage === 'function') {
+            emu.frontend.displayMessage(text, undefined, undefined, kind);
+        }
+    }
+
+    function selectEmulingoEmuFile(emu) {
+        if (!emu) return Promise.resolve(null);
+        if (typeof emu.selectFile === 'function') return emu.selectFile();
+        if (emu.frontend && typeof emu.frontend.selectFile === 'function') return emu.frontend.selectFile();
+        return Promise.resolve(null);
+    }
 
     function openEmulingo() {
         const overlay = document.getElementById('emulingo-overlay');
@@ -1344,6 +1482,13 @@
         doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#game{width:100%;height:100%}</style></head><body><div id="game"></div></body></html>');
         doc.close();
 
+        doc.addEventListener('visibilitychange', () => {
+            if (doc.visibilityState === 'hidden') checkpointEmulingoSave(frame, true);
+        });
+        win.addEventListener('blur', () => checkpointEmulingoSave(frame));
+        win.addEventListener('pagehide', () => checkpointEmulingoSave(frame, true));
+        win.addEventListener('beforeunload', () => checkpointEmulingoSave(frame, true));
+
         win.EJS_player = '#game';
         win.EJS_core = 'gba';
         win.EJS_gameUrl = emulingoRomUrl;
@@ -1353,9 +1498,12 @@
         win.EJS_color = '#e0af68';
         win.EJS_startOnLoaded = true;
         win.EJS_Buttons = { exitEmulation: false };
-        win.EJS_defaultOptions = { 'save-state-location': 'browser' };
+        win.EJS_defaultOptions = { 'save-state-location': 'browser', 'save-save-interval': '30' };
         win.EJS_ready = markEmulingoReady;
         win.EJS_onGameStart = markEmulingoReady;
+        win.EJS_onSaveState = event => handleEmulingoSaveState(frame, event);
+        win.EJS_onLoadState = () => handleEmulingoLoadState(frame);
+        win.EJS_onLoadSave = () => handleEmulingoLoadSaveFile(frame);
 
         const script = doc.createElement('script');
         script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
@@ -1369,28 +1517,200 @@
         }, 30000);
     }
 
-    /* EmulatorJS's default exit handler unmounts /data/saves before IDBFS finishes
-       auto-persisting, which wipes IndexedDB saves. Replace it with an explicit sync. */
-    function patchEmulingoExit(emu) {
-        if (!emu || !emu.functions || !Array.isArray(emu.functions.exit)) return;
-        emu.functions.exit = [() => {
-            try {
-                if (emu.saveSaveInterval) {
-                    clearInterval(emu.saveSaveInterval);
-                    emu.saveSaveInterval = null;
-                }
-                const gm = emu.gameManager;
-                if (!emu.failedToStart && gm) {
-                    gm.saveSaveFiles();
-                    gm.toggleMainLoop(0);
-                    if (gm.FS && typeof gm.FS.syncfs === 'function') {
-                        gm.FS.syncfs(false, () => {});
+    function toEmulingoBytes(raw, win) {
+        const Bytes = (win && win.Uint8Array) || Uint8Array;
+        return raw instanceof Bytes ? raw : new Bytes(raw);
+    }
+
+    function handleEmulingoSaveState(frame, event) {
+        const win = frame && frame.contentWindow;
+        const doc = frame && frame.contentDocument;
+        const emu = win && win.EJS_emulator;
+        const gm = emu && emu.gameManager;
+        const raw = event && event.state;
+        if (!emu || !gm || !raw) return;
+        const bytes = toEmulingoBytes(raw, win);
+        const slot = emulingoStateSlot(emu);
+        writeEmulingoQuickSlot(gm, slot, bytes);
+        if (emu.getSettingValue('save-state-location') === 'browser' && emu.saveInBrowserSupported() && emu.storage && emu.storage.states) {
+            putEmulingoState(emu, emulingoStateKey(emu, slot), bytes).then(() => {
+                showEmulingoEmuMessage(emu, slot === '1' ? 'SAVE SAVED TO BROWSER' : `SAVE SAVED TO BROWSER (SLOT ${slot})`, 'success');
+            });
+            checkpointEmulingoSave(frame);
+            return;
+        }
+        if (!win || !doc) return;
+        const url = win.URL.createObjectURL(new Blob([bytes]));
+        const link = doc.createElement('a');
+        link.href = url;
+        link.download = emulingoStateKey(emu, slot);
+        link.click();
+        setTimeout(() => win.URL.revokeObjectURL(url), 10000);
+    }
+
+    function handleEmulingoLoadState(frame) {
+        const win = frame && frame.contentWindow;
+        const emu = win && win.EJS_emulator;
+        const gm = emu && emu.gameManager;
+        if (!emu || !gm) return;
+        const slot = emulingoStateSlot(emu);
+        if (emu.getSettingValue('save-state-location') === 'browser' && emu.saveInBrowserSupported() && emu.storage && emu.storage.states) {
+            (async () => {
+                try {
+                    const data = await emu.storage.states.get(emulingoStateKey(emu, slot));
+                    if (!data || !(data.byteLength || data.length)) {
+                        showEmulingoEmuMessage(emu, `NO SAVE STATE IN SLOT ${slot}`, 'error');
+                        return;
                     }
+                    const bytes = toEmulingoBytes(data, win);
+                    writeEmulingoQuickSlot(gm, slot, bytes);
+                    gm.loadState(bytes);
+                    showEmulingoEmuMessage(emu, slot === '1' ? 'SAVE LOADED FROM BROWSER' : `SAVE LOADED FROM BROWSER (SLOT ${slot})`, 'success');
+                } catch (error) {
+                    console.warn('Emulingo load state failed', error);
+                    showEmulingoEmuMessage(emu, 'FAILED TO LOAD STATE', 'error');
                 }
+            })();
+            return;
+        }
+        (async () => {
+            try {
+                const file = await selectEmulingoEmuFile(emu);
+                if (!file) return;
+                const bytes = toEmulingoBytes(await file.arrayBuffer(), win);
+                writeEmulingoQuickSlot(gm, slot, bytes);
+                gm.loadState(bytes);
             } catch (error) {
-                console.warn('Emulingo exit save failed', error);
+                console.warn('Emulingo file state load failed', error);
             }
-        }];
+        })();
+    }
+
+    function handleEmulingoLoadSaveFile(frame) {
+        const win = frame && frame.contentWindow;
+        const emu = win && win.EJS_emulator;
+        const gm = emu && emu.gameManager;
+        if (!emu || !gm) return;
+        (async () => {
+            try {
+                const file = await selectEmulingoEmuFile(emu);
+                if (!file) return;
+                const sav = toEmulingoBytes(await file.arrayBuffer(), win);
+                const path = gm.getSaveFilePath();
+                if (!path) return;
+                if (gm.FS.analyzePath(path).exists) gm.FS.unlink(path);
+                gm.writeFile(path, sav);
+                gm.loadSaveFiles();
+                gm.restart();
+                emu.__emulingoLastSaveHash = hashEmulingoBytes(sav);
+                await syncEmulingoFs(gm);
+                showEmulingoEmuMessage(emu, 'LOADED SAVE FILE', 'success');
+            } catch (error) {
+                console.warn('Emulingo save import failed', error);
+                showEmulingoEmuMessage(emu, 'FAILED TO LOAD SAVE FILE', 'error');
+            }
+        })();
+    }
+
+    /* EmulatorJS's default exit handler unmounts /data/saves before IDBFS finishes
+       auto-persisting, and Quick Save only writes to volatile RAM. Patch both. */
+    function patchEmulingoEmulator(emu, frame) {
+        if (!emu) return;
+        if (emu.functions && Array.isArray(emu.functions.exit)) {
+            emu.functions.exit = [() => {
+                try {
+                    if (emu.saveSaveInterval) {
+                        clearInterval(emu.saveSaveInterval);
+                        emu.saveSaveInterval = null;
+                    }
+                    const gm = emu.gameManager;
+                    if (!emu.failedToStart && gm) {
+                        gm.saveSaveFiles();
+                        gm.toggleMainLoop(0);
+                        syncEmulingoFs(gm);
+                    }
+                } catch (error) {
+                    console.warn('Emulingo exit save failed', error);
+                }
+            }];
+        }
+        if (!emu.__emulingoHooksBound) {
+            emu.__emulingoHooksBound = true;
+            if (typeof emu.pause === 'function') {
+                const origPause = emu.pause.bind(emu);
+                emu.pause = (...args) => {
+                    const res = origPause(...args);
+                    if (!emu.__emulingoClosing) checkpointEmulingoSave(frame);
+                    return res;
+                };
+            }
+            if (typeof emu.on === 'function') {
+                emu.on('saveSaveFiles', () => {
+                    if (emu.gameManager && !emu.__emulingoClosing) syncEmulingoFs(emu.gameManager);
+                });
+            }
+        }
+        const gm = emu.gameManager;
+        if (!gm || gm.__emulingoPatched) return;
+        gm.__emulingoPatched = true;
+        try {
+            const savePath = gm.getSaveFilePath();
+            emu.__emulingoLastSaveHash = (savePath && gm.FS && gm.FS.analyzePath(savePath).exists)
+                ? hashEmulingoBytes(gm.FS.readFile(savePath))
+                : 'blank';
+        } catch (error) {
+            emu.__emulingoLastSaveHash = 'blank';
+        }
+        const win = frame && frame.contentWindow;
+        gm.quickSave = slotArg => {
+            const slot = emulingoStateSlot(emu, slotArg);
+            try {
+                const raw = gm.getState();
+                const bytes = toEmulingoBytes(raw, win);
+                writeEmulingoQuickSlot(gm, slot, bytes);
+                if (emu.saveInBrowserSupported() && emu.storage && emu.storage.states) {
+                    putEmulingoState(emu, emulingoStateKey(emu, slot), bytes);
+                }
+                checkpointEmulingoSave(frame);
+                return true;
+            } catch (error) {
+                console.warn('Emulingo quick save failed', error);
+                return false;
+            }
+        };
+        gm.quickLoad = slotArg => {
+            const slot = emulingoStateSlot(emu, slotArg);
+            const quickName = `${slot}-quick.state`;
+            if (gm.FS && gm.FS.analyzePath(`/${quickName}`).exists) {
+                gm.clearEJSResetTimer();
+                gm.functions.loadState(quickName, 0);
+                return;
+            }
+            (async () => {
+                try {
+                    const data = (emu.saveInBrowserSupported() && emu.storage && emu.storage.states)
+                        ? await emu.storage.states.get(emulingoStateKey(emu, slot))
+                        : null;
+                    if (!data || !(data.byteLength || data.length)) {
+                        showEmulingoEmuMessage(emu, `NO SAVE STATE IN SLOT ${slot}`, 'error');
+                        return;
+                    }
+                    const bytes = toEmulingoBytes(data, win);
+                    writeEmulingoQuickSlot(gm, slot, bytes);
+                    gm.loadState(bytes);
+                    showEmulingoEmuMessage(emu, `LOADED STATE FROM SLOT ${slot}`, 'success');
+                } catch (error) {
+                    console.warn('Emulingo quick load failed', error);
+                    showEmulingoEmuMessage(emu, 'FAILED TO LOAD STATE', 'error');
+                }
+            })();
+        };
+        clearEmulingoAutoSave();
+        emulingoAutoSaveTimer = setInterval(() => {
+            if (emu.started && !emu.paused && !emu.failedToStart) {
+                checkpointEmulingoSave(frame);
+            }
+        }, 3000);
     }
 
     function markEmulingoReady() {
@@ -1402,7 +1722,7 @@
         if (!frame) return;
         try {
             const emu = frame.contentWindow && frame.contentWindow.EJS_emulator;
-            patchEmulingoExit(emu);
+            patchEmulingoEmulator(emu, frame);
             frame.contentWindow.focus();
             const canvas = frame.contentDocument.querySelector('canvas');
             if (canvas) canvas.focus();
@@ -1412,26 +1732,28 @@
     }
 
     async function flushEmulingoSave(frame) {
+        clearEmulingoAutoSave();
         const emu = frame && frame.contentWindow && frame.contentWindow.EJS_emulator;
-        if (!emu) return;
+        if (!emu) {
+            await waitForEmulingoPending();
+            return;
+        }
+        emu.__emulingoClosing = true;
         try {
             if (emu.saveSaveInterval) {
                 clearInterval(emu.saveSaveInterval);
                 emu.saveSaveInterval = null;
             }
             const gm = emu.gameManager;
-            if (!gm) return;
-            if (emu.started && !emu.failedToStart) {
-                gm.saveSaveFiles();
-                emu.pause();
-                gm.toggleMainLoop(0);
+            if (gm) {
+                if (emu.started && !emu.failedToStart) {
+                    gm.saveSaveFiles();
+                    emu.pause();
+                    gm.toggleMainLoop(0);
+                }
+                await syncEmulingoFs(gm);
             }
-            if (gm.FS && typeof gm.FS.syncfs === 'function') {
-                await Promise.race([
-                    new Promise(resolve => gm.FS.syncfs(false, () => resolve())),
-                    new Promise(resolve => setTimeout(resolve, 1500))
-                ]);
-            }
+            await waitForEmulingoPending();
         } catch (error) {
             console.warn('Emulingo save failed', error);
         }
@@ -1440,6 +1762,7 @@
     function stopEmulingoSession() {
         clearTimeout(emulingoReadyTimer);
         emulingoReadyTimer = null;
+        clearEmulingoAutoSave();
         const frame = document.getElementById('emulingo-frame');
         const romUrl = emulingoRomUrl;
         emulingoRomUrl = null;
