@@ -383,13 +383,6 @@
         #emulingo-translation-panel[hidden] { display: none; }
         .emulingo-translation-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
         .emulingo-translation-header .dash-title { margin-bottom: 0; }
-        .emulingo-capture-image {
-            display: block; width: 100%; max-width: 380px; max-height: 160px; object-fit: contain;
-            margin: 0 auto 14px;
-            border: 1px solid var(--card-border); border-radius: 8px; background: #000;
-            image-rendering: pixelated;
-        }
-        .emulingo-capture-image[hidden] { display: none; }
         #emulingo-capture-status { min-height: 1.2em; margin: 0 0 12px; color: var(--dashi-gold); font-size: 0.72rem; line-height: 1.5; }
         .emulingo-capture-section { margin-top: 16px; }
         .emulingo-capture-section h3 {
@@ -594,7 +587,6 @@
                         <h2 class="dash-title" id="emulingo-capture-title">SCREEN_TRANSLATION</h2>
                         <button class="btn-deck" type="button" title="Clear this translation and keep playing" onclick="clearEmulingoTranslation()">CLEAR</button>
                     </div>
-                    <img id="emulingo-capture-image" class="emulingo-capture-image" alt="Captured game screen" hidden>
                     <p id="emulingo-capture-status" aria-live="polite"></p>
                     <div id="emulingo-capture-result" hidden></div>
                 </section>
@@ -2508,9 +2500,6 @@
         const panel = document.getElementById('emulingo-translation-panel');
         panel.hidden = true;
         panel.scrollTop = 0;
-        const image = document.getElementById('emulingo-capture-image');
-        image.hidden = true;
-        image.removeAttribute('src');
         document.getElementById('emulingo-capture-status').textContent = '';
         const result = document.getElementById('emulingo-capture-result');
         result.hidden = true;
@@ -2544,9 +2533,6 @@
         const panel = document.getElementById('emulingo-translation-panel');
         panel.hidden = false;
         panel.scrollTop = 0;
-        const image = document.getElementById('emulingo-capture-image');
-        image.hidden = true;
-        image.removeAttribute('src');
         document.getElementById('emulingo-capture-status').textContent = 'CAPTURING_SCREEN...';
         const result = document.getElementById('emulingo-capture-result');
         result.hidden = true;
@@ -2581,9 +2567,6 @@
                 : new Blob([captured], { type: `image/${shot.format || 'png'}` });
             const dataUrl = await blobToDataUrl(blob);
             if (requestId !== emulingoCaptureRequest) return;
-            const image = document.getElementById('emulingo-capture-image');
-            image.src = dataUrl;
-            image.hidden = false;
             document.getElementById('emulingo-capture-status').textContent = 'READING_SCREEN...';
             const result = await DatabaseService.translateScreen(dataUrl);
             if (requestId !== emulingoCaptureRequest) return;

@@ -7,8 +7,8 @@ const corsHeaders = {
 }
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024
-const MAX_VOCAB_ITEMS = 12
-const MAX_SENTENCES = 8
+const MAX_VOCAB_ITEMS = 6
+const MAX_SENTENCES = 4
 
 type JsonObject = Record<string, unknown>
 
@@ -122,10 +122,20 @@ Return ONLY valid JSON with this exact shape:
 Rules:
 - Only include Japanese you can actually read.
 - If there is no readable Japanese, return empty arrays and explain why in notes.
-- Prefer 1-8 high-value vocabulary items rather than every particle.
+- Prefer 1-6 high-value vocabulary items rather than every particle.
 - Keep meanings short and flashcard-friendly.
+- Keep the response compact.
 - The kanji and reading must match each other.
 - Do not wrap the JSON in markdown fences.`
+
+function thinkingConfigForModel(model: string) {
+  if (model.startsWith('gemini-2.5-flash-lite')) return null
+  if (model.startsWith('gemini-2.5')) return { thinkingBudget: 0 }
+  if (model.startsWith('gemini-3')) {
+    return { thinkingLevel: model.includes('flash-lite') ? 'minimal' : 'low' }
+  }
+  return null
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -168,12 +178,13 @@ serve(async (req) => {
     const configuredModel = Deno.env.get('VISION_MODEL') || ''
     const models = [
       configuredModel.includes('gemini') ? configuredModel : '',
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite',
       'gemini-3.8-flash',
       'gemini-3.7-flash',
       'gemini-3.6-flash',
       'gemini-3.5-flash',
       'gemini-flash-latest',
-      'gemini-3.1-flash-lite',
       'gemini-2.5-flash',
     ].filter((model, index, list) => model && list.indexOf(model) === index)
 
@@ -185,6 +196,7 @@ serve(async (req) => {
     for (let attempt = 0; attempt < maxAttempts && !response; attempt++) {
       for (const model of models) {
         usedModel = model
+        const thinkingConfig = thinkingConfigForModel(model)
         response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
           {
@@ -201,8 +213,9 @@ serve(async (req) => {
               ],
               generationConfig: {
                 temperature: 0.2,
-                maxOutputTokens: 2048,
+                maxOutputTokens: 1600,
                 responseMimeType: 'application/json',
+                ...(thinkingConfig ? { thinkingConfig } : {}),
               },
             }),
           },
