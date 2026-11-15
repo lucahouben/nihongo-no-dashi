@@ -375,6 +375,27 @@
         .emulingo-actions .btn-main { width: auto; margin-top: 0; flex: 1 1 180px; }
         .emulingo-actions .btn-secondary { width: auto; margin-top: 0; flex: 1 1 180px; }
         .emulingo-hint { margin: 0; color: var(--muted); font-size: 0.62rem; line-height: 1.5; text-align: left; }
+        .emulingo-shortcut-bar {
+            position: absolute; top: 10px; right: 10px; z-index: 5;
+            display: flex; align-items: stretch; gap: 6px; pointer-events: none;
+        }
+        .emulingo-shortcut-bar button {
+            pointer-events: auto; display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 10px; border: 1px solid var(--dashi-gold); border-radius: 8px;
+            background: rgba(8, 10, 20, 0.78); color: var(--dashi-gold); cursor: pointer;
+            font: 800 0.6rem 'JetBrains Mono', 'Fira Code', monospace; letter-spacing: 0.5px;
+            text-transform: uppercase; backdrop-filter: blur(3px); -webkit-tap-highlight-color: transparent;
+        }
+        .emulingo-shortcut-bar button:hover,
+        .emulingo-shortcut-bar button:focus-visible { background: rgba(8, 10, 20, 0.94); }
+        .emulingo-shortcut-bar button:disabled { opacity: 0.5; cursor: default; }
+        .emulingo-shortcut-map { border-color: var(--card-border) !important; color: var(--muted) !important; }
+        .emulingo-shortcut-map.active { border-color: var(--accent) !important; color: var(--accent) !important; animation: pulse 1.2s ease-in-out infinite; }
+        .emulingo-shortcut-keys { display: inline-flex; align-items: center; gap: 4px; }
+        .emulingo-shortcut-key {
+            padding: 2px 5px; border: 1px solid currentColor; border-radius: 4px;
+            font-size: 0.54rem; line-height: 1.2; opacity: 0.9;
+        }
         #emulingo-translation-panel {
             flex: 0 1 auto; max-height: min(42vh, 360px); overflow-y: auto;
             padding: 14px 16px; border: 1px solid var(--card-border); border-radius: 12px;
@@ -418,6 +439,8 @@
             .emulingo-header .btn-deck { flex: 0 0 auto; }
             #emulingo-launcher { padding: 18px; }
             #emulingo-translation-panel { max-height: 48vh; padding: 12px; }
+            .emulingo-shortcut-bar { top: 6px; right: 6px; }
+            .emulingo-shortcut-bar button { padding: 7px 8px; }
         }
         #sync-loader { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--dark-kombu); }
         .spinner { width: 40px; height: 40px; margin-bottom: 20px; border: 3px solid var(--card-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -1279,6 +1302,24 @@
     const emulingoCloudChains = new Map();
     let emulingoTranslation = null;
     let emulingoCaptureRequest = 0;
+    const EMULINGO_SHORTCUT_KEY_STORAGE = 'emulingoTranslateShortcutKey';
+    const EMULINGO_SHORTCUT_PAD_STORAGE = 'emulingoTranslateShortcutPad';
+    let emulingoShortcutKey = 'KeyT';
+    let emulingoShortcutPad = null;
+    let emulingoShortcutMapping = false;
+    let emulingoShortcutPadPrev = new Set();
+    let emulingoShortcutWatcher = null;
+    try {
+        const storedKey = localStorage.getItem(EMULINGO_SHORTCUT_KEY_STORAGE);
+        if (storedKey) emulingoShortcutKey = storedKey;
+        const storedPad = localStorage.getItem(EMULINGO_SHORTCUT_PAD_STORAGE);
+        if (storedPad !== null && storedPad !== '') {
+            const padIndex = Number(storedPad);
+            if (Number.isInteger(padIndex) && padIndex >= 0) emulingoShortcutPad = padIndex;
+        }
+    } catch (error) {
+        console.warn('Emulingo shortcut settings unavailable', error);
+    }
 
     function trackEmulingoPending(promise) {
         const task = Promise.resolve(promise);
@@ -1616,12 +1657,16 @@
         overlay.classList.add('active');
         overlay.setAttribute('aria-hidden', 'false');
         clearEmulingoTranslation();
+        cancelEmulingoShortcutMapping(false);
+        startEmulingoShortcutWatcher();
         resetEmulingoLauncher();
         document.getElementById('rom-file-input').value = '';
     }
 
     function closeEmulingo() {
         clearEmulingoTranslation();
+        cancelEmulingoShortcutMapping(false);
+        stopEmulingoShortcutWatcher();
         const flush = stopEmulingoSession();
         const overlay = document.getElementById('emulingo-overlay');
         overlay.classList.remove('active');
@@ -1810,6 +1855,7 @@
 
     function startEmulingoFrame(cloudPrefetch = null) {
         const wrap = document.getElementById('emulingo-frame-wrap');
+        cancelEmulingoShortcutMapping(false);
         wrap.replaceChildren();
         const loading = document.createElement('div');
         loading.id = 'emulingo-loading';
@@ -1826,6 +1872,7 @@
         frame.__emulingoCloudPrefetch = cloudPrefetch;
         frame.__emulingoSessionQuickSlots = new Set();
         wrap.appendChild(frame);
+        ensureEmulingoShortcutOverlay(wrap);
 
         let booted = false;
         let fallbackTimer = null;
@@ -2411,6 +2458,7 @@
         try {
             const emu = frame.contentWindow && frame.contentWindow.EJS_emulator;
             patchEmulingoEmulator(emu, frame);
+            installEmulingoFrameShortcuts(frame);
             frame.contentWindow.focus();
             const canvas = frame.contentDocument.querySelector('canvas');
             if (canvas) canvas.focus();
@@ -2510,6 +2558,231 @@
         resetEmulingoTranslationPanel();
     }
 
+    function emulingoShortcutKeyLabel(code) {
+        if (!code) return 'NONE';
+        if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+        if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+        if (/^Numpad[0-9]$/.test(code)) return `NUM ${code.slice(6)}`;
+        const labels = {
+            Space: 'SPACE', Enter: 'ENTER', Tab: 'TAB', Backspace: 'BACK',
+            ShiftLeft: 'L SHIFT', ShiftRight: 'R SHIFT',
+            ControlLeft: 'L CTRL', ControlRight: 'R CTRL',
+            AltLeft: 'L ALT', AltRight: 'R ALT', MetaLeft: 'META', MetaRight: 'META',
+            ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT',
+            Escape: 'ESC', Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']',
+            Semicolon: ';', Quote: "'", Comma: ',', Period: '.', Slash: '/',
+            Backslash: '\\', Backquote: '`'
+        };
+        return labels[code] || code;
+    }
+
+    function emulingoShortcutPadLabel(index) {
+        return index === null ? 'NONE' : `PAD ${index}`;
+    }
+
+    function updateEmulingoShortcutLabels() {
+        const keyLabel = emulingoShortcutKeyLabel(emulingoShortcutKey);
+        const padLabel = emulingoShortcutPad === null ? '' : emulingoShortcutPadLabel(emulingoShortcutPad);
+        document.querySelectorAll('.emulingo-shortcut-keys').forEach(container => {
+            container.innerHTML = `<span class="emulingo-shortcut-key">${escapeHtml(keyLabel)}</span>${padLabel ? `<span class="emulingo-shortcut-key">${escapeHtml(padLabel)}</span>` : ''}`;
+        });
+        const mapButton = document.getElementById('emulingo-shortcut-map-btn');
+        if (mapButton) {
+            mapButton.title = `Map the translate shortcut (keyboard: ${keyLabel}, gamepad: ${padLabel || 'unset'})`;
+        }
+    }
+
+    function updateEmulingoShortcutMappingUi() {
+        const mapButton = document.getElementById('emulingo-shortcut-map-btn');
+        if (!mapButton) return;
+        mapButton.classList.toggle('active', emulingoShortcutMapping);
+        mapButton.textContent = emulingoShortcutMapping ? 'CANCEL' : 'MAP';
+    }
+
+    function ensureEmulingoShortcutOverlay(wrap) {
+        if (!wrap) return;
+        wrap.querySelectorAll('.emulingo-shortcut-bar').forEach(node => node.remove());
+        const bar = document.createElement('div');
+        bar.className = 'emulingo-shortcut-bar';
+        bar.innerHTML = '<button class="emulingo-shortcut-translate" type="button" onmousedown="event.preventDefault()" onclick="captureEmulingoScreen()" title="Translate the current screen">TRANSLATE<span class="emulingo-shortcut-keys"></span></button><button class="emulingo-shortcut-map" id="emulingo-shortcut-map-btn" type="button" onmousedown="event.preventDefault()" onclick="toggleEmulingoShortcutMapping()" title="Map the translate shortcut">MAP</button>';
+        wrap.appendChild(bar);
+        updateEmulingoShortcutLabels();
+        updateEmulingoShortcutMappingUi();
+    }
+
+    function installEmulingoFrameShortcuts(frame) {
+        try {
+            const win = frame && frame.contentWindow;
+            if (!win || frame.__emulingoShortcutHandler) return;
+            frame.__emulingoShortcutHandler = event => handleEmulingoShortcutKey(event);
+            win.addEventListener('keydown', frame.__emulingoShortcutHandler, true);
+        } catch (error) {
+            console.warn('Emulingo shortcut binding failed', error);
+        }
+    }
+
+    function emulingoShortcutTargetIsTyping(target) {
+        if (!target) return false;
+        const tag = target.tagName;
+        return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+    }
+
+    function triggerEmulingoTranslateShortcut() {
+        const stage = document.getElementById('emulingo-stage');
+        if (!stage || stage.hidden) return;
+        const translateButton = document.getElementById('emulingo-translate-btn');
+        if (translateButton && translateButton.disabled) return;
+        captureEmulingoScreen();
+    }
+
+    function handleEmulingoShortcutKey(event) {
+        const overlay = document.getElementById('emulingo-overlay');
+        const stage = document.getElementById('emulingo-stage');
+        if (!overlay || !overlay.classList.contains('active') || !stage || stage.hidden) return;
+
+        if (emulingoShortcutMapping) {
+            if (event.code === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                cancelEmulingoShortcutMapping(true);
+                return;
+            }
+            if (/^(Shift|Control|Alt|Meta)(Left|Right)$/.test(event.code)) return;
+            event.preventDefault();
+            event.stopPropagation();
+            setEmulingoShortcutKey(event.code);
+            return;
+        }
+
+        if (event.code !== emulingoShortcutKey || event.repeat) return;
+        if (emulingoShortcutTargetIsTyping(event.target)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        triggerEmulingoTranslateShortcut();
+    }
+
+    function setEmulingoShortcutKey(code) {
+        emulingoShortcutKey = code;
+        try {
+            localStorage.setItem(EMULINGO_SHORTCUT_KEY_STORAGE, code);
+        } catch (error) {
+            console.warn('Emulingo shortcut could not be saved', error);
+        }
+        emulingoShortcutMapping = false;
+        emulingoShortcutPadPrev = emulingoReadPadButtons();
+        updateEmulingoShortcutLabels();
+        updateEmulingoShortcutMappingUi();
+        showToast(`Translate shortcut mapped to ${emulingoShortcutKeyLabel(code)}.`, 'var(--success)');
+    }
+
+    function setEmulingoShortcutPad(index) {
+        emulingoShortcutPad = index;
+        try {
+            localStorage.setItem(EMULINGO_SHORTCUT_PAD_STORAGE, String(index));
+        } catch (error) {
+            console.warn('Emulingo shortcut could not be saved', error);
+        }
+        emulingoShortcutMapping = false;
+        emulingoShortcutPadPrev = emulingoReadPadButtons();
+        updateEmulingoShortcutLabels();
+        updateEmulingoShortcutMappingUi();
+        showToast(`Translate shortcut mapped to gamepad button ${index}.`, 'var(--success)');
+    }
+
+    function cancelEmulingoShortcutMapping(message) {
+        if (!emulingoShortcutMapping) return;
+        emulingoShortcutMapping = false;
+        emulingoShortcutPadPrev = emulingoReadPadButtons();
+        updateEmulingoShortcutMappingUi();
+        if (message) showToast('Shortcut mapping cancelled.', 'var(--muted)');
+    }
+
+    function toggleEmulingoShortcutMapping() {
+        if (emulingoShortcutMapping) {
+            cancelEmulingoShortcutMapping(true);
+            return;
+        }
+        emulingoShortcutMapping = true;
+        emulingoShortcutPadPrev = emulingoReadPadButtons();
+        updateEmulingoShortcutMappingUi();
+        showToast('Press a keyboard key or gamepad button to map TRANSLATE. Esc cancels.', 'var(--dashi-gold)');
+    }
+
+    function emulingoReadPadButtons() {
+        const pressed = new Set();
+        const sources = [];
+        try {
+            const frame = document.getElementById('emulingo-frame');
+            const win = frame && frame.contentWindow;
+            if (win && win.navigator && typeof win.navigator.getGamepads === 'function') {
+                sources.push(win.navigator.getGamepads());
+            }
+        } catch (error) {
+            console.warn('Emulingo frame gamepad read failed', error);
+        }
+        if (typeof navigator.getGamepads === 'function') sources.push(navigator.getGamepads());
+        for (const gamepads of sources) {
+            if (!gamepads) continue;
+            for (const pad of gamepads) {
+                if (!pad || !pad.buttons) continue;
+                pad.buttons.forEach((button, index) => {
+                    if (button && (button.pressed || (typeof button.value === 'number' && button.value > 0.5))) {
+                        pressed.add(`${pad.index}:${index}`);
+                    }
+                });
+            }
+        }
+        return pressed;
+    }
+
+    function emulingoShortcutTick() {
+        emulingoShortcutWatcher = null;
+        const overlay = document.getElementById('emulingo-overlay');
+        if (!overlay || !overlay.classList.contains('active')) return;
+        const stage = document.getElementById('emulingo-stage');
+        if (!stage || stage.hidden) {
+            emulingoShortcutPadPrev = new Set();
+            emulingoShortcutWatcher = requestAnimationFrame(emulingoShortcutTick);
+            return;
+        }
+
+        const pressed = emulingoReadPadButtons();
+        if (emulingoShortcutMapping) {
+            const fresh = Array.from(pressed).find(id => !emulingoShortcutPadPrev.has(id));
+            if (fresh) {
+                const buttonIndex = Number(fresh.split(':')[1]);
+                if (Number.isInteger(buttonIndex)) setEmulingoShortcutPad(buttonIndex);
+            }
+        } else if (emulingoShortcutPad !== null) {
+            const wanted = String(emulingoShortcutPad);
+            let shouldTranslate = false;
+            for (const id of pressed) {
+                const buttonIndex = id.split(':')[1];
+                if (buttonIndex === wanted && !emulingoShortcutPadPrev.has(id)) {
+                    shouldTranslate = true;
+                    break;
+                }
+            }
+            if (shouldTranslate) triggerEmulingoTranslateShortcut();
+        }
+        emulingoShortcutPadPrev = pressed;
+        emulingoShortcutWatcher = requestAnimationFrame(emulingoShortcutTick);
+    }
+
+    function startEmulingoShortcutWatcher() {
+        if (!emulingoShortcutWatcher) {
+            emulingoShortcutPadPrev = emulingoReadPadButtons();
+            emulingoShortcutWatcher = requestAnimationFrame(emulingoShortcutTick);
+        }
+        updateEmulingoShortcutLabels();
+    }
+
+    function stopEmulingoShortcutWatcher() {
+        if (emulingoShortcutWatcher) cancelAnimationFrame(emulingoShortcutWatcher);
+        emulingoShortcutWatcher = null;
+        emulingoShortcutPadPrev = new Set();
+    }
+
     function blobToDataUrl(blob) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -2542,9 +2815,13 @@
 
     function emulingoTranslateButtonBusy(busy) {
         const button = document.getElementById('emulingo-translate-btn');
-        if (!button) return;
-        button.disabled = busy;
-        button.textContent = busy ? 'CAPTURING...' : 'TRANSLATE_SCREEN';
+        if (button) {
+            button.disabled = busy;
+            button.textContent = busy ? 'CAPTURING...' : 'TRANSLATE_SCREEN';
+        }
+        document.querySelectorAll('.emulingo-shortcut-translate').forEach(shortcut => {
+            shortcut.disabled = busy;
+        });
     }
 
     async function captureEmulingoScreen() {
@@ -3337,6 +3614,9 @@
             button.textContent = 'Auto-fill';
         }
     }
+
+    /* Emulingo translate shortcut (keyboard + gamepad) */
+    window.addEventListener('keydown', handleEmulingoShortcutKey, true);
 
     /* Global keyboard shortcuts for session navigation */
     window.addEventListener('keydown', e => {
