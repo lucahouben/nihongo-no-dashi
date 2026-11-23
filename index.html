@@ -6,7 +6,7 @@
     <title>日本語のダシ</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
-    <meta name="theme-color" content="#1a1b26">
+    <meta name="theme-color" content="#121212">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,55 +16,55 @@
     <style>
         :root {
             color-scheme: dark;
-            --dark-kombu: #1a1b26;
-            --card-bg: #1f2335;
-            --card-border: #292e42;
-            --text: #c0caf5;
-            --muted: #565f89;
-            --dashi-gold: #e0af68;
-            --action-bg: #e0af68;
-            --accent: #7dcfff;
-            --success: #9ece6a;
-            --error: #f7768e;
-            --feedback-text: #1a1b26;
-            --toggle-bg: #292e42;
-            --toggle-active: #7dcfff;
-            --button-text: #1a1b26;
-            --card-front-bg: #e0af68;
-            --card-front-text: #1a1b26;
-            --stage-prepping: #769067;
-            --stage-simmering: #e0af68;
-            --stage-boiling: #ff9e64;
-            --stage-infusing: #bb9af7;
-            --stage-perfect: #f7768e;
-            --border-soft: rgba(192, 202, 245, 0.12);
-            --panel-shadow: 0 18px 55px rgba(8, 10, 20, 0.32);
+            --dark-kombu: #0d0d0d;
+            --card-bg: #1a1a1a;
+            --card-border: #333333;
+            --text: #bebebe;
+            --muted: #555555;
+            --dashi-gold: #e68e0d;
+            --action-bg: #e68e0d;
+            --accent: #f59e0b;
+            --success: #FFC107;
+            --error: #D35F5F;
+            --feedback-text: #121212;
+            --toggle-bg: #2a2a2a;
+            --toggle-active: #f59e0b;
+            --button-text: #121212;
+            --card-front-bg: #e68e0d;
+            --card-front-text: #121212;
+            --stage-prepping: #631e1e;
+            --stage-simmering: #e68e0d;
+            --stage-boiling: #c63d3d;
+            --stage-infusing: #D35F5F;
+            --stage-perfect: #B91C1C;
+            --border-soft: rgba(190, 190, 190, 0.12);
+            --panel-shadow: 0 18px 55px rgba(0, 0, 0, 0.5);
         }
         [data-theme="light"] {
             color-scheme: light;
-            --dark-kombu: #e1e2e7;
-            --card-bg: #d5d6db;
-            --card-border: #c0c2c9;
-            --text: #3760bf;
-            --muted: #6172b0;
-            --dashi-gold: #8c6c00;
-            --action-bg: #e0af68;
-            --accent: #5a4a9c;
-            --success: #9ece6a;
-            --error: #f7768e;
-            --feedback-text: #1a1b26;
-            --toggle-bg: #c0c2c9;
-            --toggle-active: #bb9af7;
-            --button-text: #1a1b26;
-            --card-front-bg: #d5d6db;
-            --card-front-text: #3760bf;
-            --stage-prepping: #485e30;
-            --stage-simmering: #8c6c00;
-            --stage-boiling: #b15c00;
-            --stage-infusing: #5a4a9c;
-            --stage-perfect: #f7768e;
-            --border-soft: rgba(55, 96, 191, 0.16);
-            --panel-shadow: 0 18px 45px rgba(55, 68, 115, 0.14);
+            --dark-kombu: #f2f2f2;
+            --card-bg: #e6e6e6;
+            --card-border: #cccccc;
+            --text: #2a2a2a;
+            --muted: #8a8a8d;
+            --dashi-gold: #b91c1c;
+            --action-bg: #b91c1c;
+            --accent: #c63d3d;
+            --success: #FFC107;
+            --error: #D35F5F;
+            --feedback-text: #f2f2f2;
+            --toggle-bg: #cccccc;
+            --toggle-active: #c63d3d;
+            --button-text: #f2f2f2;
+            --card-front-bg: #b91c1c;
+            --card-front-text: #f2f2f2;
+            --stage-prepping: #631e1e;
+            --stage-simmering: #b91c1c;
+            --stage-boiling: #c63d3d;
+            --stage-infusing: #D35F5F;
+            --stage-perfect: #B91C1C;
+            --border-soft: rgba(42, 42, 42, 0.12);
+            --panel-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
         }
         * { box-sizing: border-box; }
         body {
@@ -528,7 +528,7 @@
 
 <div id="app">
     <div id="app-chrome">
-        <button id="exit-btn" type="button" title="Return to dashboard" aria-label="Return to dashboard" onclick="location.reload()">&gt; ABORT_LINK</button>
+        <button id="exit-btn" type="button" title="Return to dashboard" aria-label="Return to dashboard" onclick="location.reload()">&gt; Back</button>
         <div id="session-counter" title="Number of review cards remaining in this session" aria-live="polite"></div>
         <div id="chrome-end">
             <div id="audio-mode-toggle">
@@ -541,7 +541,7 @@
 
     <div id="add-form-overlay">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <h2 class="dash-title" id="add-form-title">CAPTURE_DATA</h2>
+            <h2 class="dash-title" id="add-form-title">Add Word</h2>
             <button class="btn-add-toggle" type="button" title="Close the capture form" aria-label="Close the capture form" onclick="toggleAddForm()">×</button>
         </div>
         <div id="vocab-form-fields">
@@ -565,13 +565,13 @@
             <div class="form-group"><label for="new-sentence">Japanese sentence</label><textarea id="new-sentence" rows="4" lang="ja"></textarea></div>
             <div class="form-group"><label for="new-translation">English translation</label><textarea id="new-translation" rows="3"></textarea></div>
         </div>
-        <button class="btn-main" title="Add new item to the active deck" onclick="submitNewItem()" id="add-submit-btn" style="margin-top:auto;">CAPTURE_DATA</button>
+        <button class="btn-main" title="Add new item to the active deck" onclick="submitNewItem()" id="add-submit-btn" style="margin-top:auto;">Add Word</button>
     </div>
 
     <div id="deck-form-overlay" hidden>
         <div class="deck-form-card" role="dialog" aria-modal="true" aria-labelledby="deck-form-title">
             <div class="deck-form-header">
-                <h2 class="dash-title" id="deck-form-title">NEW_DECK</h2>
+                <h2 class="dash-title" id="deck-form-title">New Deck</h2>
                 <button class="btn-add-toggle" type="button" title="Close the new deck form" aria-label="Close the new deck form" onclick="closeDeckForm()">×</button>
             </div>
             <div class="form-group">
@@ -593,7 +593,7 @@
     </div>
 
     <div id="dashboard">
-        <div class="dash-header"><div><h1 class="dash-title">日本語のダシ</h1><p class="dash-tagline">CYBERNETIC MEMORY BUFFER</p></div><button class="btn-add-toggle" id="open-add-form-btn" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
+        <div class="dash-header"><div><h1 class="dash-title">日本語のダシ</h1><p class="dash-tagline">Japanese Flashcards</p></div><button class="btn-add-toggle" id="open-add-form-btn" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
         <div id="deck-selector" class="deck-selector" role="tablist" aria-label="Select a deck"></div>
         <div id="deck-controls" class="deck-controls"></div>
         <div id="stats-display" class="stats-list"></div>
@@ -604,7 +604,7 @@
 
     <div id="emulingo-overlay" aria-hidden="true">
         <div class="emulingo-header">
-            <div><h1 class="dash-title">EMULINGO_BETA</h1><p class="dash-tagline">GBA CAPTURE LINK</p></div>
+            <div><h1 class="dash-title">Emulingo</h1><p class="dash-tagline">GBA Capture</p></div>
             <button class="btn-deck" type="button" title="Return to the dashboard" onclick="closeEmulingo()">&gt; RETURN_TO_DASHBOARD</button>
         </div>
         <div id="emulingo-body">
@@ -618,7 +618,7 @@
                 <div id="emulingo-frame-wrap"></div>
                 <section id="emulingo-translation-panel" aria-live="polite" hidden>
                     <div class="emulingo-translation-header">
-                        <h2 class="dash-title" id="emulingo-capture-title">SCREEN_TRANSLATION</h2>
+                        <h2 class="dash-title" id="emulingo-capture-title">Screen Translation</h2>
                         <button class="btn-deck" type="button" title="Clear this translation and keep playing" onclick="clearEmulingoTranslation()">CLEAR</button>
                     </div>
                     <p id="emulingo-capture-status" aria-live="polite"></p>
@@ -637,7 +637,7 @@
     <div class="flashcard" id="card" onclick="handleCardClick()">
         <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
         <div id="session-summary" onclick="event.stopPropagation()" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
-            <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">SESSION_DIAGNOSTICS</h2>
+            <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">Session Summary</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
                 <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span title="Items in this session">ITEMS_IN_SESSION</span><span id="summary-total" title="Items in this session">0</span></div>
                 <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span title="Items recalled correctly in both directions">BIDIRECTIONAL_RECALL</span><span id="summary-correct" title="Items recalled correctly in both directions">0</span></div>
@@ -3729,7 +3729,7 @@
     function toggleGroup(idx) { document.querySelectorAll('.stat-group').forEach((g, i) => { if(i === idx) g.classList.toggle('active'); else g.classList.remove('active'); }); }
     function configureAddForm() {
         const isSentenceDeck = isSentenceDeckId(activeDeckId);
-        document.getElementById('add-form-title').innerText = isSentenceDeck ? 'CAPTURE_SENTENCE' : 'CAPTURE_DATA';
+        document.getElementById('add-form-title').innerText = isSentenceDeck ? 'Add Sentence' : 'Add Word';
         document.getElementById('vocab-form-fields').hidden = isSentenceDeck;
         document.getElementById('sentence-form-fields').hidden = !isSentenceDeck;
         if (isSentenceDeck) {
@@ -3748,7 +3748,7 @@
             deckSelect.value = activeDeckId;
         }
         const submitButton = document.getElementById('add-submit-btn');
-        submitButton.innerText = isSentenceDeck ? 'SAVE_SENTENCE' : 'CAPTURE_DATA';
+        submitButton.innerText = isSentenceDeck ? 'Save Sentence' : 'Add Word';
         submitButton.title = isSentenceDeck
             ? 'Add new sentence to the selected sentence deck'
             : 'Add new word to the selected vocabulary deck';
@@ -3812,7 +3812,7 @@
             console.error('Supabase word insert failed', error);
             showToast(`Could not add word: ${error.message || 'Please try again.'}`, 'var(--error)');
         } finally {
-            btn.innerText = 'CAPTURE_DATA';
+            btn.innerText = 'Add Word';
             btn.disabled = false;
         }
     }
@@ -3853,7 +3853,7 @@
             console.error('Supabase sentence insert failed', error);
             showToast(`Could not add sentence: ${error.message || 'Please try again.'}`, 'var(--error)');
         } finally {
-            btn.innerText = 'SAVE_SENTENCE';
+            btn.innerText = 'Save Sentence';
             btn.disabled = false;
         }
     }
