@@ -635,7 +635,7 @@
 
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
+        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" style="display:none; width:80%; margin-top:12px; padding:8px; font-size:1.2rem;" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px;" onclick="checkTypedSentence()">Check</button><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
         <div id="session-summary" onclick="event.stopPropagation()" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">Session Summary</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
@@ -3224,6 +3224,27 @@
         const audioButton = document.getElementById('front-audio-button');
         audioButton.style.display = currentDirection === 'ja-en' ? 'block' : 'none';
         if (audioMode && currentDirection === 'ja-en') playAudio();
+        const typed = document.getElementById('typed-answer');
+        const typedBtn = document.getElementById('typed-check-btn');
+        const isSentence = isSentenceDeckId(sessionDeckId);
+        const showTyped = isSentence && currentDirection === 'en-ja';
+        typed.style.display = showTyped ? 'block' : 'none';
+        typedBtn.style.display = showTyped ? 'inline-block' : 'none';
+        if (showTyped) { typed.value = ''; typed.focus(); }
+    }
+
+    function normalizeJa(s){ return (s||'').replace(/[\\s、。！？,\\.!?]/g,'').toLowerCase(); }
+    function levenshtein(a,b){ if(!a.length) return b.length; if(!b.length) return a.length; let prev=Array.from({length:b.length+1},(_,i)=>i); for(let i=1;i<=a.length;i++){ let cur=[i]; for(let j=1;j<=b.length;j++){ cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); } prev=cur;} return prev[b.length]; }
+    function checkTypedSentence(){
+        if(!currentItem) return;
+        const typed=document.getElementById('typed-answer').value;
+        const expected=currentItem.sentence;
+        const a=normalizeJa(typed), b=normalizeJa(expected);
+        const dist=levenshtein(a,b);
+        const max=Math.max(a.length,b.length,1);
+        const sim=1-dist/max;
+        isFlipped=true; document.getElementById('card').classList.add('is-flipped'); updateBackUI();
+        submitResult(sim>=0.75);
     }
 
     /* Populate the back of the card with the answer for the active deck */
