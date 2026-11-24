@@ -792,11 +792,11 @@
     let kanjiInfoRequest = 0, activeKanjiTrigger = null, kanjiInfoPinned = false, kanjiInfoHideTimer = null;
 
     const STAGES = [
-        { name: "RAW_DATA", description: "Stage 1: Newly captured items undergoing initial review", color: "var(--stage-prepping)", min: 0, max: 2 },
-        { name: "DECODING", description: "Stage 2: Active memory formation & pattern recognition", color: "var(--stage-simmering)", min: 3, max: 4 },
-        { name: "CACHED", description: "Stage 3: Fast-recall short-term memory buffer", color: "var(--stage-boiling)", min: 5, max: 6 },
-        { name: "COMPILED", description: "Stage 4: Deeply integrated vocabulary", color: "var(--stage-infusing)", min: 7, max: 8 },
-        { name: "FIRMWARE", description: "Stage 5: Permanently mastered / Read-Only Memory", color: "var(--stage-perfect)", min: 9, max: 99 }
+        { name: "New", description: "Stage 1: Newly captured items undergoing initial review", color: "var(--stage-prepping)", min: 0, max: 2 },
+        { name: "Learning", description: "Stage 2: Active memory formation & pattern recognition", color: "var(--stage-simmering)", min: 3, max: 4 },
+        { name: "Familiar", description: "Stage 3: Fast-recall short-term memory", color: "var(--stage-boiling)", min: 5, max: 6 },
+        { name: "Mastered", description: "Stage 4: Deeply integrated vocabulary", color: "var(--stage-infusing)", min: 7, max: 8 },
+        { name: "Permanent", description: "Stage 5: Permanently mastered", color: "var(--stage-perfect)", min: 9, max: 99 }
     ];
 
     function getStageIdx(level) { return STAGES.findIndex(s => level >= s.min && level <= s.max); }
