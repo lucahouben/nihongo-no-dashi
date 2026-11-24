@@ -98,7 +98,7 @@
             outline: 2px solid var(--accent);
             outline-offset: 3px;
         }
-        #app { position: relative; width: 90%; max-width: 440px; text-align: center; }
+        #app { position: relative; width: 90%; max-width: 560px; text-align: center; }
         #app-chrome {
             position: absolute; top: -42px; left: 0; right: 0; z-index: 100;
             display: flex; height: 22px; align-items: center; justify-content: flex-end;
@@ -152,7 +152,7 @@
             border: 1px solid var(--dashi-gold); border-radius: 9px; background: transparent;
             color: var(--dashi-gold); cursor: pointer; font-size: 1.2rem; font-weight: 800;
         }
-        .btn-add-toggle:hover, .btn-main:hover, .btn-secondary:hover, .btn-lookup:hover, .btn-mini-play:hover, .btn-audio:hover,
+        .btn-add-toggle:hover, .btn-main:hover, .btn-secondary:hover, .btn-lookup:hover, .btn-mini-play:hover,
         .btn-correct:hover, .btn-wrong:hover {
             box-shadow: 0 0 15px var(--accent-glow);
             transform: translateY(-1px);
@@ -251,7 +251,7 @@
         .flashcard.is-flipped .card-front { visibility: hidden; }
         .card-front {
             justify-content: center; overflow-wrap: break-word; background: var(--card-front-bg);
-            color: var(--card-front-text); font-family: 'Noto Sans JP', sans-serif; font-size: 5rem;
+            color: var(--card-front-text); font-family: 'Noto Sans JP', sans-serif; font-size: clamp(2.5rem, 12vw, 5rem);
             font-weight: 800; line-height: 1.1; word-break: break-word;
         }
         #direction-indicator {
@@ -516,7 +516,7 @@
                 position: static; order: 3; flex: 1 0 100%; width: 100%; height: 22px; margin-top: 6px;
                 transform: none; line-height: 22px; text-align: center;
             }
-            .flashcard { height: min(68svh, 480px); min-height: 380px; }
+            .flashcard { height: min(68svh, 480px); min-height: clamp(280px, 42svh, 380px); }
             .card-face { padding: 24px 18px; border-radius: 10px; }
             .reading { font-size: 1.9rem; }
             .meaning { font-size: 1.25rem; }
@@ -538,7 +538,7 @@
 
 <div id="app">
     <div id="app-chrome">
-        <button id="exit-btn" type="button" title="Return to dashboard" aria-label="Return to dashboard" onclick="location.reload()">&gt; Back</button>
+        <button id="exit-btn" type="button" title="Return to dashboard" aria-label="Return to dashboard" onclick="wrapUp()">Wrap up</button>
         <div id="session-counter" title="Number of review cards remaining in this session" aria-live="polite"></div>
         <div id="chrome-end">
             <div id="audio-mode-toggle">
@@ -596,7 +596,7 @@
                 </select>
             </div>
             <div class="deck-form-actions">
-                <button class="btn-main" type="button" onclick="submitNewDeck()" id="new-deck-submit">CREATE_DECK</button>
+                <button class="btn-main" type="button" onclick="submitNewDeck()" id="new-deck-submit">Create deck</button>
                 <button class="btn-secondary" type="button" onclick="closeDeckForm()">CANCEL</button>
             </div>
         </div>
@@ -607,15 +607,14 @@
         <div id="deck-selector" class="deck-selector" role="tablist" aria-label="Select a deck"></div>
         <div id="deck-controls" class="deck-controls"></div>
         <div id="stats-display" class="stats-list"></div>
-        <button class="btn-main" id="start-btn" title="Start reviewing due cards" onclick="startSession('due')">INITIALIZE_SESSION (0)</button>
-        <button class="btn-secondary" title="Practice all items without SRS level penalties" onclick="startSession('all')">&gt; MEMORY_SIMULATION (all)</button>
-        <button class="btn-secondary" id="emulingo-open-btn" title="Open the beta GBA translation feature" onclick="openEmulingo()">&gt; BETA_EMULINGO</button>
+        <button class="btn-main" id="start-btn" title="Start reviewing due cards" onclick="startSession('due')">Start session (0)</button>
+        <button class="btn-secondary" id="emulingo-open-btn" title="Open the beta GBA translation feature" onclick="openEmulingo()">Beta Emulingo</button>
     </div>
 
     <div id="emulingo-overlay" aria-hidden="true">
         <div class="emulingo-header">
             <div><h1 class="dash-title">Emulingo</h1><p class="dash-tagline">GBA Capture</p></div>
-            <button class="btn-deck" type="button" title="Return to the dashboard" onclick="closeEmulingo()">&gt; RETURN_TO_DASHBOARD</button>
+            <button class="btn-deck" type="button" title="Return to the dashboard" onclick="closeEmulingo()">Return to dashboard</button>
         </div>
         <div id="emulingo-body">
             <div id="emulingo-launcher">
@@ -636,7 +635,7 @@
                 </section>
                 <div class="emulingo-actions">
                     <button class="btn-main" type="button" id="emulingo-translate-btn" onclick="captureEmulingoScreen()">TRANSLATE_SCREEN</button>
-                    <button class="btn-secondary" type="button" onclick="closeEmulingo()">&gt; SAVE_AND_CLOSE</button>
+                    <button class="btn-secondary" type="button" onclick="closeEmulingo()">Save and close</button>
                 </div>
                 <p class="emulingo-hint">Battery saves and browser save states sync automatically across devices for the same ROM. Use the in-emulator menu for save state slots and save-file import/export.</p>
             </div>
@@ -645,15 +644,15 @@
 
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" style="display:none; width:80%; margin-top:12px; padding:8px; font-size:1.2rem;" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px;" onclick="checkTypedSentence()">Check</button><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation" onclick="playAudio(event)" aria-label="Replay Japanese pronunciation">Replay audio</button></div>
+        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--error); border-radius:8px; background:var(--error); color:#fff; font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onclick="checkTypedSentence()">Check</button><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation" onclick="playAudio(event)" aria-label="Play Japanese pronunciation">Play audio</button></div>
         <div id="session-summary" onclick="event.stopPropagation()" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">Session Summary</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span title="Items in this session">ITEMS_IN_SESSION</span><span id="summary-total" title="Items in this session">0</span></div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span title="Items recalled correctly in both directions">BIDIRECTIONAL_RECALL</span><span id="summary-correct" title="Items recalled correctly in both directions">0</span></div>
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--error);"><span title="Incorrect direction answers during this session">RECALL_ERRORS</span><span id="summary-wrong" title="Incorrect direction answers during this session">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px;"><span title="Items in this session">Items in session</span><span id="summary-total" title="Items in this session">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span title="Items recalled correctly in both directions">Bidirectional recall</span><span id="summary-correct" title="Items recalled correctly in both directions">0</span></div>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--error);"><span title="Incorrect direction answers during this session">Recall errors</span><span id="summary-wrong" title="Incorrect direction answers during this session">0</span></div>
             </div>
-            <button class="btn-secondary" title="Return to dashboard" onclick="location.reload()" style="margin-top:30px;">&gt; RETURN_TO_DASHBOARD</button>
+            <button class="btn-secondary" title="Return to dashboard" onclick="location.reload()" style="margin-top:30px;">Return to dashboard</button>
         </div>
         <div class="card-face card-back" id="card-back-ui">
             <div id="level-indicator" title="Current SRS level and memory stage"></div>
@@ -1219,7 +1218,7 @@
         if (!controls || !deck) return;
         const canManage = Boolean(deck.deckId);
         controls.innerHTML = `
-            <button type="button" class="btn-deck" onclick="openDeckForm()" title="Create a new deck">+ NEW_DECK</button>
+            <button type="button" class="btn-deck" onclick="openDeckForm()" title="Create a new deck">+ New deck</button>
             ${canManage ? `<button type="button" class="btn-deck" onclick="promptRenameDeck()" title="Rename this deck">RENAME</button><button type="button" class="btn-deck danger" onclick="promptDeleteDeck()" title="Delete this deck and its ${escapeHtml(deck.noun)}">DELETE</button>` : ''}
         `;
     }
@@ -1274,7 +1273,7 @@
             console.error('Create deck failed', error);
             showToast(`Could not create deck: ${error.message || 'Please try again.'}`, 'var(--error)');
         } finally {
-            btn.innerText = 'CREATE_DECK';
+            btn.innerText = 'Create deck';
             btn.disabled = false;
         }
     }
@@ -3105,7 +3104,7 @@
         const deck = decks[activeDeckId] || VOCAB_DECK;
         masterList = deckItems[activeDeckId] || [];
         const dueCount = masterList.filter(i => i.nextReview <= now).length;
-        document.getElementById('start-btn').innerText = `INITIALIZE_SESSION (${dueCount})`;
+        document.getElementById('start-btn').innerText = `Start session (${dueCount})`;
         const addButton = document.getElementById('open-add-form-btn');
         addButton.title = deck.kind === 'sentences'
             ? `Add new sentence to the ${deck.name} deck`
@@ -3122,7 +3121,7 @@
                 const text = deck.listText(item) || '';
                 return escapeHtml(text.length > 60 ? `${text.slice(0, 60)}…` : text);
             }).join(deck.listSeparator) || 'No items yet';
-            html += `<div class="stat-group" id="group-${idx}" title="${stage.description}"><div class="stat-row" style="--stage-color:${stage.color}" title="${stage.description}" onclick="toggleGroup(${idx})"><span title="${itemsInStage.length} ${deck.noun} in ${stage.name}. ${stage.description}">${stage.name} (${itemsInStage.length})</span><button class="btn-mini-play" title="Practice ${stage.name} items without SRS level penalties" aria-label="Practice ${stage.name} items without SRS level penalties" onclick="startSession('stage', ${idx}, event)">RECALL</button></div><div class="level-items">${itemList}</div></div>`;
+            html += `<div class="stat-group" id="group-${idx}" title="${stage.description}"><div class="stat-row" style="--stage-color:${stage.color}" title="${stage.description}" onclick="toggleGroup(${idx})"><span title="${itemsInStage.length} ${deck.noun} in ${stage.name}. ${stage.description}">${stage.name} (${itemsInStage.length})</span><button class="btn-mini-play" title="Practice ${stage.name} items without SRS level penalties" aria-label="Practice ${stage.name} items without SRS level penalties" onclick="startSession('stage', ${idx}, event)">Recall</button></div><div class="level-items">${itemList}</div></div>`;
         });
         document.getElementById('stats-display').innerHTML = html;
     }
@@ -3470,13 +3469,12 @@
             showToast('Audio is not supported in this browser.');
             return;
         }
-        window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'ja-JP';
-        const japaneseVoice = window.speechSynthesis.getVoices().find(voice => voice.lang.toLowerCase().startsWith('ja'));
-        if (japaneseVoice) u.voice = japaneseVoice;
+        u.lang = 'ja';
+        u.rate = 1;
+        u.pitch = 1;
         u.onerror = event => {
-            if (event.error !== 'canceled' && event.error !== 'interrupted') showToast('Audio playback failed.');
+            if (event.error !== 'canceled' && event.error !== 'interrupted') showToast(`Audio playback failed: ${event.error || 'unknown'}.`);
         };
         window.speechSynthesis.speak(u);
     }
@@ -3579,11 +3577,13 @@
             }
         }
 
-        const progress = Math.round(completedCount / initialQueueLength * 100);
+        const progress = Math.min(100, Math.round(completedCount / initialQueueLength * 100));
         document.getElementById('progress-bar').style.width = `${progress}%`;
         document.getElementById('progress-container').setAttribute('aria-valuenow', progress);
         await new Promise(resolve => setTimeout(resolve, 500));
         isFlipped = false;
+        const cardBackContent = document.querySelector('.card-back-content');
+        if (cardBackContent) cardBackContent.scrollTop = 0;
         cardEl.classList.add('is-advancing');
         void cardEl.offsetWidth;
         cardEl.classList.remove('is-flipped', 'card-correct', 'card-wrong');
@@ -3591,6 +3591,22 @@
         nextItem();
         requestAnimationFrame(() => cardEl.classList.remove('is-advancing'));
         isSubmittingResult = false;
+    }
+
+    function wrapUp() {
+        const pending = [];
+        if (currentItem && currentReviewTask && currentReviewTask.round && currentReviewTask.round.answers === 1) pending.push(currentReviewTask);
+        reviewPromptQueue.forEach(task => { if (task && task.round && task.round.answers === 1) pending.push(task); });
+        if (pending.length) {
+            // Review only the remaining direction for partially answered items
+            reviewPromptQueue = pending;
+            reviewQueue = [...pending];
+            initialQueueLength = pending.length;
+            completedCount = 0;
+            nextItem();
+            return;
+        }
+        location.reload();
     }
 
     /* Toggle visibility of the example sentence tray */
