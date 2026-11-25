@@ -677,7 +677,7 @@
     </div>
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--dashi-gold); border-radius:8px; background:var(--dashi-gold); color:var(--button-text); font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onclick="checkTypedSentence()">Confirm</button></div>
+        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" onclick="event.stopPropagation()" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--dashi-gold); border-radius:8px; background:var(--dashi-gold); color:var(--button-text); font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onclick="checkTypedSentence()">Confirm</button></div>
         <div id="session-summary" onclick="event.stopPropagation()" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">Session Summary</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
@@ -694,6 +694,7 @@
                 <div id="type-text" title="Vocabulary classification, such as noun or verb" style="font-size:0.6rem; color:var(--dashi-gold); border:1px solid var(--dashi-gold); padding:2px 10px; border-radius:100px; text-transform:uppercase; font-weight:800; margin-bottom:12px;"></div>
                 <div id="reading-text" class="reading" lang="ja"></div>
                 <div id="meaning-text" class="meaning"></div>
+<div id="typed-answer-display" style="display:none; margin-top:8px; font-size:0.9rem; color:var(--muted);"></div>
                 <div id="info-tray">
                     <div id="conjugation-section" style="display:none; margin-bottom:12px;">
                         <div style="font-size:0.55rem; color:var(--muted); text-transform:uppercase; margin-bottom:4px; font-weight:800;">Conjugation</div>
@@ -3386,7 +3387,7 @@
         if (showTyped) { typed.value = ''; typed.focus(); }
         typed.onkeydown = (e) => {
             if (e.isComposing) return;
-            if (e.code === 'Space') { e.preventDefault(); checkTypedSentence(); }
+            if (e.code === 'Space') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
         };
     }
 
@@ -3414,6 +3415,7 @@
         const infoTray = document.getElementById('info-tray');
         const conjugationSection = document.getElementById('conjugation-section');
         infoTray.style.display = 'none';
+        document.getElementById('typed-answer-display').style.display = 'none';
         document.getElementById('card-back-ui').style.borderBottom = `10px solid ${s.color}`;
         document.getElementById('level-indicator').title = `SRS level ${currentItem.level}. ${s.name}: ${s.description}`;
         document.getElementById('level-indicator').innerText = `LVL ${currentItem.level}`;
@@ -3425,6 +3427,9 @@
             typeText.style.display = 'none';
             conjugationSection.style.display = 'none';
             infoTray.style.display = 'none';
+            const typedDisplay = document.getElementById('typed-answer-display');
+            typedDisplay.style.display = 'block';
+            typedDisplay.innerText = 'Your answer: ' + (document.getElementById('typed-answer').value || '(none)');
             return;
         }
 
