@@ -1072,13 +1072,17 @@
     function hideHome() {
         const overlay = document.getElementById('home-overlay');
         if (overlay) overlay.style.display = 'none';
+        const toggle = document.querySelector('.theme-switch-wrapper');
+        if (toggle) toggle.style.display = 'none';
     }
     function showHome() {
         const overlay = document.getElementById('home-overlay');
         if (overlay) overlay.style.display = 'flex';
         renderToolGrid();
+        const toggle = document.querySelector('.theme-switch-wrapper');
+        if (toggle) toggle.style.display = 'flex';
     }
-    renderToolGrid();
+    showHome();
     if (localStorage.getItem('skipHome') === '1') {
         localStorage.removeItem('skipHome');
         const overlay = document.getElementById('home-overlay');
