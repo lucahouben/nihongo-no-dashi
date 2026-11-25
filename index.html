@@ -1033,13 +1033,6 @@
         localStorage.setItem('theme', t);
     });
 
-    document.getElementById('audio-mode-checkbox').addEventListener('change', (e) => {
-        audioMode = e.target.checked;
-        if (currentItem && !isFlipped && document.getElementById('card').style.display === 'block') {
-            updateFrontPrompt();
-        }
-    });
-
     /* Fetch sentence decks and every deck's items, then populate the active deck */
     async function init() {
         const failures = [];
