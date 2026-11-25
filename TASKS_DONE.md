@@ -13,9 +13,9 @@
 - 3.2 Keyboard shortcuts updated (V Play Audio, F Answer Details + scroll, Esc Abandon, W Wrap Up).
 - 3.3 Sentence IME: Enter unbound, Space confirms when not composing, Check -> Confirm.
 
-## Additional
-- Favicon colors aligned to theme.
-- Reading text gold; Wrong button text white.
-- Review homescreen Return to dashboard button.
+## Additional UI
+- Theme switch: top-left, visible all pages, no load flash/animation.
+- Reviews homescreen Return to dashboard button (fixed top-right).
+- Wrap-up returns to reviews homescreen.
 " content">
 /home/dozo/Documents/dev/nihongo-no-dashi/TASKS_DONE.md
