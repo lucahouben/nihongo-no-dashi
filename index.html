@@ -465,7 +465,7 @@
         .sync-text { color: var(--accent); font: 700 0.7rem 'JetBrains Mono', 'Fira Code', monospace; letter-spacing: 1px; text-transform: uppercase; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         .btn-correct { border: 1px solid var(--success) !important; border-radius: 8px !important; background: var(--success) !important; color: var(--button-text) !important; font: 700 0.8rem 'JetBrains Mono', 'Fira Code', monospace !important; }
-        .btn-wrong { border: 1px solid var(--error) !important; border-radius: 8px !important; background: var(--error) !important; color: #ffffff !important; font: 700 0.8rem 'JetBrains Mono', 'Fira Code', monospace !important; }
+        .btn-wrong { border: 1px solid var(--error) !important; border-radius: 8px !important; background: var(--error) !important; color: var(--button-text) !important; font: 700 0.8rem 'JetBrains Mono', 'Fira Code', monospace !important; }
         .btn-correct:hover, .btn-correct:focus-visible { border-color: var(--success) !important; background: var(--success) !important; color: var(--feedback-text) !important; }
         .btn-wrong:hover, .btn-wrong:focus-visible { border-color: var(--error) !important; background: var(--error) !important; color: #ffffff !important; }
         .btn-correct::before { content: ""; }
@@ -688,7 +688,7 @@
             </div>
             <div class="card-back-actions">
                 <button class="btn-correct" title="Rate this direction correct; the SRS level advances only after both directions are correct" onclick="submitResult(true, event)" style="background:var(--success); color:var(--button-text); margin-bottom:8px; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Correct (1)</button>
-                <button class="btn-wrong" title="Rate this direction incorrect; the SRS level is assessed after both directions" onclick="submitResult(false, event)" style="background:var(--error); color:#ffffff !important; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
+                <button class="btn-wrong" title="Rate this direction incorrect; the SRS level is assessed after both directions" onclick="submitResult(false, event)" style="background:var(--error); color:var(--button-text) !important; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
             </div>
         </div>
     </div>
