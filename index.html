@@ -541,7 +541,6 @@
         <div class="theme-switch-wrapper"><label class="theme-switch" title="Switch between dark and light color themes"><input type="checkbox" id="theme-toggle" aria-label="Switch between dark and light color themes" /><div class="slider"></div></label></div>
     </div>
     <div id="app-chrome">
-        <button id="exit-btn" type="button" title="Return to dashboard" aria-label="Return to dashboard" onclick="wrapUp()">Wrap up</button>
         <div id="session-counter" title="Number of review cards remaining in this session" aria-live="polite"></div>
         <div id="chrome-end"></div>
     </div>
@@ -659,6 +658,9 @@
         </div>
     </div>
 
+    <div style="width:100%;max-width:600px;margin:0 auto 8px auto;text-align:left;">
+        <button class="btn-deck" type="button" onclick="wrapUp()" title="Wrap up session">Wrap up</button>
+    </div>
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
         <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--error); border-radius:8px; background:var(--error); color:#fff; font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onclick="checkTypedSentence()">Confirm</button></div>
