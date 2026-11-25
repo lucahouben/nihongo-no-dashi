@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ダシ">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='22' y='22' width='56' height='56' rx='8' fill='%231a1b26' stroke='%237dcfff' stroke-width='5'/%3E%3Cpath d='M35 12v10m15-10v10m15-10v10m15-10v10M35 78v10m15-10v10m15-10v10m15-10v10M12 35h10m-10 15h10m-10 15h10m-10 15h10m56-45h10m-10 15h10m-10 15h10m-10 15h10' stroke='%23bb9af7' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M39 40h22v20H39z' fill='%23e0af68'/%3E%3Cpath d='M43 47h14m-14 6h10' stroke='%231a1b26' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='22' y='22' width='56' height='56' rx='8' fill='%2317130f' stroke='%23e2b45f' stroke-width='5'/%3E%3Cpath d='M35 12v10m15-10v10m15-10v10m15-10v10M35 78v10m15-10v10m15-10v10m15-10v10M12 35h10m-10 15h10m-10 15h10m-10 15h10m56-45h10m-10 15h10m-10 15h10m-10 15h10' stroke='%23e2b45f' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M39 40h22v20H39z' fill='%23e2b45f'/%3E%3Cpath d='M43 47h14m-14 6h10' stroke='%231a1b26' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         :root {
             color-scheme: dark;
@@ -319,16 +319,16 @@
         .shortcut-hint { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
         .key-hint { margin: 0 3px; padding: 2px 5px; border: 1px solid var(--card-border); border-radius: 4px; color: var(--accent); }
         #add-form-overlay {
-            position: fixed; top: 100%; left: 0; z-index: 2000; display: flex; width: 100%; height: 100%;
-            flex-direction: column; padding: 40px 25px; background: var(--dark-kombu);
-            transition: top 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed; inset: 0; z-index: 2000; display: none; width: 100%; height: 100%;
+            flex-direction: column; padding: 40px 25px; background: rgba(23,19,15,0.45);
+            backdrop-filter: blur(4px); overflow-y: auto;
         }
-        #add-form-overlay.active { top: 0; }
+        #add-form-overlay.active { display: flex; align-items: center; justify-content: center; }
         #add-form-overlay .btn-add-toggle { background: var(--card-bg) !important; color: var(--text) !important; }
-        .form-group { margin-bottom: 15px; text-align: left; }
-        .form-group label { display: block; margin-bottom: 5px; color: var(--dashi-gold); font: 700 0.65rem 'JetBrains Mono', 'Fira Code', monospace; text-transform: uppercase; }
+        .form-group { margin-bottom: 8px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 3px; color: var(--dashi-gold); font: 700 0.65rem 'JetBrains Mono', 'Fira Code', monospace; text-transform: uppercase; }
         .form-group input, .form-group textarea, .form-group select {
-            width: 100%; padding: 12px; border: 1px solid var(--card-border); border-radius: 8px;
+            width: 100%; padding: 8px; border: 1px solid var(--card-border); border-radius: 8px;
             outline: none; background: var(--card-bg); color: var(--text); font-family: inherit; font-size: 1rem;
         }
         .form-group textarea { resize: vertical; line-height: 1.5; }
@@ -348,7 +348,7 @@
         #lookup-status { min-height: 1em; margin-top: 5px; color: var(--muted); font-size: 0.7rem; }
         #deck-form-overlay {
             position: fixed; inset: 0; z-index: 2500; display: flex; align-items: center; justify-content: center;
-            padding: 20px; background: var(--overlay-bg); backdrop-filter: blur(4px);
+            padding: 20px; background: rgba(23, 19, 15, 0.45); backdrop-filter: blur(4px);
         }
         #deck-form-overlay[hidden] { display: none; }
         .deck-form-card {
@@ -598,8 +598,28 @@
         </div>
     </div>
 
+    <div id="unified-modal" hidden style="position:fixed;inset:0;z-index:2600;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(23,19,15,0.45);backdrop-filter:blur(4px);">
+        <div style="width:100%;max-width:380px;padding:24px;border:1px solid var(--card-border);border-radius:16px;background:var(--card-bg);color:var(--text);">
+            <h2 id="unified-modal-title" class="dash-title" style="margin-bottom:12px;">Confirm</h2>
+            <p id="unified-modal-message" style="margin:0 0 12px;color:var(--muted);font-size:0.9rem;"></p>
+            <input id="unified-modal-input" type="text" style="display:none;width:100%;padding:10px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--text);margin-bottom:12px;" />
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button class="btn-secondary" type="button" style="flex:1;margin-top:0;padding:12px;font:700 0.8rem 'JetBrains Mono','Fira Code',monospace;" onclick="closeUnifiedModal()">CANCEL</button>
+                <button class="btn-main" type="button" style="flex:1;margin-top:0;padding:12px;font:700 0.8rem 'JetBrains Mono','Fira Code',monospace;" id="unified-modal-confirm" onclick="confirmUnifiedModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="home-overlay" style="position:fixed;inset:0;z-index:1500;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dark-kombu);backdrop-filter:blur(4px);">
+        <div style="width:100%;max-width:720px;">
+            <h1 class="dash-title" style="text-align:center;margin-bottom:8px;">日本語のダシ</h1>
+            <p class="dash-tagline" style="text-align:center;margin-bottom:24px;">Choose a tool</p>
+            <div id="tool-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;"></div>
+        </div>
+    </div>
+
     <div id="dashboard">
-        <div class="dash-header"><div><h1 class="dash-title">日本語のダシ</h1><p class="dash-tagline">Japanese Flashcards</p></div><button class="btn-add-toggle" id="open-add-form-btn" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
+        <div class="dash-header"><div><h1 class="dash-title">日本語のダシ</h1><p class="dash-tagline">Japanese Flashcards</p></div><button class="btn-deck" type="button" title="Return to the dashboard" onclick="showHome()" style="position:fixed;top:12px;right:12px;z-index:1000;">Return to dashboard</button><button class="btn-add-toggle" id="open-add-form-btn" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
         <div id="deck-selector" class="deck-selector" role="tablist" aria-label="Select a deck"></div>
         <div id="deck-controls" class="deck-controls"></div>
         <div id="stats-display" class="stats-list"></div>
@@ -648,7 +668,7 @@
                 <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--success);"><span title="Items recalled correctly in both directions">Bidirectional recall</span><span id="summary-correct" title="Items recalled correctly in both directions">0</span></div>
                 <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-soft); padding-bottom:8px; color:var(--error);"><span title="Incorrect direction answers during this session">Recall errors</span><span id="summary-wrong" title="Incorrect direction answers during this session">0</span></div>
             </div>
-            <button class="btn-secondary" title="Return to dashboard" onclick="location.reload()" style="margin-top:30px;">Return to dashboard</button>
+            <button class="btn-secondary" title="Return to dashboard" onclick="localStorage.setItem('skipHome','1');location.reload();" style="margin-top:30px;">Return to dashboard</button>
         </div>
         <div class="card-face card-back" id="card-back-ui">
             <div id="level-indicator" title="Current SRS level and memory stage"></div>
@@ -1033,6 +1053,38 @@
         localStorage.setItem('theme', t);
     });
 
+    function renderToolGrid() {
+        const grid = document.getElementById('tool-grid');
+        if (!grid) return;
+        const tools = [
+            { name: 'Reviews', action: "hideHome();", enabled: true },
+            { name: 'GBA Immersion', action: "hideHome(); openEmulingo();", enabled: true },
+            { name: 'Database Viewer & Editor', action: '', enabled: false },
+            { name: 'Conversation', action: '', enabled: false },
+            { name: 'Notes', action: '', enabled: false },
+        ];
+        grid.innerHTML = tools.map(tool => `
+            <button type="button" class="btn-deck" ${tool.enabled ? `onclick="${tool.action}"` : 'disabled'} style="padding:18px;min-height:80px;opacity:${tool.enabled ? 1 : 0.45};">
+                ${escapeHtml(tool.name)}${tool.enabled ? '' : ' (Coming Soon)'}
+            </button>
+        `).join('');
+    }
+    function hideHome() {
+        const overlay = document.getElementById('home-overlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+    function showHome() {
+        const overlay = document.getElementById('home-overlay');
+        if (overlay) overlay.style.display = 'flex';
+        renderToolGrid();
+    }
+    renderToolGrid();
+    if (localStorage.getItem('skipHome') === '1') {
+        localStorage.removeItem('skipHome');
+        const overlay = document.getElementById('home-overlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+
     /* Fetch sentence decks and every deck's items, then populate the active deck */
     async function init() {
         const failures = [];
@@ -1204,7 +1256,7 @@
         const controls = document.getElementById('deck-controls');
         const deck = decks[activeDeckId];
         if (!controls || !deck) return;
-        const canManage = Boolean(deck.deckId);
+        const canManage = true;
         controls.innerHTML = `
             <button type="button" class="btn-deck" onclick="openDeckForm()" title="Create a new deck">+ New deck</button>
             ${canManage ? `<button type="button" class="btn-deck" onclick="promptRenameDeck()" title="Rename this deck">RENAME</button><button type="button" class="btn-deck danger" onclick="promptDeleteDeck()" title="Delete this deck and its ${escapeHtml(deck.noun)}">DELETE</button>` : ''}
@@ -1266,43 +1318,87 @@
         }
     }
 
+    let unifiedModalCallback = null;
+    function openUnifiedModal({ title, message, input = false, value = '', confirmText = 'OK', onConfirm }) {
+        document.getElementById('unified-modal-title').innerText = title;
+        document.getElementById('unified-modal-message').innerText = message;
+        const inputEl = document.getElementById('unified-modal-input');
+        inputEl.style.display = input ? 'block' : 'none';
+        inputEl.value = value;
+        document.getElementById('unified-modal-confirm').innerText = confirmText;
+        unifiedModalCallback = onConfirm;
+        document.getElementById('unified-modal').hidden = false;
+        document.getElementById('unified-modal').style.display = 'flex';
+    }
+    function closeUnifiedModal() {
+        document.getElementById('unified-modal').hidden = true;
+        document.getElementById('unified-modal').style.display = 'none';
+        unifiedModalCallback = null;
+    }
+    function confirmUnifiedModal() {
+        const value = document.getElementById('unified-modal-input').value;
+        const cb = unifiedModalCallback;
+        closeUnifiedModal();
+        if (cb) cb(value);
+    }
+
     async function promptRenameDeck() {
         const deck = decks[activeDeckId];
         if (!deck || !deck.deckId) return;
-        const input = prompt('Rename deck:', deck.name);
-        const name = (input || '').trim();
-        if (!name || name === deck.name) return;
-        try {
-            await DatabaseService.renameDeck(deck.deckId, name);
-            const row = namedDecks.find(entry => entry.id === deck.deckId);
-            if (row) row.name = name;
-            rebuildDeckRegistry();
-            updateDashboard();
-            showToast(`Deck renamed: ${name}`, 'var(--success)');
-        } catch (error) {
-            console.error('Rename deck failed', error);
-            showToast(`Could not rename deck: ${error.message || 'Please try again.'}`, 'var(--error)');
-        }
+        openUnifiedModal({
+            title: 'Rename Deck',
+            message: 'Enter a new deck name.',
+            input: true,
+            value: deck.name,
+            confirmText: 'Rename',
+            onConfirm: async (name) => {
+                name = (name || '').trim();
+                if (!name || name === deck.name) return;
+                try {
+                    if (deck.deckId) {
+                        await DatabaseService.renameDeck(deck.deckId, name);
+                        const row = namedDecks.find(entry => entry.id === deck.deckId);
+                        if (row) row.name = name;
+                    } else {
+                        deck.name = name;
+                        deck.label = name;
+                    }
+                    rebuildDeckRegistry();
+                    updateDashboard();
+                    showToast(`Deck renamed: ${name}`, 'var(--success)');
+                } catch (error) {
+                    console.error('Rename deck failed', error);
+                    showToast(`Could not rename deck: ${error.message || 'Please try again.'}`, 'var(--error)');
+                }
+            }
+        });
     }
 
     async function promptDeleteDeck() {
         const deck = decks[activeDeckId];
         if (!deck || !deck.deckId) return;
         const itemCount = (deckItems[activeDeckId] || []).length;
-        if (!confirm(`Delete the "${deck.name}" deck and its ${itemCount} ${deck.noun}? This cannot be undone.`)) return;
-        try {
-            await DatabaseService.deleteDeck(deck.deckId);
-            namedDecks = namedDecks.filter(entry => entry.id !== deck.deckId);
-            delete deckItems[activeDeckId];
-            rebuildDeckRegistry();
-            activeDeckId = 'vocabulary';
-            localStorage.setItem('activeDeck', activeDeckId);
-            updateDashboard();
-            showToast(`Deck deleted: ${deck.name}`, 'var(--success)');
-        } catch (error) {
-            console.error('Delete deck failed', error);
-            showToast(`Could not delete deck: ${error.message || 'Please try again.'}`, 'var(--error)');
-        }
+        openUnifiedModal({
+            title: 'Delete Deck',
+            message: `Delete the "${deck.name}" deck and its ${itemCount} ${deck.noun}? This cannot be undone.`,
+            confirmText: 'Delete',
+            onConfirm: async () => {
+                if (!deck.deckId) { showToast('Cannot delete built-in deck.', 'var(--error)'); return; }
+                try {
+                    await DatabaseService.deleteDeck(deck.deckId);
+                    namedDecks = namedDecks.filter(entry => entry.id !== deck.deckId);
+                    delete deckItems[activeDeckId];
+                    rebuildDeckRegistry();
+                    activeDeckId = 'vocabulary';
+                    localStorage.setItem('activeDeck', activeDeckId);
+                    updateDashboard();
+                    showToast(`Deck deleted: ${deck.name}`, 'var(--success)');
+                } catch (error) {
+                    console.error('Delete deck failed', error);
+                    showToast(`Could not delete deck: ${error.message || 'Please try again.'}`, 'var(--error)');
+                }
+            }
+        });
     }
 
     /* --- Emulingo beta: isolated GBA emulator shell ---------------------- */
@@ -1687,6 +1783,7 @@
         overlay.classList.remove('active');
         overlay.setAttribute('aria-hidden', 'true');
         resetEmulingoLauncher();
+        showHome();
         return flush;
     }
 
@@ -3593,6 +3690,7 @@
             nextItem();
             return;
         }
+        localStorage.setItem('skipHome','1');
         location.reload();
     }
 
