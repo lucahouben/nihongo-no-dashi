@@ -32,10 +32,10 @@
             --button-text: #17130f;
             --card-front-bg: #d6a44f;
             --card-front-text: #17130f;
-            --stage-prepping: #76674f;
-            --stage-simmering: #a56f35;
-            --stage-boiling: #c18a40;
-            --stage-infusing: #b85b47;
+            --stage-prepping: #b84040;
+            --stage-simmering: #c96a3a;
+            --stage-boiling: #d49a3a;
+            --stage-infusing: #d9b04a;
             --stage-perfect: #e2b45f;
             --border-soft: rgba(241, 231, 211, 0.11);
             --overlay-bg: rgba(23, 19, 15, 0.82);
@@ -63,10 +63,10 @@
             --button-text: #fffaf0;
             --card-front-bg: #c9943e;
             --card-front-text: #352e24;
-            --stage-prepping: #77684d;
-            --stage-simmering: #986426;
-            --stage-boiling: #b17d32;
-            --stage-infusing: #9d503f;
+            --stage-prepping: #9d3a3a;
+            --stage-simmering: #b05f30;
+            --stage-boiling: #b8842e;
+            --stage-infusing: #a89035;
             --stage-perfect: #9a6722;
             --border-soft: rgba(53, 46, 36, 0.12);
             --overlay-bg: rgba(243, 237, 226, 0.82);
@@ -541,10 +541,6 @@
         <button id="exit-btn" type="button" title="Return to dashboard" aria-label="Return to dashboard" onclick="wrapUp()">Wrap up</button>
         <div id="session-counter" title="Number of review cards remaining in this session" aria-live="polite"></div>
         <div id="chrome-end">
-            <div id="audio-mode-toggle">
-                <span title="Hear the Japanese text instead of seeing the Japanese prompt">AUDIO MODE</span>
-                <label class="theme-switch" title="Hear the Japanese text instead of seeing the Japanese prompt"><input type="checkbox" id="audio-mode-checkbox" aria-label="Hear the Japanese text instead of seeing the Japanese prompt" /><div class="slider"></div></label>
-            </div>
             <div class="theme-switch-wrapper"><label class="theme-switch" title="Switch between dark and light color themes"><input type="checkbox" id="theme-toggle" aria-label="Switch between dark and light color themes" /><div class="slider"></div></label></div>
         </div>
     </div>
@@ -557,7 +553,7 @@
         <div id="vocab-form-fields">
             <div class="form-group"><label for="new-vocab-deck">Deck</label><select id="new-vocab-deck"></select></div>
             <div class="form-group">
-                <label for="new-kanji">Kanji</label>
+                <label for="new-kanji">Expression</label>
                 <div class="kanji-input-row">
                     <input type="text" id="new-kanji">
                     <button type="button" class="btn-lookup" id="lookup-btn" title="Look up this word and fill in available dictionary details" onclick="lookupNewWord()">Auto-fill</button>
@@ -644,7 +640,7 @@
 
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--error); border-radius:8px; background:var(--error); color:#fff; font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onclick="checkTypedSentence()">Check</button><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation" onclick="playAudio(event)" aria-label="Play Japanese pronunciation">Play audio</button></div>
+        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--error); border-radius:8px; background:var(--error); color:#fff; font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onclick="checkTypedSentence()">Confirm</button><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation" onclick="playAudio(event)" aria-label="Play Japanese pronunciation">Play audio</button></div>
         <div id="session-summary" onclick="event.stopPropagation()" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">Session Summary</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
@@ -671,10 +667,8 @@
                 </div>
             </div>
             <div class="card-back-actions">
-                <button class="btn-audio" id="back-audio-button" type="button" title="Play the Japanese text" onclick="playAudio(event)" style="width:100%; margin:0 0 10px;">Replay audio (V)</button>
                 <button class="btn-correct" title="Rate this direction correct; the SRS level advances only after both directions are correct" onclick="submitResult(true, event)" style="background:var(--success); color:var(--button-text); margin-bottom:8px; border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Correct (1)</button>
                 <button class="btn-wrong" title="Rate this direction incorrect; the SRS level is assessed after both directions" onclick="submitResult(false, event)" style="background:var(--error); color:var(--button-text); border:none; width:100%; padding:14px; border-radius:12px; font-weight:800; cursor:pointer;">Wrong (2)</button>
-                <button title="Show or hide the example sentence and conjugation details" style="background:none; border:none; color:var(--muted); font-size:0.55rem; width:100%; margin-top:10px; cursor:pointer; font-weight:800;" onclick="toggleDetails(event)">DETAILS (F)</button>
             </div>
         </div>
     </div>
@@ -696,11 +690,12 @@
     </aside>
 
     <div id="keyboard-legend">
-        <span class="shortcut-hint"><span class="key-hint">V</span> Audio</span>
-        <span class="shortcut-hint"><span class="key-hint">Space</span> Flip</span>
+        <span class="shortcut-hint"><span class="key-hint">V</span> Play Audio</span>
+        <span class="shortcut-hint"><span class="key-hint">Space</span> Flip / Confirm</span>
         <span class="shortcut-hint"><span class="key-hint">1/2</span> Result</span>
-        <span class="shortcut-hint"><span class="key-hint">F</span> Info</span>
-        <span class="shortcut-hint"><span class="key-hint">Esc</span> Exit</span>
+        <span class="shortcut-hint"><span class="key-hint">F</span> Answer Details</span>
+        <span class="shortcut-hint"><span class="key-hint">W</span> Wrap Up</span>
+        <span class="shortcut-hint"><span class="key-hint">Esc</span> Abandon</span>
     </div>
 </div>
 
@@ -3247,6 +3242,10 @@
         typed.style.display = showTyped ? 'block' : 'none';
         typedBtn.style.display = showTyped ? 'inline-block' : 'none';
         if (showTyped) { typed.value = ''; typed.focus(); }
+        typed.onkeydown = (e) => {
+            if (e.isComposing) return;
+            if (e.code === 'Space') { e.preventDefault(); checkTypedSentence(); }
+        };
     }
 
     function normalizeJa(s){ return (s||'').replace(/[\\s、。！？,\\.!?]/g,'').toLowerCase(); }
@@ -3771,12 +3770,13 @@
         }
         if (document.getElementById('card').style.display !== 'block') return;
         if (e.key === 'Escape' && !document.getElementById('kanji-info').hidden) { hideKanjiInfo(); return; }
+        if (e.code === 'Space') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
+        if (e.key === 'w' || e.key === 'W') { wrapUp(); return; }
         if (e.key === 'Escape') location.reload();
-        if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
         if (isFlipped) {
             if (e.key === '1') submitResult(true);
             if (e.key === '2') submitResult(false);
-            if (e.key === 'f' || e.key === 'F') toggleDetails();
+            if (e.key === 'f' || e.key === 'F') { toggleDetails(); const el=document.querySelector('.answer-details'); if(el) el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
         }
         if ((e.key === 'v' || e.key === 'V') && (isFlipped || currentDirection === 'ja-en')) playAudio();
     });
