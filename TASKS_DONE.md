@@ -13,9 +13,10 @@
 - 3.2 Keyboard shortcuts updated (V Play Audio, F Answer Details + scroll, Esc Abandon, W Wrap Up).
 - 3.3 Sentence IME: Enter unbound, Space confirms when not composing, Check -> Confirm.
 
-## Additional UI
-- Theme switch: top-left, visible all pages, no load flash/animation.
-- Reviews homescreen Return to dashboard button (fixed top-right).
-- Wrap-up returns to reviews homescreen.
-" content">
-/home/dozo/Documents/dev/nihongo-no-dashi/TASKS_DONE.md
+## Recent UI
+- Confirm button palette-friendly.
+- Wrap-up only during review.
+- F scrolls details.
+- Wrong button restored in sentence review.
+- Beta Emulingo button removed.
+- Theme switch top-left all pages.
