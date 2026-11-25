@@ -309,7 +309,7 @@
         #kanji-info-status { min-height: 1em; margin-top: 10px; color: var(--muted); font-size: 0.75rem; }
         .kanji-info-sources { margin-top: 12px; color: var(--muted); font-size: 0.65rem; line-height: 1.5; }
         .kanji-info-sources a { color: var(--accent); }
-        #info-tray { display: block; width: 100%; margin-bottom: 20px; padding-top: 15px; border-top: 1px solid var(--border-soft); text-align: left; }
+        #info-tray { display: none !important; width: 100%; margin-bottom: 20px; padding-top: 15px; border-top: 1px solid var(--border-soft); text-align: left; }
         #info-tray > div:first-child { color: var(--muted) !important; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
         #keyboard-legend {
             display: none; flex-wrap: wrap; justify-content: center; gap: 8px 12px; margin-top: 25px;
@@ -628,6 +628,19 @@
         <button class="btn-main" id="start-btn" title="Start reviewing due cards" onclick="startSession('due')">Start session (0)</button>
     </div>
 
+    <div id="dbviewer-overlay" aria-hidden="true" style="position:fixed;inset:0;z-index:1800;display:none;flex-direction:column;padding:16px;background:var(--dark-kombu);color:var(--text);">
+        <div style="max-width:1000px;margin:auto;width:100%;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;position:relative;">
+                <h1 class="dash-title">Database Viewer</h1>
+                <button class="btn-deck" type="button" title="Return to dashboard" onclick="closeDbViewer()" style="border:none;background:transparent;color:var(--dashi-gold);font:800 1.1rem 'JetBrains Mono','Fira Code',monospace;cursor:pointer;">日本語のダシ</button>
+            </div>
+            <select id="dbviewer-table" style="margin-bottom:12px;padding:6px;">
+                <option value="vocab">vocab</option>
+                <option value="sentences">sentences</option>
+            </select>
+            <div id="dbviewer-content" style="overflow:auto;max-height:70vh;"></div>
+        </div>
+    </div>
     <div id="emulingo-overlay" aria-hidden="true">
         <div id="emulingo-body">
             <button class="btn-deck" type="button" title="Return to the dashboard" onclick="closeEmulingo()" onmouseover="this.style.color='var(--accent)';this.style.textShadow='0 0 10px var(--accent-glow)';this.style.transform='scale(1.08)'" onmouseout="this.style.color='var(--dashi-gold)';this.style.textShadow='none';this.style.transform='scale(1)'" style="position:absolute;top:12px;right:12px;border:none;background:transparent;color:var(--dashi-gold);font:800 1.1rem 'JetBrains Mono','Fira Code',monospace;letter-spacing:1.5px;cursor:pointer;transition:color .15s ease,text-shadow .15s ease,transform .15s ease;display:inline-block;">日本語のダシ</button>
@@ -714,12 +727,12 @@
     </aside>
 
     <div id="keyboard-legend">
-        <span class="shortcut-hint"><span class="key-hint">V</span> Play Audio</span>
-        <span class="shortcut-hint"><span class="key-hint">Space</span> Flip / Confirm</span>
+        <span class="shortcut-hint" onclick="playAudio()" style="cursor:pointer;"><span class="key-hint">V</span> Play Audio</span>
+        <span class="shortcut-hint" onclick="if(!isFlipped) handleCardClick();" style="cursor:pointer;"><span class="key-hint">Space</span> Flip / Confirm</span>
         <span class="shortcut-hint"><span class="key-hint">1/2</span> Result</span>
-        <span class="shortcut-hint"><span class="key-hint">F</span> Answer Details</span>
-        <span class="shortcut-hint"><span class="key-hint">W</span> Wrap Up</span>
-        <span class="shortcut-hint"><span class="key-hint">Esc</span> Abandon</span>
+        <span class="shortcut-hint" onclick="const t=document.getElementById('info-tray');const v=t.style.display==='block';toggleDetails();if(!v)t.scrollIntoView({behavior:'smooth',block:'nearest'});else document.getElementById('card').scrollIntoView({behavior:'smooth',block:'nearest'});" style="cursor:pointer;"><span class="key-hint">F</span> Answer Details</span>
+        <span class="shortcut-hint" onclick="wrapUp()" style="cursor:pointer;"><span class="key-hint">W</span> Wrap Up</span>
+        <span class="shortcut-hint" onclick="location.reload()" style="cursor:pointer;"><span class="key-hint">Esc</span> Abandon</span>
     </div>
 </div>
 
@@ -1039,7 +1052,12 @@
             deleteDeck,
             translateScreen,
             getEmulingoSave,
-            upsertEmulingoSave
+            upsertEmulingoSave,
+            getTableRows: async function(table) {
+                const { data, error } = await getClient().from(table).select('*').limit(200);
+                if (error) throw error;
+                return data || [];
+            }
         });
     })();
 
@@ -1769,6 +1787,38 @@
         return Promise.resolve(null);
     }
 
+    function openDbViewer() {
+        const overlay = document.getElementById('dbviewer-overlay');
+        if (overlay) overlay.style.display = 'flex';
+        loadDbViewer();
+    }
+    function closeDbViewer() {
+        const overlay = document.getElementById('dbviewer-overlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+    async function loadDbViewer() {
+        const table = document.getElementById('dbviewer-table').value;
+        const content = document.getElementById('dbviewer-content');
+        content.innerHTML = 'Loading...';
+        try {
+            const rows = await DatabaseService.getTableRows(table);
+            if (!rows.length) { content.innerHTML = 'No rows.'; return; }
+            const cols = Object.keys(rows[0]);
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;"><thead><tr>';
+            cols.forEach(c => html += `<th style="border:1px solid var(--border-soft);padding:4px;text-align:left;">${escapeHtml(c)}</th>`);
+            html += '</tr></thead><tbody>';
+            rows.forEach(r => {
+                html += '<tr>';
+                cols.forEach(c => html += `<td style="border:1px solid var(--border-soft);padding:4px;">${escapeHtml(String(r[c] ?? ''))}</td>`);
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            content.innerHTML = html;
+        } catch (e) {
+            content.innerHTML = 'Error: ' + escapeHtml(e.message || String(e));
+        }
+    }
+    document.getElementById('dbviewer-table')?.addEventListener('change', loadDbViewer);
     function openEmulingo() {
         const overlay = document.getElementById('emulingo-overlay');
         overlay.classList.add('active');
@@ -3363,6 +3413,7 @@
         const typeText = document.getElementById('type-text');
         const infoTray = document.getElementById('info-tray');
         const conjugationSection = document.getElementById('conjugation-section');
+        infoTray.style.display = 'none';
         document.getElementById('card-back-ui').style.borderBottom = `10px solid ${s.color}`;
         document.getElementById('level-indicator').title = `SRS level ${currentItem.level}. ${s.name}: ${s.description}`;
         document.getElementById('level-indicator').innerText = `LVL ${currentItem.level}`;
@@ -3702,7 +3753,7 @@
     }
 
     /* Toggle visibility of the example sentence tray */
-    function toggleDetails(e) { if(e) e.stopPropagation(); if (isSentenceDeckId(sessionDeckId)) return; const t = document.getElementById('info-tray'); t.style.display = t.style.display === "block" ? "none" : "block"; }
+    function toggleDetails(e) { if(e) e.stopPropagation(); if (isSentenceDeckId(sessionDeckId)) return; const t = document.getElementById('info-tray'); const visible = getComputedStyle(t).display !== 'none'; t.style.setProperty('display', visible ? 'none' : 'block', 'important'); }
 
     const AUTOFILL_FIELD_IDS = ['new-reading', 'new-meaning', 'new-type', 'new-example'];
 
