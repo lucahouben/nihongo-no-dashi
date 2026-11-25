@@ -640,7 +640,7 @@
 
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--error); border-radius:8px; background:var(--error); color:#fff; font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onclick="checkTypedSentence()">Confirm</button><button id="front-audio-button" class="btn-audio front-audio-button" title="Play the Japanese pronunciation" onclick="playAudio(event)" aria-label="Play Japanese pronunciation">Play audio</button></div>
+        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--error); border-radius:8px; background:var(--error); color:#fff; font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onclick="checkTypedSentence()">Confirm</button></div>
         <div id="session-summary" onclick="event.stopPropagation()" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">Session Summary</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
@@ -3176,7 +3176,6 @@
             document.getElementById('card').classList.remove('is-flipped');
             isFlipped = false;
             document.getElementById('display-front').style.display = "none";
-            document.getElementById('front-audio-button').style.display = "none";
             document.getElementById('session-summary').style.display = "flex";
             
             document.getElementById('session-counter').style.display = 'none';
@@ -3186,7 +3185,6 @@
 
             return;
         }
-        document.getElementById('front-audio-button').style.display = "block";
         document.getElementById('session-counter').innerText = `${reviewQueue.length} ITEMS LEFT`;
         currentReviewTask = reviewPromptQueue.shift();
         currentItem = currentReviewTask.item;
@@ -3224,8 +3222,6 @@
             displayFront.style.fontSize = kanjiLength > 8 ? "2.5rem" : kanjiLength > 4 ? "3.5rem" : "5rem";
         }
         renderKanjiPrompt(prompt);
-        const audioButton = document.getElementById('front-audio-button');
-        audioButton.style.display = currentDirection === 'ja-en' ? 'block' : 'none';
         if (audioMode && currentDirection === 'ja-en') playAudio();
         const typed = document.getElementById('typed-answer');
         const typedBtn = document.getElementById('typed-check-btn');
