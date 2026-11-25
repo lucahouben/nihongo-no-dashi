@@ -658,7 +658,7 @@
         </div>
     </div>
 
-    <div style="width:100%;max-width:600px;margin:0 auto 8px auto;text-align:left;">
+    <div id="wrapup-bar" style="display:none;width:100%;max-width:600px;margin:0 auto 8px auto;text-align:left;">
         <button class="btn-deck" type="button" onclick="wrapUp()" title="Wrap up session">Wrap up</button>
     </div>
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
@@ -3266,6 +3266,7 @@
         document.getElementById('progress-container').setAttribute('aria-valuenow', 0);
         document.getElementById('keyboard-legend').style.display = 'flex';
         document.getElementById('session-counter').style.display = 'block';
+        document.getElementById('wrapup-bar').style.display = 'block';
         nextItem(true);
     }
 
@@ -3278,7 +3279,8 @@
             isFlipped = false;
             document.getElementById('display-front').style.display = "none";
             document.getElementById('session-summary').style.display = "flex";
-            
+            document.getElementById('wrapup-bar').style.display = 'none';
+
             document.getElementById('session-counter').style.display = 'none';
             document.getElementById('summary-total').innerText = initialQueueLength;
             document.getElementById('summary-correct').innerText = completedCount;
