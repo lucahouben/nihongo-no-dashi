@@ -3868,7 +3868,13 @@
         if (isFlipped) {
             if (e.key === '1') submitResult(true);
             if (e.key === '2') submitResult(false);
-            if (e.key === 'f' || e.key === 'F') { toggleDetails(); const el=document.querySelector('.answer-details'); if(el) el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+            if (e.key === 'f' || e.key === 'F') {
+                const tray = document.getElementById('info-tray');
+                const wasVisible = tray.style.display === 'block';
+                toggleDetails();
+                if (!wasVisible) tray.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                else document.getElementById('card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
         if ((e.key === 'v' || e.key === 'V') && (isFlipped || currentDirection === 'ja-en')) playAudio();
     });
