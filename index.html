@@ -364,12 +364,14 @@
             padding: 16px; background: var(--dark-kombu); color: var(--text);
         }
         #emulingo-overlay.active { display: flex; }
-        .emulingo-header { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+        .emulingo-header { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; position: relative; gap: 14px; margin-bottom: 14px; }
+.emulingo-header .btn-deck { position: absolute; right: 0; top: 0; }
         .emulingo-header .dash-title { margin-bottom: 3px; }
-        #emulingo-body { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; }
+.emulingo-header .dash-tagline { }
+        #emulingo-body { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; position: relative; }
         #emulingo-launcher {
             max-width: 520px; margin: auto; padding: 24px; border: 1px solid var(--card-border);
-            border-radius: 12px; background: var(--card-bg); text-align: center;
+            border-radius: 12px; background: var(--card-bg); text-align: left;
         }
         #emulingo-launcher[hidden], #emulingo-stage[hidden] { display: none; }
         .emulingo-copy { margin: 0 0 18px; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
@@ -612,14 +614,14 @@
 
     <div id="home-overlay" style="position:fixed;inset:0;z-index:1500;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--dark-kombu);backdrop-filter:blur(4px);">
         <div style="width:100%;max-width:720px;">
-            <h1 class="dash-title" style="text-align:center;margin-bottom:8px;">日本語のダシ</h1>
-            <p class="dash-tagline" style="text-align:center;margin-bottom:24px;">Choose a tool</p>
+            <h1 class="dash-title" style="text-align:center;margin-bottom:8px;font-size:1.6rem;">日本語のダシ</h1>
+            <p class="dash-tagline" style="text-align:center;margin-bottom:24px;font-size:1rem;">Choose a tool</p>
             <div id="tool-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;"></div>
         </div>
     </div>
 
     <div id="dashboard">
-        <div class="dash-header"><div><h1 class="dash-title">日本語のダシ</h1><p class="dash-tagline">Japanese Flashcards</p></div><button class="btn-deck" type="button" title="Return to the dashboard" onclick="showHome()" style="position:fixed;top:12px;right:12px;z-index:1000;">Return to dashboard</button><button class="btn-add-toggle" id="open-add-form-btn" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
+        <div class="dash-header"><div><h1 class="dash-title">Flashcards</h1><p class="dash-tagline">Spaced Repetition System</p></div><button class="btn-deck" type="button" title="Return to the dashboard" onclick="showHome()" onmouseover="this.style.color='var(--accent)';this.style.textShadow='0 0 10px var(--accent-glow)';this.style.transform='scale(1.08)'" onmouseout="this.style.color='var(--dashi-gold)';this.style.textShadow='none';this.style.transform='scale(1)'" style="position:fixed;top:12px;right:12px;z-index:1000;border:none;background:transparent;color:var(--dashi-gold);font:800 1.1rem 'JetBrains Mono','Fira Code',monospace;letter-spacing:1.5px;cursor:pointer;transition:color .15s ease,text-shadow .15s ease,transform .15s ease;display:inline-block;">日本語のダシ</button><button class="btn-add-toggle" id="open-add-form-btn" type="button" title="Add new word to database" aria-label="Add new word to database" onclick="toggleAddForm()">+</button></div>
         <div id="deck-selector" class="deck-selector" role="tablist" aria-label="Select a deck"></div>
         <div id="deck-controls" class="deck-controls"></div>
         <div id="stats-display" class="stats-list"></div>
@@ -627,12 +629,12 @@
     </div>
 
     <div id="emulingo-overlay" aria-hidden="true">
-        <div class="emulingo-header">
-            <div><h1 class="dash-title">Emulingo</h1><p class="dash-tagline">GBA Capture</p></div>
-            <button class="btn-deck" type="button" title="Return to the dashboard" onclick="closeEmulingo()">Return to dashboard</button>
-        </div>
         <div id="emulingo-body">
+            <button class="btn-deck" type="button" title="Return to the dashboard" onclick="closeEmulingo()" onmouseover="this.style.color='var(--accent)';this.style.textShadow='0 0 10px var(--accent-glow)';this.style.transform='scale(1.08)'" onmouseout="this.style.color='var(--dashi-gold)';this.style.textShadow='none';this.style.transform='scale(1)'" style="position:absolute;top:12px;right:12px;border:none;background:transparent;color:var(--dashi-gold);font:800 1.1rem 'JetBrains Mono','Fira Code',monospace;letter-spacing:1.5px;cursor:pointer;transition:color .15s ease,text-shadow .15s ease,transform .15s ease;display:inline-block;">日本語のダシ</button>
             <div id="emulingo-launcher">
+                <div class="emulingo-header" style="justify-content:flex-start;">
+                    <div><h1 class="dash-title">GameSlate</h1><p class="dash-tagline">Retro Immersion</p></div>
+                </div>
                 <p class="emulingo-copy">Load a GBA ROM stored on this device. The ROM stays in your browser and is not uploaded.</p>
                 <input type="file" id="rom-file-input" accept=".gba,.agb,.zip,application/zip,application/x-zip-compressed,application/octet-stream" style="position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;" aria-hidden="true" tabindex="-1">
                 <button class="btn-main" type="button" onclick="document.getElementById('rom-file-input').click()">LOAD_ROM</button>
@@ -1061,8 +1063,8 @@
         const grid = document.getElementById('tool-grid');
         if (!grid) return;
         const tools = [
-            { name: 'Reviews', action: "hideHome();", enabled: true },
-            { name: 'GBA Immersion', action: "hideHome(); openEmulingo();", enabled: true },
+            { name: 'Flashcards', action: "hideHome();", enabled: true },
+            { name: 'GameSlate', action: "hideHome(); openEmulingo();", enabled: true },
             { name: 'Database Viewer & Editor', action: '', enabled: false },
             { name: 'Conversation', action: '', enabled: false },
             { name: 'Notes', action: '', enabled: false },
