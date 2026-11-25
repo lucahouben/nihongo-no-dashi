@@ -677,7 +677,7 @@
     </div>
     <div id="progress-container" title="Progress through the current review session" role="progressbar" aria-label="Review session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-bar"></div></div>
     <div class="flashcard" id="card" onclick="handleCardClick()">
-        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" onclick="event.stopPropagation()" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--dashi-gold); border-radius:8px; background:var(--dashi-gold); color:var(--button-text); font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onclick="checkTypedSentence()">Confirm</button></div>
+        <div class="card-face card-front" id="display-front"><div id="direction-indicator"></div><span id="front-prompt">...</span><input id="typed-answer" type="text" lang="ja" autocomplete="off" onclick="event.stopPropagation()" style="display:none; width:80%; margin-top:12px; padding:10px; font-size:1.2rem; border:1px solid var(--card-border); border-radius:8px; background:var(--card-bg); color:var(--text);" /><button id="typed-check-btn" type="button" style="display:none; margin-top:8px; padding:10px 16px; border:1px solid var(--dashi-gold); border-radius:8px; background:var(--dashi-gold); color:var(--button-text); font:700 0.8rem 'JetBrains Mono','Fira Code',monospace; cursor:pointer;" onmouseover="this.style.background='var(--accent)'" onmouseout="this.style.background='var(--dashi-gold)'" onclick="if(!isFlipped) flipCard()">Confirm</button></div>
         <div id="session-summary" onclick="event.stopPropagation()" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; background:var(--card-bg); border-radius:25px; color:var(--text); padding:20px; box-sizing:border-box;">
             <h2 style="color:var(--dashi-gold); margin-bottom:20px; font-size:1.2rem;" title="Summary of your completed review session">Session Summary</h2>
             <div style="width:100%; display:flex; flex-direction:column; gap:15px; font-weight:600;">
@@ -729,11 +729,11 @@
 
     <div id="keyboard-legend">
         <span class="shortcut-hint" onclick="playAudio()" style="cursor:pointer;"><span class="key-hint">V</span> Play Audio</span>
-        <span class="shortcut-hint" onclick="if(!isFlipped) handleCardClick();" style="cursor:pointer;"><span class="key-hint">Space</span> Flip / Confirm</span>
+        <span class="shortcut-hint" onclick="if(!isFlipped) flipCard();" style="cursor:pointer;"><span class="key-hint">Space</span> Flip</span>
         <span class="shortcut-hint"><span class="key-hint">1/2</span> Result</span>
         <span class="shortcut-hint" onclick="const t=document.getElementById('info-tray');const v=t.style.display==='block';toggleDetails();if(!v)t.scrollIntoView({behavior:'smooth',block:'nearest'});else document.getElementById('card').scrollIntoView({behavior:'smooth',block:'nearest'});" style="cursor:pointer;"><span class="key-hint">F</span> Answer Details</span>
         <span class="shortcut-hint" onclick="wrapUp()" style="cursor:pointer;"><span class="key-hint">W</span> Wrap Up</span>
-        <span class="shortcut-hint" onclick="location.reload()" style="cursor:pointer;"><span class="key-hint">Esc</span> Abandon</span>
+        <span class="shortcut-hint" onclick="document.getElementById('card').style.display='none';document.getElementById('card').classList.remove('is-flipped');isFlipped=false;document.getElementById('progress-container').style.display='none';document.getElementById('wrapup-bar').style.display='none';document.getElementById('keyboard-legend').style.display='none';document.getElementById('session-counter').style.display='none';document.getElementById('dashboard').style.display='block';updateDashboard();" style="cursor:pointer;"><span class="key-hint">Esc</span> Abandon</span>
     </div>
 </div>
 
@@ -3344,6 +3344,8 @@
         currentReviewTask = reviewPromptQueue.shift();
         currentItem = currentReviewTask.item;
         currentDirection = currentReviewTask.direction;
+        isFlipped = false;
+        document.getElementById('card').classList.remove('is-flipped');
         updateFrontPrompt();
         
         if (first) updateBackUI();
@@ -3387,7 +3389,6 @@
         if (showTyped) { typed.value = ''; typed.focus(); }
         typed.onkeydown = (e) => {
             if (e.isComposing) return;
-            if (e.code === 'Space') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
         };
     }
 
@@ -3428,8 +3429,12 @@
             conjugationSection.style.display = 'none';
             infoTray.style.display = 'none';
             const typedDisplay = document.getElementById('typed-answer-display');
-            typedDisplay.style.display = 'block';
-            typedDisplay.innerText = 'Your answer: ' + (document.getElementById('typed-answer').value || '(none)');
+            if (currentDirection === 'en-ja') {
+                typedDisplay.style.display = 'block';
+                typedDisplay.innerText = 'Your answer: ' + (document.getElementById('typed-answer').value || '(none)');
+            } else {
+                typedDisplay.style.display = 'none';
+            }
             return;
         }
 
@@ -3660,7 +3665,8 @@
     }
 
     /* Flip the card to reveal the answer */
-    function handleCardClick() { if(isFlipped || document.getElementById('session-summary').style.display === 'flex') return; isFlipped = true; document.getElementById('card').classList.add('is-flipped'); updateBackUI(); }
+    function flipCard() { if(isFlipped || document.getElementById('session-summary').style.display === 'flex') return; isFlipped = true; document.getElementById('card').classList.add('is-flipped'); updateBackUI(); }
+    function handleCardClick() { if (isSentenceDeckId(sessionDeckId) && document.getElementById('typed-answer').style.display !== 'none') return; flipCard(); }
 
     /* Process user feedback, update SRS level, and persist it to Supabase */
     async function submitResult(isCorrect, e) {
@@ -3751,6 +3757,7 @@
             initialQueueLength = pending.length;
             completedCount = 0;
             nextItem();
+            document.getElementById('session-counter').innerText = `Wrapping up (${reviewQueue.length} items left)`;
             return;
         }
         localStorage.setItem('skipHome','1');
@@ -3906,6 +3913,7 @@
 
     /* Global keyboard shortcuts for session navigation */
     window.addEventListener('keydown', e => {
+        if (!isFlipped && document.getElementById('typed-answer').style.display !== 'none' && /^[a-z]$/i.test(e.key)) return;
         if (!document.getElementById('deck-form-overlay').hidden) {
             if (e.key === 'Escape') closeDeckForm();
             return;
@@ -3919,9 +3927,9 @@
         }
         if (document.getElementById('card').style.display !== 'block') return;
         if (e.key === 'Escape' && !document.getElementById('kanji-info').hidden) { hideKanjiInfo(); return; }
-        if (e.code === 'Space') { e.preventDefault(); if (!isFlipped) handleCardClick(); }
-        if (e.key === 'w' || e.key === 'W') { wrapUp(); return; }
-        if (e.key === 'Escape') location.reload();
+        if (e.code === 'Space' && document.getElementById('typed-answer').style.display === 'none') { e.preventDefault(); if (!isFlipped) flipCard(); }
+        if (e.key === 'w' || e.key === 'W') { e.preventDefault(); wrapUp(); return; }
+        if (e.key === 'Escape') { document.getElementById('card').style.display = 'none'; document.getElementById('card').classList.remove('is-flipped'); isFlipped=false; document.getElementById('progress-container').style.display = 'none'; document.getElementById('wrapup-bar').style.display = 'none'; document.getElementById('keyboard-legend').style.display = 'none'; document.getElementById('session-counter').style.display = 'none'; document.getElementById('dashboard').style.display = 'block'; updateDashboard(); return; }
         if (isFlipped) {
             if (e.key === '1') submitResult(true);
             if (e.key === '2') submitResult(false);
